@@ -7,7 +7,7 @@ namespace Core;
 use League\CommonMark\Environment\Environment;
 use League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension;
 use League\CommonMark\Extension\DisallowedRawHtml\DisallowedRawHtmlExtension;
-use League\CommonMark\Extension\GithubFlavoredMarkdown\GithubFlavoredMarkdownExtension;
+use League\CommonMark\Extension\GithubFlavoredMarkdownExtension;
 use League\CommonMark\MarkdownConverter;
 
 final class ContentRenderer
@@ -39,16 +39,35 @@ final class ContentRenderer
         return $this->rewriteInternalLinks($html);
     }
 
+    /**
+     * Zwei-Phasen-Pipeline: Phase 1 sammelt alle [[type:slug]]-Referenzen im
+     * HTML, Phase 2 löst sie gebündelt über die Registry auf (Batch statt
+     * N+1), erst danach wird ersetzt.
+     */
     private function rewriteInternalLinks(string $html): string
     {
+        $pattern = '/\[\[([a-z0-9_-]+):([a-z0-9_-]+)\]\]/i';
+        if (preg_match_all($pattern, $html, $matches, PREG_SET_ORDER) === 0) {
+            return $html;
+        }
+
+        $references = [];
+        foreach ($matches as $m) {
+            $references[strtolower($m[1])][] = strtolower($m[2]);
+        }
+
+        $resolved = $this->registry->resolveLinks($this->db, $references);
+
         return (string)preg_replace_callback(
-            '/\[\[([a-z0-9_-]+):([a-z0-9_-]+)\]\]/i',
-            function (array $m): string {
-                $resolved = $this->registry->resolveLink($this->db, $m[1], $m[2]);
-                if ($resolved === null) {
+            $pattern,
+            function (array $m) use ($resolved): string {
+                $type = strtolower($m[1]);
+                $slug = strtolower($m[2]);
+                $link = $resolved[$type][$slug] ?? null;
+                if ($link === null) {
                     return '<a class="broken-link" href="#">[[' . e($m[1] . ':' . $m[2]) . ']]</a>';
                 }
-                return '<a href="' . e($resolved['url']) . '">' . e($m[1] . ':' . $m[2]) . '</a>';
+                return '<a href="' . e($link['url']) . '">' . e($m[1] . ':' . $m[2]) . '</a>';
             },
             $html
         );

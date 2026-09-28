@@ -2,6 +2,11 @@
     <h1><?= e($page['title'] ?? $page['slug']) ?></h1>
     <div class="content"><?= $rendered ?>
     </div>
+    <?php if ($user->isAdmin()): ?>
+    <form method="post" action="/pages/<?= e($page['slug']) ?>/delete">
+        <button type="submit">Seite löschen</button>
+    </form>
+    <?php endif; ?>
 </article>
 
 <section class="preview">

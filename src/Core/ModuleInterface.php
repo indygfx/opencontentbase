@@ -19,4 +19,19 @@ interface ModuleInterface
 
     /** @return array{url: string}|null */
     public function resolveLink(Database $db, string $slug): ?array;
+
+    /**
+     * Löst mehrere Slugs in einem Batch auf (IN-Query statt N+1).
+     *
+     * @param list<string> $slugs
+     * @return array<string, array{url: string}|null> Map slug => Auflösung; fehlende Slugs => null
+     */
+    public function resolveLinks(Database $db, array $slugs): array;
+
+    /**
+     * Hook des Core vor dem Löschen eines content_objects: das Modul räumt
+     * seine Detail-Tabelle selbst auf (nicht löschbare Objekte verhindern
+     * das Löschen durch Werfen einer Exception).
+     */
+    public function onDelete(Database $db, string $uuid): void;
 }

@@ -15,6 +15,7 @@ final class App
     private View $view;
     private ModuleRegistry $registry;
     private ContentRenderer $renderer;
+    private ObjectDeleter $deleter;
 
     public function __construct(private string $basePath)
     {
@@ -25,13 +26,14 @@ final class App
         $this->view = new View($this->basePath);
         $this->registry = new ModuleRegistry();
         $this->renderer = new ContentRenderer($this->db, $this->registry);
+        $this->deleter = new ObjectDeleter($this->db, $this->registry);
     }
 
     public function boot(): void
     {
         $this->migrator->migrate('core', CoreMigrations::migrations());
 
-        $pages = new PagesModule($this->db, $this->view, $this->renderer);
+        $pages = new PagesModule($this->db, $this->view, $this->renderer, $this->deleter);
         $this->registry->register($pages);
         $this->migrator->migrate($pages->id(), $pages->migrations());
 
