@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Bestehende Dateien/Verzeichnisse direkt ausliefern (CSS, JS, Icons)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Alle anderen Requests an den Front Controller
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
