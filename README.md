@@ -28,6 +28,8 @@ composer install
 php -S localhost:8080 -t public
 ```
 
+> **Hinweis `composer.lock`:** Die Lock-Datei ist bewusst nicht eingecheckt (siehe `.gitignore`). Sie entsteht lokal bei `composer install` und fixiert dort die exakten Paketversionen. Bei „läuft bei mir nicht"-Situationen oder nach `composer update` daran denken, dass jedes System seine eigene Lock-Datei hat — Versionen ggf. dokumentieren.
+
 Erststart legt automatisch den Benutzer **admin / admin** an (bitte sofort ändern).
 
 ## Struktur

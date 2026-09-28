@@ -4,8 +4,8 @@
 <?php endif; ?>
 <form method="post" action="<?= $page !== null ? '/pages/' . e($page['slug']) : '/pages' ?>" class="card">
     <?php if ($page === null): ?>
-        <label for="slug">Slug</label>
-        <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" required pattern="[a-z0-9-]+">
+        <label for="slug">Slug <small class="muted">(leer lassen = automatisch aus dem Titel)</small></label>
+        <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" placeholder="automatisch" pattern="[a-z0-9-]*" title="a-z, 0-9, Bindestrich; leer lassen für automatische Ableitung">
     <?php endif; ?>
     <label for="title">Titel</label>
     <input id="title" name="title" value="<?= e($page['title'] ?? '') ?>" required>
@@ -49,6 +49,23 @@
     });
 
     fetchPreview();
+
+    var slugInput = document.getElementById('slug');
+    var titleInput = document.getElementById('title');
+    if (slugInput !== null && titleInput !== null) {
+        var syncSlug = function () {
+            if (slugInput.value === '') {
+                slugInput.placeholder = 'wird: ' + titleInput.value
+                    .toLowerCase()
+                    .replace(/[äöü]/g, function (c) { return {'ä': 'ae', 'ö': 'oe', 'ü': 'ue'}[c]; })
+                    .replace(/ß/g, 'ss')
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+            }
+        };
+        titleInput.addEventListener('input', syncSlug);
+        syncSlug();
+    }
 
     document.addEventListener('keydown', function (ev) {
         if ((ev.metaKey || ev.ctrlKey) && ev.key === 's') {

@@ -102,6 +102,12 @@ final class PagesController
         $title = trim((string)($_POST['title'] ?? ''));
         $body = (string)($_POST['body'] ?? '');
 
+        if ($slug === '') {
+            $slug = slugify($title);
+        } else {
+            $slug = slugify($slug);
+        }
+
         $error = $this->validateSlug($slug);
         if ($error !== null) {
             return $this->page($user, 'modules/Pages/templates/edit.php', [
@@ -146,7 +152,7 @@ final class PagesController
     private function validateSlug(string $slug): ?string
     {
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
-            return 'Slug erforderlich (a-z, 0-9, Bindestrich).';
+            return 'Konnte keinen Slug aus dem Titel ableiten (a-z, 0-9, Bindestrich).';
         }
         $exists = $this->db->one(
             "SELECT 1 FROM content_objects WHERE type = 'page' AND slug = ?",
