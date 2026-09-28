@@ -7,6 +7,7 @@ namespace Pages;
 use Core\Auth;
 use Core\ContentRenderer;
 use Core\Database;
+use Core\ObjectDeleter;
 use Core\Response;
 use Core\User;
 use Core\View;
@@ -16,7 +17,8 @@ final class PagesController
     public function __construct(
         private Database $db,
         private View $view,
-        private ContentRenderer $renderer
+        private ContentRenderer $renderer,
+        private ObjectDeleter $deleter
     ) {
     }
 
@@ -123,6 +125,16 @@ final class PagesController
         });
 
         return Response::redirect('/pages/' . rawurlencode($slug));
+    }
+
+    public function destroy(string $slug, User $user): Response
+    {
+        $page = $this->findPage($slug);
+        if ($page === null) {
+            return $this->notFound($user);
+        }
+        $this->deleter->delete('page', (string)$page['object_id']);
+        return Response::redirect('/pages');
     }
 
     public function preview(User $user): Response

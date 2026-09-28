@@ -7,6 +7,7 @@ namespace Pages;
 use Core\ContentRenderer;
 use Core\Database;
 use Core\ModuleInterface;
+use Core\ObjectDeleter;
 use Core\Router;
 use Core\View;
 
@@ -14,9 +15,9 @@ final class PagesModule implements ModuleInterface
 {
     private PagesController $controller;
 
-    public function __construct(Database $db, View $view, ContentRenderer $renderer)
+    public function __construct(Database $db, View $view, ContentRenderer $renderer, ObjectDeleter $deleter)
     {
-        $this->controller = new PagesController($db, $view, $renderer);
+        $this->controller = new PagesController($db, $view, $renderer, $deleter);
     }
 
     public function id(): string
@@ -37,6 +38,7 @@ final class PagesModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->show($params['slug'], $user), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/pages/{slug}/edit', 'handler' => fn ($params, $user) => $c->edit($params['slug'], $user), 'roles' => ['editor']],
             ['method' => 'POST', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->update($params['slug'], $user), 'roles' => ['editor']],
+            ['method' => 'POST', 'pattern' => '/pages/{slug}/delete', 'handler' => fn ($params, $user) => $c->destroy($params['slug'], $user), 'roles' => ['admin']],
             ['method' => 'POST', 'pattern' => '/pages/{slug}/preview', 'handler' => fn ($params, $user) => $c->preview($user), 'roles' => ['editor']],
         ];
     }
@@ -72,5 +74,31 @@ final class PagesModule implements ModuleInterface
             [$slug]
         );
         return $row === null ? null : ['url' => '/pages/' . rawurlencode((string)$row['slug'])];
+    }
+
+    public function resolveLinks(Database $db, array $slugs): array
+    {
+        $result = array_fill_keys($slugs, null);
+        if ($slugs === []) {
+            return $result;
+        }
+        $placeholders = implode(',', array_fill(0, count($slugs), '?'));
+        $rows = $db->all(
+            "SELECT o.slug
+               FROM content_objects o
+               JOIN pages p ON p.object_id = o.id
+              WHERE o.type = 'page' AND o.slug IN ({$placeholders})",
+            $slugs
+        );
+        foreach ($rows as $row) {
+            $slug = (string)$row['slug'];
+            $result[$slug] = ['url' => '/pages/' . rawurlencode($slug)];
+        }
+        return $result;
+    }
+
+    public function onDelete(Database $db, string $uuid): void
+    {
+        $db->run('DELETE FROM pages WHERE object_id = ?', [$uuid]);
     }
 }
