@@ -4,6 +4,7 @@
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
     <form method="post" action="/login">
+        <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
         <label for="username">Benutzername</label>
         <input id="username" name="username" required autofocus autocomplete="username">
         <label for="password">Passwort</label>

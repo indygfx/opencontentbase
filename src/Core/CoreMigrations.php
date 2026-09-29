@@ -59,6 +59,10 @@ final class CoreMigrations
                 );
                 $db->run('CREATE INDEX idx_revisions_object ON content_revisions(object_id, created_at)');
             },
+            // v3: CSRF-Token pro Session
+            function (Database $db): void {
+                $db->run('ALTER TABLE sessions ADD COLUMN csrf_token TEXT');
+            },
         ];
     }
 }

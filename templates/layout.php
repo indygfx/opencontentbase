@@ -28,6 +28,7 @@
         .broken-link { color: #b91c1c; background: #fef2f2; border-bottom: 1px dashed #b91c1c; }
         .preview { margin-top: 2rem; }
         .muted { color: var(--muted); }
+        .success { color: #15803d; }
     </style>
 </head>
 <body>
@@ -39,8 +40,9 @@
             <?php if ($user->hasAtLeast('editor')): ?>
                 <a href="/pages/new">Neue Seite</a>
             <?php endif; ?>
-            <span class="muted"><?= e($user->username()) ?></span>
+            <a href="/profile"><?= e($user->username()) ?></a>
             <form class="inline" method="post" action="/logout">
+                <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
                 <button type="submit">Abmelden</button>
             </form>
         <?php else: ?>

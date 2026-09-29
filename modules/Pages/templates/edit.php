@@ -3,6 +3,7 @@
     <p class="error"><?= e($error) ?></p>
 <?php endif; ?>
 <form method="post" action="<?= $page !== null ? '/pages/' . e($page['slug']) : '/pages' ?>" class="card">
+        <?= $csrf->field() ?>
     <?php if ($page === null): ?>
         <label for="slug">Slug <small class="muted">(leer lassen = automatisch aus dem Titel)</small></label>
         <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" placeholder="automatisch" pattern="[a-z0-9-]*" title="a-z, 0-9, Bindestrich; leer lassen für automatische Ableitung">

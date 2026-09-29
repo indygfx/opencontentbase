@@ -7,6 +7,7 @@ namespace Pages;
 use Core\Auth;
 use Core\ContentRenderer;
 use Core\Database;
+use Core\Csrf;
 use Core\ObjectDeleter;
 use Core\Response;
 use Core\User;
@@ -18,7 +19,8 @@ final class PagesController
         private Database $db,
         private View $view,
         private ContentRenderer $renderer,
-        private ObjectDeleter $deleter
+        private ObjectDeleter $deleter,
+        private Csrf $csrf
     ) {
     }
 
@@ -197,6 +199,7 @@ final class PagesController
         return Response::html($this->view->render('templates/layout.php', [
             'title' => (string)($data['title'] ?? 'ContentBase'),
             'user' => $user,
+            'csrf' => $this->csrf,
             'content' => $content,
         ]), $status);
     }
@@ -210,6 +213,7 @@ final class PagesController
         return Response::html($this->view->render('templates/layout.php', [
             'title' => '404',
             'user' => $user,
+            'csrf' => $this->csrf,
             'content' => $content,
         ]), 404);
     }

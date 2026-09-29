@@ -25,12 +25,19 @@ final class Auth
 
         $token = $this->randomToken();
         $this->db->run(
-            'INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES (?, ?, ?, ?)',
+            'DELETE FROM sessions WHERE token_hash = ?',
+            [hash('sha256', (string)($_COOKIE[self::COOKIE] ?? ''))]
+        );
+        $csrf = $_COOKIE['cb_csrf'] ?? '';
+        $csrf = is_string($csrf) && preg_match('/^[0-9a-f]{64}$/', $csrf) === 1 ? $csrf : null;
+        $this->db->run(
+            'INSERT INTO sessions (id, user_id, token_hash, expires_at, csrf_token) VALUES (?, ?, ?, ?, ?)',
             [
                 self::uuid4(),
                 (string)$row['id'],
                 hash('sha256', $token),
                 gmdate('Y-m-d H:i:s', time() + self::LIFETIME_DAYS * 86400),
+                $csrf,
             ]
         );
 
@@ -65,6 +72,61 @@ final class Auth
             [hash('sha256', $token), gmdate('Y-m-d H:i:s')]
         );
         return $row === null ? null : User::fromRow($row);
+    }
+
+    public function currentSessionId(): ?string
+    {
+        $token = $_COOKIE[self::COOKIE] ?? '';
+        if (!is_string($token) || $token === '') {
+            return null;
+        }
+        $row = $this->db->one(
+            'SELECT id FROM sessions WHERE token_hash = ?',
+            [hash('sha256', $token)]
+        );
+        return $row === null ? null : (string)$row['id'];
+    }
+
+    public function currentCsrfToken(): ?string
+    {
+        $token = $_COOKIE[self::COOKIE] ?? '';
+        if (!is_string($token) || $token === '') {
+            return null;
+        }
+        $row = $this->db->one(
+            'SELECT csrf_token FROM sessions WHERE token_hash = ?',
+            [hash('sha256', $token)]
+        );
+        return $row === null ? null : (isset($row['csrf_token']) ? (string)$row['csrf_token'] : null);
+    }
+
+    public function changePassword(User $user, string $old, string $new, string $confirm): ?\InvalidArgumentException
+    {
+        if ($new !== $confirm) {
+            return new \InvalidArgumentException('Die neuen Passwörter stimmen nicht überein.');
+        }
+        if (strlen($new) < 8) {
+            return new \InvalidArgumentException('Das neue Passwort muss mindestens 8 Zeichen lang sein.');
+        }
+        $row = $this->db->one('SELECT password FROM users WHERE id = ?', [$user->id()]);
+        if ($row === null || !password_verify($old, (string)$row['password'])) {
+            return new \InvalidArgumentException('Das aktuelle Passwort ist falsch.');
+        }
+        if (password_verify($new, (string)$row['password'])) {
+            return new \InvalidArgumentException('Das neue Passwort darf dem aktuellen nicht entsprechen.');
+        }
+        $this->db->run(
+            'UPDATE users SET password = ? WHERE id = ?',
+            [password_hash($new, PASSWORD_BCRYPT), $user->id()]
+        );
+        $current = $this->currentSessionId();
+        if ($current !== null) {
+            $this->db->run(
+                'DELETE FROM sessions WHERE user_id = ? AND id != ?',
+                [$user->id(), $current]
+            );
+        }
+        return null;
     }
 
     public function ensureInitialAdmin(): void
