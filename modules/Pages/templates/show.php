@@ -4,6 +4,7 @@
     </div>
     <?php if ($user->isAdmin()): ?>
     <form method="post" action="/pages/<?= e($page['slug']) ?>/delete">
+        <?= $csrf->field() ?>
         <button type="submit">Seite löschen</button>
     </form>
     <?php endif; ?>

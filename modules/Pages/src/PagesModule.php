@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Pages;
 
 use Core\ContentRenderer;
+use Core\Csrf;
 use Core\Database;
 use Core\ModuleInterface;
 use Core\ObjectDeleter;
@@ -15,9 +16,9 @@ final class PagesModule implements ModuleInterface
 {
     private PagesController $controller;
 
-    public function __construct(Database $db, View $view, ContentRenderer $renderer, ObjectDeleter $deleter)
+    public function __construct(Database $db, View $view, ContentRenderer $renderer, ObjectDeleter $deleter, Csrf $csrf)
     {
-        $this->controller = new PagesController($db, $view, $renderer, $deleter);
+        $this->controller = new PagesController($db, $view, $renderer, $deleter, $csrf);
     }
 
     public function id(): string

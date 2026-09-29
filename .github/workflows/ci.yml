@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: sqlite3, mbstring, dom
+          coverage: none
+
+      - name: Composer install
+        run: composer install --no-interaction --no-progress
+
+      - name: Syntax-Check
+        run: find src modules public -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Statische Analyse (phpstan)
+        run: vendor/bin/phpstan analyse src modules --no-progress
+
+      - name: Tests (phpunit)
+        run: vendor/bin/phpunit --no-progress

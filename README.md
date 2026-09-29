@@ -19,7 +19,25 @@ Modulare Content-Plattform: PHP 8.2 + SQLite, Composer nur als Autoloader, kein 
 | Datenbank | SQLite (WAL, `foreign_keys ON`, `busy_timeout 5000`) |
 | Abhängigkeiten | `league/commonmark ^2.4` |
 | Dev | `phpunit ^10`, `phpstan ^1.10` |
+| CI | GitHub Actions: Syntax-Check, phpstan, phpunit bei jedem Push/PR |
 | Frontend | Server-gerenderte PHP-Templates, minimales Vanilla-JS (Debounce, fetch-Preview, Cmd+S) |
+
+## Automatische Prüfungen (CI)
+
+Bei jedem Push und jedem Pull-Request läuft automatisch eine Prüfung über GitHub Actions (`.github/workflows/ci.yml`):
+
+1. **Syntax-Check**: `php -l` über alle PHP-Dateien in `src/`, `modules/`, `public/`
+2. **Statische Analyse**: `phpstan` über `src/` und `modules/`
+3. **Tests**: `phpunit` über `tests/`
+
+Lokal die gleichen Prüfungen ausführen:
+
+```bash
+vendor/bin/phpstan analyse src modules --no-progress
+vendor/bin/phpunit --no-progress
+```
+
+Der Prüflauf dauert ~1 Minute; grüner Haken am Commit/PR = alles gut, rotes X = Fehlermeldung im Log.
 
 ## Start
 
@@ -47,14 +65,15 @@ public/index.php   Front Controller
 - Sessions: 64-Byte-Random-Tokens, nur SHA-256-Hash in der DB, `httpOnly` + `SameSite=Lax`, 30 Tage, Expiry-Check per Query
 - Content: `html_input=escape`, `allow_unsafe_links=false`, `DisallowedRawHtml`
 - Rollen-Guard pro Route (`admin > editor > user`), Unauth -> Redirect auf `/login`, 403-Template
+- CSRF-Schutz für alle POST-Routen (Session-gebundenes Token, Cookie-Fallback für Gäste, `hash_equals`-Vergleich)
+- Passwort-Ãnderung im Profil (`/profile`) mit Session-Revocation aller anderen Sitzungen
+- Login mit Session-Rotation (alte Sitzung wird bei Re-Login verworfen)
 
 ## Bekannte Lücken (Roadmap Phase 5)
 
-- Kein CSRF-Schutz für POST-Formulare
 - Kein Rate-Limiting beim Login
 - Admin-Boot nur für Erststart, kein CLI `user:create`
 - Router ohne HTTP-Method-Spoofing, ohne optionale Segmente
-- `tests/` leer
 
 ## Roadmap
 

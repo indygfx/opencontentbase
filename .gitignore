@@ -2,3 +2,4 @@ vendor
 data
 *.sqlite*
 composer.lock
+.phpunit.cache/
