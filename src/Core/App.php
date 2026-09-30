@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Core;
 
 use Pages\PagesModule;
+use Writing\WritingModule;
 
 final class App
 {
@@ -38,6 +39,9 @@ final class App
         $pages = new PagesModule($this->db, $this->view, $this->renderer, $this->deleter, $this->csrf);
         $this->registry->register($pages);
         $this->migrator->migrate($pages->id(), $pages->migrations());
+        $writing = new WritingModule($this->db, $this->view, $this->csrf);
+        $this->registry->register($writing);
+        $this->migrator->migrate($writing->id(), $writing->migrations());
 
         $this->registerCoreRoutes();
         foreach ($this->registry->all() as $module) {
