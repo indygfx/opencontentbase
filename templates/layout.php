@@ -37,6 +37,9 @@
     <nav>
         <?php if (($user ?? null) !== null): ?>
             <a href="/pages">Seiten</a>
+            <?php if ($user->isAdmin()): ?>
+                <a href="/users">Nutzer</a>
+            <?php endif; ?>
             <?php if ($user->hasAtLeast('editor')): ?>
                 <a href="/pages/new">Neue Seite</a>
             <?php endif; ?>

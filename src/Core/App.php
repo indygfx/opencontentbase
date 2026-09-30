@@ -106,6 +106,13 @@ final class App
         $this->router->post('/logout', fn ($params, $user) => $controller->logout());
         $this->router->get('/profile', fn ($params, $user) => $controller->showProfile($user));
         $this->router->post('/profile/password', fn ($params, $user) => $controller->changePassword($user));
+
+        $admin = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
+        $this->router->get('/users', fn ($params, $user) => $admin->index($user), ['admin']);
+        $this->router->post('/users', fn ($params, $user) => $admin->store($user), ['admin']);
+        $this->router->post('/users/{id}/role', fn ($params, $user) => $admin->updateRole($user, $params['id']), ['admin']);
+        $this->router->post('/users/{id}/password', fn ($params, $user) => $admin->resetPassword($user, $params['id']), ['admin']);
+        $this->router->post('/users/{id}/delete', fn ($params, $user) => $admin->destroy($user, $params['id']), ['admin']);
     }
 
     private function fail(int $code, string $message): void
