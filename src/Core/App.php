@@ -64,7 +64,7 @@ final class App
         try {
             $route = $this->router->dispatch($method, $path);
         } catch (RouteNotFoundException) {
-            $this->fail(404, 'Nicht gefunden');
+            $this->fail(404, 'Not found');
             return;
         }
 
@@ -74,13 +74,13 @@ final class App
                 Response::redirect('/login')->send();
                 return;
             }
-            $this->fail(403, 'Zugriff verweigert');
+            $this->fail(403, 'Access denied');
             return;
         }
 
         $handler = $route['handler'];
         if ($method === 'POST' && !$this->csrf->validate()) {
-            $this->fail(403, 'Ungültiges oder fehlendes CSRF-Token.');
+            $this->fail(403, 'Invalid or missing CSRF token.');
             return;
         }
         $response = $handler($route['params'], $user);

@@ -1,5 +1,5 @@
 <section class="card">
-    <h1>Nutzer verwalten</h1>
+    <h1>User management</h1>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
@@ -7,38 +7,38 @@
         <p class="success"><?= e($success) ?></p>
     <?php endif; ?>
 
-    <h2>Nutzer anlegen</h2>
+    <h2>Create user</h2>
     <form method="post" action="/users">
         <?= $csrf->field() ?>
-        <label for="username">Benutzername</label>
+        <label for="username">Username</label>
         <input id="username" name="username" required minlength="3" autofocus autocomplete="off">
-        <label for="password">Passwort</label>
+        <label for="password">Password</label>
         <input id="password" type="password" name="password" required minlength="8" autocomplete="new-password">
-        <label for="password_confirm">Passwort bestätigen</label>
+        <label for="password_confirm">Confirm password</label>
         <input id="password_confirm" type="password" name="password_confirm" required minlength="8" autocomplete="new-password">
-        <label for="role">Rolle</label>
+        <label for="role">Role</label>
         <select id="role" name="role">
             <option value="user">user</option>
             <option value="editor">editor</option>
             <option value="admin">admin</option>
         </select>
-        <button type="submit">Anlegen</button>
+        <button type="submit">Create</button>
     </form>
 
-    <h2>Bestehende Nutzer</h2>
+    <h2>Existing users</h2>
     <table>
         <tr>
-            <th>Benutzername</th>
-            <th>Rolle</th>
-            <th>Aktive Sitzungen</th>
-            <th>Aktionen</th>
+            <th>Username</th>
+            <th>Role</th>
+            <th>Active sessions</th>
+            <th>Actions</th>
         </tr>
         <?php foreach ($users as $u): ?>
             <tr>
                 <td><?= e($u['username']) ?></td>
                 <td>
                     <?php if ($u['username'] === 'admin' || $u['id'] === $currentUserId): ?>
-                        <?= e($u['role']) ?> <span class="muted">(fix)</span>
+                        <?= e($u['role']) ?> <span class="muted">(fixed)</span>
                     <?php else: ?>
                         <form class="inline" method="post" action="/users/<?= e($u['id']) ?>/role">
                             <?= $csrf->field() ?>
@@ -47,7 +47,7 @@
                                     <option value="<?= e($r) ?>" <?= $u['role'] === $r ? 'selected' : '' ?>><?= e($r) ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <button type="submit">Rolle setzen</button>
+                            <button type="submit">Set role</button>
                         </form>
                     <?php endif; ?>
                 </td>
@@ -55,18 +55,18 @@
                 <td>
                     <?php if ($u['id'] !== $currentUserId): ?>
                         <details>
-                            <summary>Passwort zurücksetzen</summary>
+                            <summary>Reset password</summary>
                             <form method="post" action="/users/<?= e($u['id']) ?>/password">
                                 <?= $csrf->field() ?>
-                                <label for="pw_<?= e($u['id']) ?>">Neues Passwort</label>
+                                <label for="pw_<?= e($u["id"]) ?>">New password</label>
                                 <input id="pw_<?= e($u['id']) ?>" type="password" name="password_new" required minlength="8" autocomplete="new-password">
-                                <button type="submit">Zurücksetzen</button>
+                                <button type="submit">Reset</button>
                             </form>
                         </details>
                         <?php if ($u['username'] !== 'admin'): ?>
                             <form class="inline" method="post" action="/users/<?= e($u['id']) ?>/delete">
                                 <?= $csrf->field() ?>
-                                <button type="submit">Löschen</button>
+                                <button type="submit">Delete</button>
                             </form>
                         <?php endif; ?>
                     <?php endif; ?>

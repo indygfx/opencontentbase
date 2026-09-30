@@ -1,4 +1,4 @@
-<h1><?= $page !== null ? 'Bearbeiten: ' . e($page['title'] ?? $page['slug']) : 'Neue Seite' ?></h1>
+<h1><?= $page !== null ? 'Edit: ' . e($page['title'] ?? $page['slug']) : 'New page' ?></h1>
 <?php if (!empty($error)): ?>
     <p class="error"><?= e($error) ?></p>
 <?php endif; ?>
@@ -6,7 +6,7 @@
         <?= $csrf->field() ?>
     <?php if ($page === null): ?>
         <label for="slug">Slug <small class="muted">(leer lassen = automatisch aus dem Titel)</small></label>
-        <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" placeholder="automatisch" pattern="[a-z0-9-]*" title="a-z, 0-9, Bindestrich; leer lassen für automatische Ableitung">
+        <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" placeholder="automatic" pattern="[a-z0-9-]*" title="a-z, 0-9, hyphen; leave empty to derive automatically">
     <?php endif; ?>
     <label for="title">Titel</label>
     <input id="title" name="title" value="<?= e($page['title'] ?? '') ?>" required>
@@ -38,7 +38,7 @@
         }).then(function (data) {
             preview.innerHTML = data.html;
         }).catch(function () {
-            preview.textContent = 'Vorschau nicht verfügbar.';
+            preview.textContent = 'Preview unavailable.';
         });
     }
 
