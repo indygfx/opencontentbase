@@ -52,11 +52,11 @@ final class ModuleRegistry
     }
 
     /**
-     * Batch-Dispatch: sammelt Slugs pro ContentType und löst sie mit je einem
+     * Batch dispatch: collects slugs per content type and resolves them with one
      * Modul-Aufruf (IN-Query) auf, statt pro Link ein resolveLink (N+1).
      *
      * @param array<string, list<string>> $references Map type => slugs
-     * @return array<string, array<string, array{url: string}|null>> Map type => (slug => Auflösung)
+     * @return array<string, array<string, array{url: string}|null>> Map type => (slug => resolution)
      */
     public function resolveLinks(Database $db, array $references): array
     {
@@ -73,7 +73,7 @@ final class ModuleRegistry
 
     /**
      * Triggert den onDelete-Hook aller Module, deren ContentTypes der Type bedient,
-     * damit Modul-Detailtabellen vor dem Core-Löschen aufgeräumt werden.
+     * so module detail tables are cleaned up before the core deletion.
      */
     public function notifyDelete(Database $db, string $type, string $uuid): void
     {

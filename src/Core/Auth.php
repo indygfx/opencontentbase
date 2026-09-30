@@ -103,17 +103,17 @@ final class Auth
     public function changePassword(User $user, string $old, string $new, string $confirm): ?\InvalidArgumentException
     {
         if ($new !== $confirm) {
-            return new \InvalidArgumentException('Die neuen Passwörter stimmen nicht überein.');
+            return new \InvalidArgumentException('The new passwords do not match.');
         }
         if (strlen($new) < 8) {
-            return new \InvalidArgumentException('Das neue Passwort muss mindestens 8 Zeichen lang sein.');
+            return new \InvalidArgumentException('The new password must be at least 8 characters long.');
         }
         $row = $this->db->one('SELECT password FROM users WHERE id = ?', [$user->id()]);
         if ($row === null || !password_verify($old, (string)$row['password'])) {
-            return new \InvalidArgumentException('Das aktuelle Passwort ist falsch.');
+            return new \InvalidArgumentException('The current password is wrong.');
         }
         if (password_verify($new, (string)$row['password'])) {
-            return new \InvalidArgumentException('Das neue Passwort darf dem aktuellen nicht entsprechen.');
+            return new \InvalidArgumentException('The new password must differ from the current one.');
         }
         $this->db->run(
             'UPDATE users SET password = ? WHERE id = ?',

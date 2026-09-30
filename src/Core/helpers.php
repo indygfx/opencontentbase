@@ -9,8 +9,8 @@ function e($value): string
 }
 
 /**
- * Normalisiert einen beliebigen Text zu einem URL-Slug: Kleinbuchstaben,
- * Umlaute transliteriert, Leerzeichen -> Bindestrich, alles außer a-z/0-9/- entfernt.
+ * Normalizes arbitrary text into a URL slug: lowercase letters,
+ * umlauts transliterated, spaces -> hyphens, everything except a-z/0-9/- removed.
  */
 function slugify(string $text): string
 {

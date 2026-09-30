@@ -39,7 +39,7 @@ final class PagesController
               ORDER BY r.title COLLATE NOCASE"
         );
         return $this->page($user, 'modules/Pages/templates/index.php', [
-            'title' => 'Seiten',
+            'title' => 'Pages',
             'pages' => $pages,
         ]);
     }
@@ -73,7 +73,7 @@ final class PagesController
             return $this->notFound($user);
         }
         return $this->page($user, 'modules/Pages/templates/edit.php', [
-            'title' => 'Bearbeiten: ' . (string)$page['title'],
+            'title' => 'Edit: ' . (string)$page['title'],
             'page' => $page,
         ]);
     }
@@ -93,7 +93,7 @@ final class PagesController
     public function create(User $user): Response
     {
         return $this->page($user, 'modules/Pages/templates/edit.php', [
-            'title' => 'Neue Seite',
+            'title' => 'New page',
             'page' => null,
         ]);
     }
@@ -113,7 +113,7 @@ final class PagesController
         $error = $this->validateSlug($slug);
         if ($error !== null) {
             return $this->page($user, 'modules/Pages/templates/edit.php', [
-                'title' => 'Neue Seite',
+                'title' => 'New page',
                 'page' => null,
                 'error' => $error,
             ], 422);
@@ -209,7 +209,7 @@ final class PagesController
     {
         $content = $this->view->render('templates/error.php', [
             'code' => 404,
-            'message' => 'Seite nicht gefunden.',
+            'message' => 'Page not found.',
         ]);
         return Response::html($this->view->render('templates/layout.php', [
             'title' => '404',

@@ -13,7 +13,7 @@ final class AuthController
     public function showLogin(): Response
     {
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'Anmelden',
+            'title' => 'Sign in',
             'user' => null,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/login.php', ['csrf' => $this->csrf]),
@@ -27,11 +27,11 @@ final class AuthController
         $user = $this->auth->login($username, $password);
         if ($user === null) {
             return Response::html($this->view->render('templates/layout.php', [
-                'title' => 'Anmelden',
+                'title' => 'Sign in',
                 'user' => null,
                 'csrf' => $this->csrf,
                 'content' => $this->view->render('templates/login.php', [
-                    'error' => 'Benutzername oder Passwort falsch.',
+                    'error' => 'Wrong username or password.',
                     'csrf' => $this->csrf,
                 ]),
             ]), 401);
@@ -51,7 +51,7 @@ final class AuthController
             return Response::redirect('/login');
         }
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'Profil',
+            'title' => 'Profile',
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/profile.php', [
@@ -76,10 +76,10 @@ final class AuthController
             'user' => $user,
             'csrf' => $this->csrf,
             'error' => $error === null ? null : $error->getMessage(),
-            'success' => $error === null ? 'Passwort geändert. Andere Sitzungen wurden abgemeldet.' : null,
+            'success' => $error === null ? 'Password changed. Other sessions have been signed out.' : null,
         ]);
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'Profil',
+            'title' => 'Profile',
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $content,

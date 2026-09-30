@@ -1,6 +1,6 @@
-<h1>Seiten</h1>
+<h1>Pages</h1>
 <?php if (empty($pages)): ?>
-    <p class="muted">Noch keine Seiten vorhanden.</p>
+    <p class="muted">No pages yet.</p>
 <?php else: ?>
     <table>
         <thead>

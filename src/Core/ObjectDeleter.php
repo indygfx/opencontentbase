@@ -13,9 +13,9 @@ final class ObjectDeleter
     }
 
     /**
-     * Löscht ein content_objects-Objekt transaktional: erst der onDelete-Hook
-     * des zuständigen Moduls (Aufräumen der Detail-Tabelle), dann der
-     * Core-Datensatz. Wirft das Modul, rollt die Transaktion zurück und das
+     * Deletes a content_objects entry transactionally: first the onDelete hook
+     * of the owning module (cleaning up the detail table), then the
+     * core record. If the module throws, the transaction is rolled back and the
      * Objekt bleibt erhalten.
      */
     public function delete(string $type, string $uuid): void
@@ -27,7 +27,7 @@ final class ObjectDeleter
                 [$uuid, $type]
             )->rowCount();
             if ($deleted === 0) {
-                throw new \RuntimeException("Objekt {$uuid} (Typ {$type}) nicht gefunden");
+                throw new \RuntimeException("Object {$uuid} (type {$type}) not found");
             }
         });
     }

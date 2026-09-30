@@ -36,20 +36,20 @@
     <a class="brand" href="/">ContentBase</a>
     <nav>
         <?php if (($user ?? null) !== null): ?>
-            <a href="/pages">Seiten</a>
+            <a href="/pages">Pages</a>
             <?php if ($user->isAdmin()): ?>
-                <a href="/users">Nutzer</a>
+                <a href="/users">Users</a>
             <?php endif; ?>
             <?php if ($user->hasAtLeast('editor')): ?>
-                <a href="/pages/new">Neue Seite</a>
+                <a href="/pages/new">New page</a>
             <?php endif; ?>
             <a href="/profile"><?= e($user->username()) ?></a>
             <form class="inline" method="post" action="/logout">
                 <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
-                <button type="submit">Abmelden</button>
+                <button type="submit">Sign out</button>
             </form>
         <?php else: ?>
-            <a href="/login">Anmelden</a>
+            <a href="/login">Sign in</a>
         <?php endif; ?>
     </nav>
 </header>

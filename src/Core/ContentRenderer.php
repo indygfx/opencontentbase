@@ -41,7 +41,7 @@ final class ContentRenderer
 
     /**
      * Zwei-Phasen-Pipeline: Phase 1 sammelt alle [[type:slug]]-Referenzen im
-     * HTML, Phase 2 löst sie gebündelt über die Registry auf (Batch statt
+     * HTML; phase 2 resolves them in one batch via the registry (batch instead of
      * N+1), erst danach wird ersetzt.
      */
     private function rewriteInternalLinks(string $html): string

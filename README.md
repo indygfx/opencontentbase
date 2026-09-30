@@ -1,90 +1,92 @@
 # ContentBase
 
-ContentBase ist eine modulare Content-Plattform, die bewusst auf Leichtigkeit setzt: PHP 8.2 und SQLite statt eines schweren Frameworks – Composer dient nur als Autoloader. Im Kern arbeitet das System mit generischen Content-Objekten (UUID, Typ, Slug) statt fixer Tabellen; eigentliche Funktionalität bringen Module mit, die sich an ein einheitliches Interface halten und ihre eigenen Tabellen sowie versionierte Migrationen mitbringen. Der Core kennt dabei keine Interna der Module – er verwaltet nur, was diese über definierte Wege melden.
+ContentBase is a modular content platform that deliberately favors lightness: PHP 8.2 and SQLite instead of a heavy framework – Composer serves only as an autoloader. At its core the system works with generic content objects (UUID, type, slug) instead of fixed tables; actual functionality comes from modules that follow a uniform interface and bring their own tables and versioned migrations. The core knows nothing about module internals – it manages only what modules report through defined channels.
 
-Inhalte werden in Markdown (CommonMark mit GFM) geschrieben, wobei Sicherheit Vorrang hat: Roh-HTML wird escaped, unsichere Links neutralisiert. Interne Verweise funktionieren über die Syntax `[[type:slug]]` und werden über die Modul-Registry aufgelöst; unauflösbare Links erscheinen als Broken-Link-Marker. Eine serverseitige Live-Preview sorgt dafür, dass Redaktion und Ausgabe immer dasselbe Rendering verwenden.
+Content is written in Markdown (CommonMark with GFM), with security taking priority: raw HTML is escaped, unsafe links are neutralized. Internal references use the `[[type:slug]]` syntax and are resolved through the module registry; unresolvable links render as broken-link markers. A server-side live preview ensures that editing and output always use the same rendering.
 
-Die Qualität sichert eine CI-Pipeline über GitHub Actions, die bei jedem Push und Pull-Request Syntax-Check, phpstan und phpunit durchläuft – lokal mit denselben Befehlen reproduzierbar. Was die Sicherheit angeht, ist bereits vieles umgesetzt: bcrypt-Passwörter, 64-Byte-Session-Tokens (nur als SHA-256-Hash in der Datenbank), Session-Rotation beim Login, CSRF-Schutz für alle POST-Routen sowie ein Rollen-Modell (admin/editor/user) mit Route-Guards und 403-Handling. Gleichzeitig ist die Roadmap ehrlich: Rate-Limiting beim Login und ein CLI-Tool für die Benutzerverwaltung fehlen noch und sind für Phase 5 geplant.
+Quality is safeguarded by a CI pipeline on GitHub Actions that runs a syntax check, phpstan and phpunit on every push and pull request – reproducible locally with the same commands. As for security, much is already in place: bcrypt passwords, 64-byte session tokens (stored only as SHA-256 hashes in the database), session rotation on login, CSRF protection for all POST routes, and a role model (admin/editor/user) with route guards and 403 handling. At the same time the roadmap is honest: rate limiting on login and a CLI tool for user management are still missing and planned for phase 5.
 
-Der Start ist minimal gehalten – `composer install` und ein eingebauter PHP-Server genügen. Beim Erststart wird automatisch der Benutzer admin/admin angelegt (sofort ändern!), und die composer.lock wird bewusst nicht eingecheckt, sodass jedes System seine eigene, lokal fixierte Versionierung hat. Von der Roadmap sind Core, Content-Pipeline und das Pages-Referenzmodul bereits fertig; als Nächstes steht ein Schreib-App-Modul (Projekte, Charaktere, Beziehungen, Kapitel) sowie Editor-Feinheiten wie Diffs, Graph-UI und Revisionen pro Objekt an.
+Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline and the pages reference module are done; next up are a writing app module (projects, characters, relationships, chapters) and editor refinements such as diffs, a graph UI and per-object revisions.
 
-## Architektur
+## Architecture
 
-- **Generische Content-Objekte**: `content_objects` (UUID, `type`, `slug`) statt fixer `pages`-Tabelle im Core; Module bringen eigene Tabellen mit.
-- **ModuleInterface-Vertrag**: `id()`, `routes()`, `migrations()`, `contentTypes()`, `resolveLink()` — der Core kennt keine Modul-Details.
-- **Versionierte Migrationen pro Modul**: `schema_versions (module, version)`, ausgeführt durch `Core\Migrator` in Einzeltransaktionen.
-- **Verallgemeinerte interne Links**: `[[type:slug]]` im Content, Auflösung über die Modul-Registry (`ModuleRegistry::resolveLink`); unauflösbare Links werden als Broken-Link-Marker gerendert.
-- **CommonMark + GFM** via `league/commonmark` — Roh-HTML wird escaped, unsichere Links neutralisiert (`allow_unsafe_links: false`, `DisallowedRawHtml`).
-- **Serverseitige Live-Preview**: ein Parser auf dem Server, kein JS-Parser-Duell.
+- **Generic content objects**: `content_objects` (UUID, `type`, `slug`) instead of a fixed `pages` table in the core; modules bring their own tables.
+- **ModuleInterface contract**: `id()`, `routes()`, `migrations()`, `contentTypes()`, `resolveLink()` – the core knows no module details.
+- **Versioned migrations per module**: `schema_versions (module, version)`, executed by `Core\Migrator` in individual transactions.
+- **Generalized internal links**: `[[type:slug]]` in content, resolved via the module registry (`ModuleRegistry::resolveLink`); unresolvable links render as broken-link markers.
+- **CommonMark + GFM** via `league/commonmark` – raw HTML is escaped, unsafe links neutralized (`allow_unsafe_links: false`, `DisallowedRawHtml`).
+- **Server-side live preview**: one parser on the server, no JS parser mismatch.
 
 ## Stack
 
-| Baustein | Wahl |
+| Component | Choice |
 | --- | --- |
-| Sprache | PHP >= 8.2, `strict_types`, PSR-4 via Composer |
-| Datenbank | SQLite (WAL, `foreign_keys ON`, `busy_timeout 5000`) |
-| Abhängigkeiten | `league/commonmark ^2.4` |
+| Language | PHP >= 8.2, `strict_types`, PSR-4 via Composer |
+| Database | SQLite (WAL, `foreign_keys ON`, `busy_timeout 5000`) |
+| Dependencies | `league/commonmark ^2.4` |
 | Dev | `phpunit ^10`, `phpstan ^1.10` |
-| CI | GitHub Actions: Syntax-Check, phpstan, phpunit bei jedem Push/PR |
-| Frontend | Server-gerenderte PHP-Templates, minimales Vanilla-JS (Debounce, fetch-Preview, Cmd+S) |
+| CI | GitHub Actions: syntax check, phpstan, phpunit on every push/PR |
+| Frontend | Server-rendered PHP templates, minimal vanilla JS (debounce, fetch preview, Cmd+S) |
 
-## Automatische Prüfungen (CI)
+## Automated checks (CI)
 
-Bei jedem Push und jedem Pull-Request läuft automatisch eine Prüfung über GitHub Actions (`.github/workflows/ci.yml`):
+On every push and every pull request, a check runs automatically via GitHub Actions (`.github/workflows/ci.yml`):
 
-1. **Syntax-Check**: `php -l` über alle PHP-Dateien in `src/`, `modules/`, `public/`
-2. **Statische Analyse**: `phpstan` über `src/` und `modules/`
-3. **Tests**: `phpunit` über `tests/`
+1. **Syntax check**: `php -l` over all PHP files in `src/`, `modules/`, `public/`
+2. **Static analysis**: `phpstan` over `src/` and `modules/`
+3. **Tests**: `phpunit` over `tests/`
 
-Lokal die gleichen Prüfungen ausführen:
+Run the same checks locally:
 
 ```bash
 vendor/bin/phpstan analyse src modules --no-progress
 vendor/bin/phpunit --no-progress
 ```
 
-Der Prüflauf dauert ~1 Minute; grüner Haken am Commit/PR = alles gut, rotes X = Fehlermeldung im Log.
+A run takes about a minute; green check mark on the commit/PR = all good, red X = error message in the log.
 
-## Start
+## Getting started
 
 ```bash
 composer install
 php -S localhost:8080 -t public
 ```
 
-> **Hinweis `composer.lock`:** Die Lock-Datei ist bewusst nicht eingecheckt (siehe `.gitignore`). Sie entsteht lokal bei `composer install` und fixiert dort die exakten Paketversionen. Bei „läuft bei mir nicht"-Situationen oder nach `composer update` daran denken, dass jedes System seine eigene Lock-Datei hat — Versionen ggf. dokumentieren.
+> **Note on `composer.lock`:** The lock file is intentionally not checked in (see `.gitignore`). It is created locally by `composer install` and pins the exact package versions there. When debugging "works on my machine" situations or after `composer update`, remember that every system has its own lock file – document versions if needed.
 
-Erststart legt automatisch den Benutzer **admin / admin** an (bitte sofort ändern).
+On first start the user **admin / admin** is created automatically (change it immediately).
 
-## Struktur
+## Structure
 
 ```
 src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry
-modules/Pages/     Referenzmodul (Routen, Migration, Controller, Templates)
+modules/Pages/     Reference module (routes, migration, controller, templates)
 templates/         Layout, Login, Error
-public/index.php   Front Controller
+public/index.php   Front controller
 ```
 
-## Sicherheit (aktuell)
+## Security (current state)
 
-- Passwörter: `password_hash()` (bcrypt)
-- Sessions: 64-Byte-Random-Tokens, nur SHA-256-Hash in der DB, `httpOnly` + `SameSite=Lax`, 30 Tage, Expiry-Check per Query
-- Content: `html_input=escape`, `allow_unsafe_links=false`, `DisallowedRawHtml`
-- Rollen-Guard pro Route (`admin > editor > user`), Unauth -> Redirect auf `/login`, 403-Template
-- CSRF-Schutz für alle POST-Routen (Session-gebundenes Token, Cookie-Fallback für Gäste, `hash_equals`-Vergleich)
-- Passwort-Ãnderung im Profil (`/profile`) mit Session-Revocation aller anderen Sitzungen
-- Login mit Session-Rotation (alte Sitzung wird bei Re-Login verworfen)
+- Passwords: `password_hash()` (bcrypt)
+- Sessions: 64-byte random tokens, only SHA-256 hash in the DB, `httpOnly` + `SameSite=Lax`, 30 days, expiry check per query
+- Password change in the profile (`/profile`) with session revocation of all other sessions
+- Login with session rotation (old session is discarded on re-login)
+- CSRF protection for all POST routes (session-bound token, cookie fallback for guests, `hash_equals` comparison)
+- Role guard per route (`admin > editor > user`), unauthenticated -> redirect to `/login`, 403 template
+- User management (admin only): create users, change roles, reset passwords, delete users
 
-## Bekannte Lücken (Roadmap Phase 5)
+## Known gaps (roadmap phase 5)
 
-- Kein Rate-Limiting beim Login
-- Admin-Boot nur für Erststart, kein CLI `user:create`
-- Router ohne HTTP-Method-Spoofing, ohne optionale Segmente
+- No rate limiting on login
+- Admin boot only for first start, no CLI `user:create`
+- Router without HTTP method spoofing, without optional segments
 
 ## Roadmap
 
-1. Core + Auth + Modul-Registry (fertig)
-2. Content-Pipeline mit `[[type:slug]]` (fertig im Core)
-3. pages-Referenzmodul (fertig)
-4. Schreib-App-Modul: projects -> characters (n), relationships (n:m mit Attributen), chapters -> Text via content_revisions, backgrounds (4 Kategorien) (offen)
-5. Editor-Feinheiten, Diffs, Graph-UI, Board, Revisionen pro Content-Objekt (offen)
+1. Core + auth + module registry (done)
+2. Content pipeline with `[[type:slug]]` (done in the core)
+3. pages reference module (done)
+4. Writing app module: projects -> characters (n), relationships (n:m with attributes), chapters -> text via content_revisions, backgrounds (4 categories) (open)
+5. Editor refinements, diffs, graph UI, board, revisions per content object (open)
+
+Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).
