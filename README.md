@@ -1,6 +1,12 @@
 # ContentBase
 
-Modulare Content-Plattform: PHP 8.2 + SQLite, Composer nur als Autoloader, kein Framework.
+ContentBase ist eine modulare Content-Plattform, die bewusst auf Leichtigkeit setzt: PHP 8.2 und SQLite statt eines schweren Frameworks – Composer dient nur als Autoloader. Im Kern arbeitet das System mit generischen Content-Objekten (UUID, Typ, Slug) statt fixer Tabellen; eigentliche Funktionalität bringen Module mit, die sich an ein einheitliches Interface halten und ihre eigenen Tabellen sowie versionierte Migrationen mitbringen. Der Core kennt dabei keine Interna der Module – er verwaltet nur, was diese über definierte Wege melden.
+
+Inhalte werden in Markdown (CommonMark mit GFM) geschrieben, wobei Sicherheit Vorrang hat: Roh-HTML wird escaped, unsichere Links neutralisiert. Interne Verweise funktionieren über die Syntax `[[type:slug]]` und werden über die Modul-Registry aufgelöst; unauflösbare Links erscheinen als Broken-Link-Marker. Eine serverseitige Live-Preview sorgt dafür, dass Redaktion und Ausgabe immer dasselbe Rendering verwenden.
+
+Die Qualität sichert eine CI-Pipeline über GitHub Actions, die bei jedem Push und Pull-Request Syntax-Check, phpstan und phpunit durchläuft – lokal mit denselben Befehlen reproduzierbar. Was die Sicherheit angeht, ist bereits vieles umgesetzt: bcrypt-Passwörter, 64-Byte-Session-Tokens (nur als SHA-256-Hash in der Datenbank), Session-Rotation beim Login, CSRF-Schutz für alle POST-Routen sowie ein Rollen-Modell (admin/editor/user) mit Route-Guards und 403-Handling. Gleichzeitig ist die Roadmap ehrlich: Rate-Limiting beim Login und ein CLI-Tool für die Benutzerverwaltung fehlen noch und sind für Phase 5 geplant.
+
+Der Start ist minimal gehalten – `composer install` und ein eingebauter PHP-Server genügen. Beim Erststart wird automatisch der Benutzer admin/admin angelegt (sofort ändern!), und die composer.lock wird bewusst nicht eingecheckt, sodass jedes System seine eigene, lokal fixierte Versionierung hat. Von der Roadmap sind Core, Content-Pipeline und das Pages-Referenzmodul bereits fertig; als Nächstes steht ein Schreib-App-Modul (Projekte, Charaktere, Beziehungen, Kapitel) sowie Editor-Feinheiten wie Diffs, Graph-UI und Revisionen pro Objekt an.
 
 ## Architektur
 
