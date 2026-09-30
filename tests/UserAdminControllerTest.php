@@ -21,7 +21,7 @@ final class UserAdminControllerTest extends TestCase
 
     protected function setUp(): void
     {
-        $base = '/workspace/github__indygfx__opencontentbase';
+        $base = dirname(__DIR__);
         $path = sys_get_temp_dir() . '/cb_test_' . uniqid() . '.sqlite';
         $this->db = new Database($path);
         (new Migrator($this->db))->migrate('core', CoreMigrations::migrations());

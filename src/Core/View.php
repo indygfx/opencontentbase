@@ -15,7 +15,7 @@ final class View
     {
         $file = $this->basePath . '/' . ltrim($template, '/');
         if (!is_file($file)) {
-            throw new \RuntimeException("Template nicht gefunden: {$template}");
+            throw new \RuntimeException("Template not found: {$template}");
         }
 
         extract($data, EXTR_SKIP);
