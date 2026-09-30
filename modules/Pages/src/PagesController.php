@@ -195,6 +195,7 @@ final class PagesController
     private function page(User $user, string $innerTemplate, array $data, int $status = 200): Response
     {
         $data['user'] = $user;
+        $data['csrf'] = $this->csrf;
         $content = $this->view->render($innerTemplate, $data);
         return Response::html($this->view->render('templates/layout.php', [
             'title' => (string)($data['title'] ?? 'ContentBase'),
