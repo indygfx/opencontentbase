@@ -56,6 +56,7 @@ final class AuthController
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/profile.php', [
                 'user' => $user,
+                'csrf' => $this->csrf,
                 'error' => null,
                 'success' => null,
             ]),
@@ -73,6 +74,7 @@ final class AuthController
         $error = $this->auth->changePassword($user, $old, $new, $confirm);
         $content = $this->view->render('templates/profile.php', [
             'user' => $user,
+            'csrf' => $this->csrf,
             'error' => $error === null ? null : $error->getMessage(),
             'success' => $error === null ? 'Passwort geändert. Andere Sitzungen wurden abgemeldet.' : null,
         ]);
