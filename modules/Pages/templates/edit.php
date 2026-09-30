@@ -25,14 +25,14 @@
     'use strict';
     var body = document.getElementById('body');
     var preview = document.getElementById('preview');
-    var url = body.getAttribute('data-preview');
+    var url = body.getAttribute('data-preview');    var csrfField = document.querySelector('input[name="_csrf"]');    var csrfToken = csrfField !== null ? csrfField.value : '';
     var timer = null;
 
     function fetchPreview() {
         fetch(url, {
             method: 'POST',
             headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({body: body.value}).toString()
+            body: new URLSearchParams({body: body.value, _csrf: csrfToken}).toString()
         }).then(function (r) {
             return r.json();
         }).then(function (data) {
