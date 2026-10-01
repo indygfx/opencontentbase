@@ -37,6 +37,7 @@
     <nav>
         <?php if (($user ?? null) !== null): ?>
             <a href="/pages">Pages</a>
+            <a href="/writing">Writing</a>
             <?php if ($user->isAdmin()): ?>
                 <a href="/users">Users</a>
             <?php endif; ?>

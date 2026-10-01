@@ -1,0 +1,56 @@
+<section class="card">
+    <p class="muted"><a href="/writing">&larr; All projects</a></p>
+    <h1><?= e($project['title']) ?></h1>
+    <?php if (!empty($error)): ?>
+        <p class="error"><?= e($error) ?></p>
+    <?php endif; ?>
+
+    <h2>Texts</h2>
+    <p class="muted">Chapters, characters, relationships and backgrounds will be bundled here (next build step).</p>
+
+    <?php if ($isOwner): ?>
+        <h2>Rename project</h2>
+        <form method="post" action="/writing/<?= e($project['id']) ?>">
+            <?= $csrf->field() ?>
+            <label for="title">Title</label>
+            <input id="title" name="title" required minlength="2" maxlength="200" value="<?= e($project['title']) ?>">
+            <button type="submit">Save</button>
+        </form>
+
+        <h2>Share project</h2>
+        <form method="post" action="/writing/<?= e($project['id']) ?>/share">
+            <?= $csrf->field() ?>
+            <label for="username">Username</label>
+            <input id="username" name="username" required placeholder="who to invite">
+            <button type="submit">Share</button>
+        </form>
+
+        <?php if ($members !== []): ?>
+            <h3>Shared with</h3>
+            <table>
+                <tr><th>User</th><th>Role</th><th></th></tr>
+                <?php foreach ($members as $m): ?>
+                    <tr>
+                        <td><?= e($m['username']) ?></td>
+                        <td><?= e($m['role']) ?></td>
+                        <td>
+                            <form class="inline" method="post" action="/writing/<?= e($project['id']) ?>/unshare">
+                                <?= $csrf->field() ?>
+                                <input type="hidden" name="user_id" value="<?= e($m['user_id']) ?>">
+                                <button type="submit">Revoke</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        <?php endif; ?>
+
+        <h2>Danger zone</h2>
+        <form method="post" action="/writing/<?= e($project['id']) ?>/delete">
+            <?= $csrf->field() ?>
+            <button type="submit">Delete project</button>
+        </form>
+    <?php else: ?>
+        <p class="muted">Shared with you by <?= e($project['owner_name'] ?? '') ?>. You can read and edit texts, but not manage the project.</p>
+    <?php endif; ?>
+</section>

@@ -17,7 +17,8 @@
         ],
         "psr-4": {
             "Core\\": "src/Core/",
-            "Pages\\": "modules/Pages/src/"
+            "Pages\\": "modules/Pages/src/",
+            "Writing\\": "modules/Writing/src/"
         }
     },
     "config": {
