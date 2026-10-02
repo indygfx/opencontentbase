@@ -56,9 +56,9 @@ final class WritingModule implements ModuleInterface
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters', 'handler' => fn ($params, $user) => $ca->store($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}/edit', 'handler' => fn ($params, $user) => $ca->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/preview', 'handler' => fn ($params, $user) => $ca->preview($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}/delete', 'handler' => fn ($params, $user) => $ca->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
-            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/preview', 'handler' => fn ($params, $user) => $ca->preview($user), 'roles' => ['user']],
         ];
     }
 
