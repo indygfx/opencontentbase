@@ -63,6 +63,26 @@ final class CoreMigrations
             function (Database $db): void {
                 $db->run('ALTER TABLE sessions ADD COLUMN csrf_token TEXT');
             },
+            // v4: drop global (type, slug) uniqueness; writing module detail tables
+            // enforce per-project uniqueness (UNIQUE (project_id, slug)) - PLANNING.md section 2
+            function (Database $db): void {
+                $db->pdo()->exec('ALTER TABLE content_objects RENAME TO content_objects_old');
+                $db->run(
+                    'CREATE TABLE content_objects (
+                        id TEXT PRIMARY KEY,
+                        type TEXT NOT NULL,
+                        slug TEXT NOT NULL,
+                        owner_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )'
+                );
+                $db->run(
+                    'INSERT INTO content_objects (id, type, slug, owner_id, created_at)
+                     SELECT id, type, slug, owner_id, created_at FROM content_objects_old'
+                );
+                $db->run('CREATE INDEX idx_objects_type_slug ON content_objects(type, slug)');
+                $db->run('DROP TABLE content_objects_old');
+            },
         ];
     }
 }
