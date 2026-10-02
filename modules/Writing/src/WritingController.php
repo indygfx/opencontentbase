@@ -85,7 +85,13 @@ final class WritingController
         if ($title === '' || mb_strlen($title) < 2) {
             return $this->projectError($user, $project, 'The title must be at least 2 characters long.', 422);
         }
-        $this->db->run('UPDATE projects SET title = ? WHERE id = ?', [$title, $id]);
+        $blurb = trim((string)($_POST['blurb'] ?? ''));
+        $synopsis = trim((string)($_POST['synopsis'] ?? ''));
+        $synopsisLong = trim((string)($_POST['synopsis_long'] ?? ''));
+        $this->db->run(
+            'UPDATE projects SET title = ?, blurb = ?, synopsis = ?, synopsis_long = ? WHERE id = ?',
+            [$title, $blurb, $synopsis, $synopsisLong, $id]
+        );
         return Response::redirect('/writing/' . $id);
     }
 
@@ -183,7 +189,7 @@ final class WritingController
     private function chapters(string $projectId): array
     {
         return $this->db->all(
-            "SELECT o.slug, COALESCE(r.title, o.slug) AS title
+            "SELECT o.slug, COALESCE(r.title, o.slug) AS title, COALESCE(r.summary, '') AS summary
              FROM content_objects o
              JOIN chapters c ON c.id = o.id
              LEFT JOIN content_revisions r ON r.object_id = o.id
@@ -212,7 +218,7 @@ final class WritingController
     private function findProject(string $id): ?array
     {
         return $this->db->one(
-            'SELECT id, owner_id, title, created_at FROM projects WHERE id = ?',
+            'SELECT id, owner_id, title, blurb, synopsis, synopsis_long, created_at FROM projects WHERE id = ?',
             [$id]
         );
     }

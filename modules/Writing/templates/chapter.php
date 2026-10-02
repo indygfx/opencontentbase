@@ -2,6 +2,9 @@
     <p class="muted"><a href="/writing/<?= e($projectId) ?>">&larr; <?= e($projectTitle) ?></a></p>
     <article>
         <h1><?= e($chapter['title'] ?? $chapter['slug']) ?></h1>
+        <?php if (!empty($chapter['summary'])): ?>
+            <p class="muted"><strong>Idee:</strong> <?= e($chapter['summary']) ?></p>
+        <?php endif; ?>
         <div class="content"><?= $rendered /* already escaped/sanitized by ContentRenderer */ ?></div>
     </article>
     <?php if ($canEdit): ?>

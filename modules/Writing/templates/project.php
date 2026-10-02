@@ -5,13 +5,24 @@
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
 
+    <h2>Schneeflocke</h2>
+    <dl>
+        <dt>Kurzbeschreibung <span class="muted">(Schritt 2 – ein Absatz: Setup, 3 Wendepunkte, Ende)</span></dt>
+        <dd><?= $project['blurb'] !== '' ? nl2br(e($project['blurb'])) : '<span class="muted">Noch nicht erfasst.</span>' ?></dd>
+        <dt>Synopsis <span class="muted">(Schritte 4/6 – Kapitel&uuml;bersicht)</span></dt>
+        <dd><?= $project['synopsis'] !== '' ? nl2br(e($project['synopsis'])) : '<span class="muted">Noch nicht erfasst.</span>' ?></dd>
+        <dt>Erweiterte Synopsis</dt>
+        <dd><?= $project['synopsis_long'] !== '' ? nl2br(e($project['synopsis_long'])) : '<span class="muted">Noch nicht erfasst.</span>' ?></dd>
+    </dl>
+
     <h2>Chapters</h2>
     <?php if ($chapters !== []): ?>
         <table>
-            <tr><th>Title</th><th>Slug</th><th></th></tr>
+            <tr><th>Title</th><th>Idee</th><th>Slug</th><th></th></tr>
             <?php foreach ($chapters as $ch): ?>
                 <tr>
                     <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
+                    <td class="muted"><?= e(mb_strimwidth((string)($ch['summary'] ?? ''), 0, 60, '…')) ?></td>
                     <td class="muted"><?= e($ch['slug']) ?></td>
                     <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>">Open</a></td>
                 </tr>
@@ -110,11 +121,17 @@
     <?php endif; ?>
 
     <?php if ($isOwner): ?>
-        <h2>Rename project</h2>
+        <h2>Edit project (Schneeflocke)</h2>
         <form method="post" action="/writing/<?= e($project['id']) ?>">
             <?= $csrf->field() ?>
             <label for="title">Title</label>
             <input id="title" name="title" required minlength="2" maxlength="200" value="<?= e($project['title']) ?>">
+            <label for="blurb">Kurzbeschreibung <small class="muted">(Schneeflocke Schritt 2)</small></label>
+            <textarea id="blurb" name="blurb" rows="4" placeholder="ein Absatz: Setup, 3 Wendepunkte, Ende"><?= e($project['blurb']) ?></textarea>
+            <label for="synopsis">Synopsis <small class="muted">(Schritte 4/6)</small></label>
+            <textarea id="synopsis" name="synopsis" rows="6" placeholder="Kapitel&uuml;bersicht"><?= e($project['synopsis']) ?></textarea>
+            <label for="synopsis_long">Erweiterte Synopsis</label>
+            <textarea id="synopsis_long" name="synopsis_long" rows="6"><?= e($project['synopsis_long']) ?></textarea>
             <button type="submit">Save</button>
         </form>
 

@@ -43,18 +43,19 @@ final class ChapterController
         $title = trim((string)($_POST['title'] ?? ''));
         $slugInput = trim((string)($_POST['slug'] ?? ''));
         $slug = slugify($slugInput ?: $title);
+        $summary = trim((string)($_POST['summary'] ?? ''));
         $body = (string)($_POST['body'] ?? '');
         $error = $this->validate($projectId, $title, $slug);
         if ($error === null && $slugInput !== '' && $this->slugTaken($projectId, $slug)) {
             $error = 'A chapter with that slug already exists in this project.';
         }
         if ($error !== null) {
-            return $this->editError($user, $projectId, null, $title, $slugInput, $body, $error);
+            return $this->editError($user, $projectId, null, $title, $slugInput, $summary, $body, $error);
         }
         if ($slugInput === '') {
             $slug = $this->uniqueSlug($projectId, $slug);
         }
-        $this->insertChapter($user, $projectId, $slug, $title, $body);
+        $this->insertChapter($user, $projectId, $slug, $title, $summary, $body);
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug));
     }
 
@@ -98,6 +99,7 @@ final class ChapterController
         }
         $title = trim((string)($_POST['title'] ?? ''));
         $newSlug = slugify(trim((string)($_POST['slug'] ?? '')) ?: $title);
+        $summary = trim((string)($_POST['summary'] ?? ''));
         $body = (string)($_POST['body'] ?? '');
         if ($newSlug !== $slug) {
             $error = $this->validate($projectId, $title, $newSlug);
@@ -105,9 +107,9 @@ final class ChapterController
             $error = $title === '' ? 'The title must not be empty.' : null;
         }
         if ($error !== null) {
-            return $this->editError($user, $projectId, $slug, $title, $newSlug, $body, $error);
+            return $this->editError($user, $projectId, $slug, $title, $newSlug, $summary, $body, $error);
         }
-        $this->db->transaction(function (Database $db) use ($chapter, $newSlug, $title, $body, $user): void {
+        $this->db->transaction(function (Database $db) use ($chapter, $newSlug, $title, $summary, $body, $user): void {
             if ($newSlug !== (string)$chapter['slug']) {
                 $db->run(
                     'UPDATE content_objects SET slug = ? WHERE id = ?',
@@ -115,8 +117,8 @@ final class ChapterController
                 );
             }
             $db->run(
-                'INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES (?, ?, ?, ?, ?)',
-                [\Core\Auth::uuid4(), (string)$chapter['object_id'], $title, $body, $user->id()]
+                'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id) VALUES (?, ?, ?, ?, ?, ?)',
+                [\Core\Auth::uuid4(), (string)$chapter['object_id'], $title, $summary, $body, $user->id()]
             );
         });
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($newSlug));
@@ -176,9 +178,9 @@ final class ChapterController
         ) !== null;
     }
 
-    private function insertChapter(User $user, string $projectId, string $slug, string $title, string $body): void
+    private function insertChapter(User $user, string $projectId, string $slug, string $title, string $summary, string $body): void
     {
-        $this->db->transaction(function (Database $db) use ($user, $projectId, $slug, $title, $body): void {
+        $this->db->transaction(function (Database $db) use ($user, $projectId, $slug, $title, $summary, $body): void {
             $objectId = \Core\Auth::uuid4();
             $db->run(
                 "INSERT INTO content_objects (id, type, slug, owner_id) VALUES (?, 'chapter', ?, ?)",
@@ -189,8 +191,8 @@ final class ChapterController
                 [$objectId, $projectId, $slug]
             );
             $db->run(
-                'INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES (?, ?, ?, ?, ?)',
-                [\Core\Auth::uuid4(), $objectId, $title, $body, $user->id()]
+                'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id) VALUES (?, ?, ?, ?, ?, ?)',
+                [\Core\Auth::uuid4(), $objectId, $title, $summary, $body, $user->id()]
             );
         });
     }
@@ -199,7 +201,7 @@ final class ChapterController
     private function findChapter(string $projectId, string $slug): ?array
     {
         return $this->db->one(
-            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, r.title, r.body
+            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, r.title, r.summary, r.body
              FROM content_objects o
              JOIN chapters c ON c.id = o.id
              LEFT JOIN content_revisions r ON r.object_id = o.id
@@ -229,12 +231,14 @@ final class ChapterController
         ?string $slug,
         string $title,
         string $slugInput,
+        string $summary,
         string $body,
         string $error
     ): Response {
         $chapter = [
             'slug' => $slugInput,
             'title' => $title,
+            'summary' => $summary,
             'body' => $body,
         ];
         return $this->page($user, 'modules/Writing/templates/chapter_edit.php', [
