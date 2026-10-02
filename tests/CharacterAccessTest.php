@@ -174,6 +174,27 @@ final class CharacterAccessTest extends TestCase
         $this->assertSame(404, $response->status());
     }
 
+    public function testDuplicateTitleGetsAutoSlugSuffix(): void
+    {
+        $_POST = ['slug' => '', 'title' => 'Introduction', 'body' => 'a'];
+        $this->controller->store($this->owner, 'p1');
+        $_POST = ['slug' => '', 'title' => 'Introduction', 'body' => 'b'];
+        $this->controller->store($this->owner, 'p1');
+        $slugs = $this->db->all(
+            "SELECT o.slug FROM content_objects o JOIN characters k ON k.id = o.id
+             WHERE o.type = 'character' AND k.project_id = 'p1' ORDER BY o.slug"
+        );
+        $this->assertSame(['introduction', 'introduction-2'], array_column($slugs, 'slug'));
+    }
+
+    public function testValidationErrorKeepsBody(): void
+    {
+        $_POST = ['slug' => '', 'title' => '', 'body' => 'My important text'];
+        $response = $this->controller->store($this->owner, 'p1');
+        $this->assertSame(422, $response->status());
+        $this->assertStringContainsString('My important text', $response->body());
+    }
+
     protected function tearDown(): void
     {
         unset($this->db, $this->access, $this->controller, $this->owner, $this->member, $this->stranger);
