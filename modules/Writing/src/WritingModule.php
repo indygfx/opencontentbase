@@ -135,7 +135,7 @@ final class WritingModule implements ModuleInterface
                         project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
                         from_character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
                         to_character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                        kind TEXT NOT NULL DEFAULT 'related',
+                        kind TEXT NOT NULL DEFAULT \'related\',
                         description TEXT NOT NULL DEFAULT '',
                         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         CHECK (from_character_id <> to_character_id),
