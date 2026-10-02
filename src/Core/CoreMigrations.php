@@ -66,11 +66,8 @@ final class CoreMigrations
             // v4: drop global (type, slug) uniqueness; writing module detail tables
             // enforce per-project uniqueness (UNIQUE (project_id, slug)) - PLANNING.md section 2
             function (Database $db): void {
-                $db->pdo()->exec('PRAGMA legacy_alter_table = ON');
-                $db->pdo()->exec('ALTER TABLE content_objects RENAME TO content_objects_old');
-                $db->pdo()->exec('PRAGMA legacy_alter_table = OFF');
                 $db->run(
-                    'CREATE TABLE content_objects (
+                    'CREATE TABLE content_objects_new (
                         id TEXT PRIMARY KEY,
                         type TEXT NOT NULL,
                         slug TEXT NOT NULL,
@@ -79,11 +76,12 @@ final class CoreMigrations
                     )'
                 );
                 $db->run(
-                    'INSERT INTO content_objects (id, type, slug, owner_id, created_at)
-                     SELECT id, type, slug, owner_id, created_at FROM content_objects_old'
+                    'INSERT INTO content_objects_new (id, type, slug, owner_id, created_at)
+                     SELECT id, type, slug, owner_id, created_at FROM content_objects'
                 );
+                $db->run('DROP TABLE content_objects');
+                $db->pdo()->exec('ALTER TABLE content_objects_new RENAME TO content_objects');
                 $db->run('CREATE INDEX idx_objects_type_slug ON content_objects(type, slug)');
-                $db->run('DROP TABLE content_objects_old');
             },
         ];
     }
