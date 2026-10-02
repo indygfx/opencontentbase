@@ -25,7 +25,7 @@ final class ProjectAccessTest extends TestCase
         $path = sys_get_temp_dir() . '/cb_test_' . uniqid() . '.sqlite';
         $this->db = new Database($path);
         (new Migrator($this->db))->migrate('core', CoreMigrations::migrations());
-        (new Migrator($this->db))->migrate('writing', (new \Writing\WritingModule($this->db, new \Core\View(dirname(__DIR__)), new \Core\Csrf($this->db, new Auth($this->db))))->migrations());
+        (new Migrator($this->db))->migrate('writing', (new \Writing\WritingModule($this->db, new \Core\View(dirname(__DIR__)), new \Core\Csrf($this->db, new Auth($this->db)), new \Core\ContentRenderer($this->db, new \Core\ModuleRegistry())))->migrations());
         $this->access = new ProjectAccess($this->db);
 
         foreach ([['o1', 'owner'], ['u1', 'other'], ['m1', 'member']] as [$id, $name]) {

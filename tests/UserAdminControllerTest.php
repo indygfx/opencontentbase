@@ -8,6 +8,8 @@ use Core\CoreMigrations;
 use Core\Csrf;
 use Core\Database;
 use Core\Migrator;
+use Core\ContentRenderer;
+use Core\ModuleRegistry;
 use Core\User;
 use Core\UserAdminController;
 use Core\View;
@@ -28,7 +30,12 @@ final class UserAdminControllerTest extends TestCase
         $auth = new Auth($this->db);
         (new Migrator($this->db))->migrate(
             'writing',
-            (new \Writing\WritingModule($this->db, new View($base), new Csrf($this->db, $auth)))->migrations()
+            (new \Writing\WritingModule(
+                $this->db,
+                new View($base),
+                new Csrf($this->db, $auth),
+                new ContentRenderer($this->db, new ModuleRegistry())
+            ))->migrations()
         );
         $this->controller = new UserAdminController(
             $this->db,

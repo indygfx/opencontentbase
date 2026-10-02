@@ -59,6 +59,7 @@ final class WritingController
             'isOwner' => $isOwner,
             'members' => $this->access->members($id),
             'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
+            'chapters' => $this->chapters($id),
             'error' => null,
             'success' => null,
         ]);
@@ -135,6 +136,23 @@ final class WritingController
             [$id, $memberUserId]
         );
         return Response::redirect('/writing/' . $id);
+    }
+
+    /** @return list<array{slug: string, title: string}> */
+    private function chapters(string $projectId): array
+    {
+        return $this->db->all(
+            "SELECT o.slug, COALESCE(r.title, o.slug) AS title
+             FROM content_objects o
+             JOIN chapters c ON c.id = o.id
+             LEFT JOIN content_revisions r ON r.object_id = o.id
+              AND r.created_at = (
+                  SELECT MAX(r2.created_at) FROM content_revisions r2 WHERE r2.object_id = o.id
+              )
+             WHERE o.type = 'chapter' AND c.project_id = ?
+             ORDER BY r.created_at ASC, o.slug ASC",
+            [$projectId]
+        );
     }
 
     /** @return list<array{id: string, username: string}> */

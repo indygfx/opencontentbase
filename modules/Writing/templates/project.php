@@ -5,8 +5,22 @@
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
 
-    <h2>Texts</h2>
-    <p class="muted">Chapters, characters, relationships and backgrounds will be bundled here (next build step).</p>
+    <h2>Chapters</h2>
+    <?php if ($chapters !== []): ?>
+        <table>
+            <tr><th>Title</th><th>Slug</th><th></th></tr>
+            <?php foreach ($chapters as $ch): ?>
+                <tr>
+                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
+                    <td class="muted"><?= e($ch['slug']) ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>">Open</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p class="muted">No chapters yet.</p>
+    <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/chapters/new">New chapter</a></p>
 
     <?php if ($isOwner): ?>
         <h2>Rename project</h2>

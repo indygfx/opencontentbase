@@ -33,6 +33,11 @@ final class Response
         );
     }
 
+    public function status(): int
+    {
+        return $this->status;
+    }
+
     public function send(): void
     {
         http_response_code($this->status);
