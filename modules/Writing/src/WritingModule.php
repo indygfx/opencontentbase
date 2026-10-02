@@ -13,6 +13,7 @@ final class WritingModule implements ModuleInterface
     private ProjectAccess $access;
 
     private ChapterController $chapters;
+    private CharacterController $characters;
 
     public function __construct(
         Database $db,
@@ -23,6 +24,7 @@ final class WritingModule implements ModuleInterface
         $this->access = new ProjectAccess($db);
         $this->controller = new WritingController($db, $view, $csrf, $this->access);
         $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer);
+        $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
     }
 
     public function id(): string
@@ -34,6 +36,7 @@ final class WritingModule implements ModuleInterface
     {
         $c = $this->controller;
         $ch = $this->chapters;
+        $ca = $this->characters;
         return [
             ['method' => 'GET', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['user']],
@@ -49,6 +52,13 @@ final class WritingModule implements ModuleInterface
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}', 'handler' => fn ($params, $user) => $ch->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/delete', 'handler' => fn ($params, $user) => $ch->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/preview', 'handler' => fn ($params, $user) => $ch->preview($user), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/characters/new', 'handler' => fn ($params, $user) => $ca->create($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters', 'handler' => fn ($params, $user) => $ca->store($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}/edit', 'handler' => fn ($params, $user) => $ca->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}/delete', 'handler' => fn ($params, $user) => $ca->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/preview', 'handler' => fn ($params, $user) => $ca->preview($user), 'roles' => ['user']],
         ];
     }
 
@@ -89,26 +99,36 @@ final class WritingModule implements ModuleInterface
                 );
                 $db->run('CREATE INDEX idx_chapters_project ON chapters(project_id)');
             },
+            // v3: characters (per-project slugs, PLANNING.md section 2)
+            function (Database $db): void {
+                $db->run(
+                    'CREATE TABLE characters (
+                        id TEXT PRIMARY KEY,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        slug TEXT NOT NULL,
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (project_id, slug)
+                    )'
+                );
+                $db->run('CREATE INDEX idx_characters_project ON characters(project_id)');
+            },
         ];
     }
 
     public function contentTypes(): array
     {
-        return ['chapter'];
+        return ['chapter', 'character'];
     }
 
     public function resolveLink(Database $db, string $slug): ?array
     {
-        $row = $db->one(
-            "SELECT c.project_id, o.slug
-             FROM content_objects o
-             JOIN chapters c ON c.id = o.id
-             WHERE o.type = 'chapter' AND o.slug = ?",
-            [$slug]
-        );
-        return $row === null
-            ? null
-            : ['url' => '/writing/' . rawurlencode((string)$row['project_id']) . '/chapters/' . rawurlencode((string)$row['slug'])];
+        foreach (['chapter', 'character'] as $type) {
+            $row = $this->findObject($db, $type, $slug);
+            if ($row !== null) {
+                return ['url' => $this->url($type, (string)$row['project_id'], (string)$row['slug'])];
+            }
+        }
+        return null;
     }
 
     public function resolveLinks(Database $db, array $slugs): array
@@ -116,18 +136,23 @@ final class WritingModule implements ModuleInterface
         if ($slugs === []) {
             return [];
         }
+        $result = array_fill_keys($slugs, null);
         $placeholders = implode(',', array_fill(0, count($slugs), '?'));
         $rows = $db->all(
-            "SELECT c.project_id, o.slug
+            "SELECT o.type, c.project_id, o.slug
              FROM content_objects o
-             JOIN chapters c ON c.id = o.id
-             WHERE o.type = 'chapter' AND o.slug IN ($placeholders)",
-            $slugs
+             JOIN chapters c ON c.id = o.id AND o.type = 'chapter'
+             WHERE o.slug IN ($placeholders)
+             UNION
+             SELECT o.type, k.project_id, o.slug
+             FROM content_objects o
+             JOIN characters k ON k.id = o.id AND o.type = 'character'
+             WHERE o.slug IN ($placeholders)",
+            array_merge($slugs, $slugs)
         );
-        $result = array_fill_keys($slugs, null);
         foreach ($rows as $row) {
             $result[(string)$row['slug']] = [
-                'url' => '/writing/' . rawurlencode((string)$row['project_id']) . '/chapters/' . rawurlencode((string)$row['slug']),
+                'url' => $this->url((string)$row['type'], (string)$row['project_id'], (string)$row['slug']),
             ];
         }
         return $result;
@@ -136,5 +161,26 @@ final class WritingModule implements ModuleInterface
     public function onDelete(Database $db, string $uuid): void
     {
         $db->run('DELETE FROM chapters WHERE id = ?', [$uuid]);
+        $db->run('DELETE FROM characters WHERE id = ?', [$uuid]);
+    }
+
+    /** @return array{project_id: string, slug: string}|null */
+    private function findObject(Database $db, string $type, string $slug): ?array
+    {
+        $table = $type === 'chapter' ? 'chapters' : 'characters';
+        $row = $db->one(
+            "SELECT t.project_id, o.slug
+             FROM content_objects o
+             JOIN {$table} t ON t.id = o.id
+             WHERE o.type = ? AND o.slug = ?",
+            [$type, $slug]
+        );
+        return $row === null ? null : ['project_id' => (string)$row['project_id'], 'slug' => (string)$row['slug']];
+    }
+
+    private function url(string $type, string $projectId, string $slug): string
+    {
+        $segment = $type === 'chapter' ? 'chapters' : 'characters';
+        return '/writing/' . rawurlencode($projectId) . '/' . $segment . '/' . rawurlencode($slug);
     }
 }

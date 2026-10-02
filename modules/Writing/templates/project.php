@@ -22,6 +22,23 @@
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/chapters/new">New chapter</a></p>
 
+    <h2>Characters</h2>
+    <?php if ($characters !== []): ?>
+        <table>
+            <tr><th>Name</th><th>Slug</th><th></th></tr>
+            <?php foreach ($characters as $ch): ?>
+                <tr>
+                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
+                    <td class="muted"><?= e($ch['slug']) ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($ch['slug']) ?>">Open</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p class="muted">No characters yet.</p>
+    <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/characters/new">New character</a></p>
+
     <?php if ($isOwner): ?>
         <h2>Rename project</h2>
         <form method="post" action="/writing/<?= e($project['id']) ?>">
