@@ -66,7 +66,9 @@ final class CoreMigrations
             // v4: drop global (type, slug) uniqueness; writing module detail tables
             // enforce per-project uniqueness (UNIQUE (project_id, slug)) - PLANNING.md section 2
             function (Database $db): void {
+                $db->pdo()->exec('PRAGMA legacy_alter_table = ON');
                 $db->pdo()->exec('ALTER TABLE content_objects RENAME TO content_objects_old');
+                $db->pdo()->exec('PRAGMA legacy_alter_table = OFF');
                 $db->run(
                     'CREATE TABLE content_objects (
                         id TEXT PRIMARY KEY,
