@@ -14,6 +14,8 @@ final class WritingModule implements ModuleInterface
 
     private ChapterController $chapters;
     private CharacterController $characters;
+    private BackgroundController $backgrounds;
+    private RelationshipController $relationships;
 
     public function __construct(
         Database $db,
@@ -25,6 +27,8 @@ final class WritingModule implements ModuleInterface
         $this->controller = new WritingController($db, $view, $csrf, $this->access);
         $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer);
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
+        $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
+        $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
     }
 
     public function id(): string
@@ -37,6 +41,8 @@ final class WritingModule implements ModuleInterface
         $c = $this->controller;
         $ch = $this->chapters;
         $ca = $this->characters;
+        $bg = $this->backgrounds;
+        $rel = $this->relationships;
         return [
             ['method' => 'GET', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['user']],
@@ -59,6 +65,15 @@ final class WritingModule implements ModuleInterface
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/preview', 'handler' => fn ($params, $user) => $ca->preview($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}/delete', 'handler' => fn ($params, $user) => $ca->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/preview', 'handler' => fn ($params, $user) => $bg->preview($user), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/backgrounds/new', 'handler' => fn ($params, $user) => $bg->create($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds', 'handler' => fn ($params, $user) => $bg->store($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/backgrounds/{slug}', 'handler' => fn ($params, $user) => $bg->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/backgrounds/{slug}/edit', 'handler' => fn ($params, $user) => $bg->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/{slug}', 'handler' => fn ($params, $user) => $bg->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/{slug}/delete', 'handler' => fn ($params, $user) => $bg->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/relations', 'handler' => fn ($params, $user) => $rel->store($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/relations/delete', 'handler' => fn ($params, $user) => $rel->destroy($user, $params['id']), 'roles' => ['user']],
         ];
     }
 
@@ -112,17 +127,49 @@ final class WritingModule implements ModuleInterface
                 );
                 $db->run('CREATE INDEX idx_characters_project ON characters(project_id)');
             },
+            // v4: character_relations (edges between characters of one project)
+            function (Database $db): void {
+                $db->run(
+                    'CREATE TABLE character_relations (
+                        id TEXT PRIMARY KEY,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        from_character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+                        to_character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+                        kind TEXT NOT NULL DEFAULT 'related',
+                        description TEXT NOT NULL DEFAULT '',
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        CHECK (from_character_id <> to_character_id),
+                        UNIQUE (from_character_id, to_character_id, kind)
+                    )'
+                );
+                $db->run('CREATE INDEX idx_relations_project ON character_relations(project_id)');
+                $db->run('CREATE INDEX idx_relations_from ON character_relations(from_character_id)');
+                $db->run('CREATE INDEX idx_relations_to ON character_relations(to_character_id)');
+            },
+            // v5: backgrounds (per-project slugs, PLANNING.md section 2)
+            function (Database $db): void {
+                $db->run(
+                    'CREATE TABLE backgrounds (
+                        id TEXT PRIMARY KEY,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        slug TEXT NOT NULL,
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (project_id, slug)
+                    )'
+                );
+                $db->run('CREATE INDEX idx_backgrounds_project ON backgrounds(project_id)');
+            },
         ];
     }
 
     public function contentTypes(): array
     {
-        return ['chapter', 'character'];
+        return ['chapter', 'character', 'background'];
     }
 
     public function resolveLink(Database $db, string $slug): ?array
     {
-        foreach (['chapter', 'character'] as $type) {
+        foreach (['chapter', 'character', 'background'] as $type) {
             $row = $this->findObject($db, $type, $slug);
             if ($row !== null) {
                 return ['url' => $this->url($type, (string)$row['project_id'], (string)$row['slug'])];
@@ -147,8 +194,13 @@ final class WritingModule implements ModuleInterface
              SELECT o.type, k.project_id, o.slug
              FROM content_objects o
              JOIN characters k ON k.id = o.id AND o.type = 'character'
+             WHERE o.slug IN ($placeholders)
+             UNION
+             SELECT o.type, b.project_id, o.slug
+             FROM content_objects o
+             JOIN backgrounds b ON b.id = o.id AND o.type = 'background'
              WHERE o.slug IN ($placeholders)",
-            array_merge($slugs, $slugs)
+            array_merge($slugs, $slugs, $slugs)
         );
         foreach ($rows as $row) {
             $result[(string)$row['slug']] = [
@@ -160,14 +212,18 @@ final class WritingModule implements ModuleInterface
 
     public function onDelete(Database $db, string $uuid): void
     {
+        $db->run('DELETE FROM character_relations WHERE from_character_id = ?', [$uuid]);
+        $db->run('DELETE FROM character_relations WHERE to_character_id = ?', [$uuid]);
         $db->run('DELETE FROM chapters WHERE id = ?', [$uuid]);
         $db->run('DELETE FROM characters WHERE id = ?', [$uuid]);
+        $db->run('DELETE FROM backgrounds WHERE id = ?', [$uuid]);
     }
 
     /** @return array{project_id: string, slug: string}|null */
     private function findObject(Database $db, string $type, string $slug): ?array
     {
-        $table = $type === 'chapter' ? 'chapters' : 'characters';
+        $table = ['chapter' => 'chapters', 'character' => 'characters', 'background' => 'backgrounds'][$type]
+            ?? throw new \InvalidArgumentException("Unknown type {$type}");
         $row = $db->one(
             "SELECT t.project_id, o.slug
              FROM content_objects o
@@ -180,7 +236,8 @@ final class WritingModule implements ModuleInterface
 
     private function url(string $type, string $projectId, string $slug): string
     {
-        $segment = $type === 'chapter' ? 'chapters' : 'characters';
+        $segment = ['chapter' => 'chapters', 'character' => 'characters', 'background' => 'backgrounds'][$type]
+            ?? throw new \InvalidArgumentException("Unknown type {$type}");
         return '/writing/' . rawurlencode($projectId) . '/' . $segment . '/' . rawurlencode($slug);
     }
 }

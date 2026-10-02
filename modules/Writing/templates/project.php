@@ -39,6 +39,76 @@
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/characters/new">New character</a></p>
 
+    <h2>Backgrounds</h2>
+    <?php if ($backgrounds !== []): ?>
+        <table>
+            <tr><th>Title</th><th>Slug</th><th></th></tr>
+            <?php foreach ($backgrounds as $b): ?>
+                <tr>
+                    <td><a href="/writing/<?= e($project['id']) ?>/backgrounds/<?= e($b['slug']) ?>"><?= e($b['title']) ?></a></td>
+                    <td class="muted"><?= e($b['slug']) ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/backgrounds/<?= e($b['slug']) ?>">Open</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p class="muted">No backgrounds yet.</p>
+    <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/backgrounds/new">New background</a></p>
+
+    <h2>Relationships</h2>
+    <?php if ($relations !== []): ?>
+        <table>
+            <tr><th>From</th><th>Kind</th><th>To</th><th>Description</th><th></th></tr>
+            <?php foreach ($relations as $r): ?>
+                <tr>
+                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($r['from_slug'] ?? '') ?>"><?= e($r['from_title']) ?></a></td>
+                    <td><?= e($r['kind']) ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($r['to_slug'] ?? '') ?>"><?= e($r['to_title']) ?></a></td>
+                    <td class="muted"><?= e($r['description']) ?></td>
+                    <td>
+                        <form class="inline" method="post" action="/writing/<?= e($project['id']) ?>/relations/delete">
+                            <?= $csrf->field() ?>
+                            <input type="hidden" name="relation_id" value="<?= e($r['id']) ?>">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p class="muted">No relationships yet.</p>
+    <?php endif; ?>
+    <?php if (count($characterOptions) >= 2): ?>
+        <h3>New relationship</h3>
+        <form method="post" action="/writing/<?= e($project['id']) ?>/relations">
+            <?= $csrf->field() ?>
+            <label for="from_character_id">From</label>
+            <select id="from_character_id" name="from_character_id" required>
+                <?php foreach ($characterOptions as $c): ?>
+                    <option value="<?= e($c['id']) ?>"><?= e($c['title']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <label for="kind">Kind</label>
+            <select id="kind" name="kind">
+                <?php foreach (['related', 'family', 'friend', 'rival', 'lover', 'mentor', 'ally', 'enemy'] as $k): ?>
+                    <option value="<?= e($k) ?>"><?= e($k) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <label for="to_character_id">To</label>
+            <select id="to_character_id" name="to_character_id" required>
+                <?php foreach ($characterOptions as $c): ?>
+                    <option value="<?= e($c['id']) ?>"><?= e($c['title']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <label for="description">Description <small class="muted">(optional)</small></label>
+            <input id="description" name="description" maxlength="500" placeholder="how they relate">
+            <button type="submit">Add</button>
+        </form>
+    <?php else: ?>
+        <p class="muted">Create at least two characters to define relationships.</p>
+    <?php endif; ?>
+
     <?php if ($isOwner): ?>
         <h2>Rename project</h2>
         <form method="post" action="/writing/<?= e($project['id']) ?>">

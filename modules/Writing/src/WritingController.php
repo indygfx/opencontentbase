@@ -11,12 +11,15 @@ use Core\View;
 
 final class WritingController
 {
+    private RelationshipController $relationships;
+
     public function __construct(
         private Database $db,
         private View $view,
         private Csrf $csrf,
         private ProjectAccess $access
     ) {
+        $this->relationships = new RelationshipController($db, $view, $csrf, $access);
     }
 
     public function index(User $user): Response
@@ -61,6 +64,9 @@ final class WritingController
             'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
             'chapters' => $this->chapters($id),
             'characters' => $this->characters($id),
+            'backgrounds' => $this->backgrounds($id),
+            'relations' => $this->relationships->list($id),
+            'characterOptions' => $this->relationships->characterOptions($id),
             'error' => null,
             'success' => null,
         ]);
@@ -140,6 +146,23 @@ final class WritingController
     }
 
     /** @return list<array{slug: string, title: string}> */
+    private function backgrounds(string $projectId): array
+    {
+        return $this->db->all(
+            "SELECT o.slug, COALESCE(r.title, o.slug) AS title
+             FROM content_objects o
+             JOIN backgrounds b ON b.id = o.id
+             LEFT JOIN content_revisions r ON r.object_id = o.id
+              AND r.created_at = (
+                  SELECT MAX(r2.created_at) FROM content_revisions r2 WHERE r2.object_id = o.id
+              )
+             WHERE o.type = 'background' AND b.project_id = ?
+             ORDER BY r.created_at ASC, o.slug ASC",
+            [$projectId]
+        );
+    }
+
+    /** @return list<array{slug: string, title: string}> */
     private function characters(string $projectId): array
     {
         return $this->db->all(
@@ -205,6 +228,11 @@ final class WritingController
             'shareTargets' => $this->access->isOwner($user, (string)$project['id'])
                 ? $this->shareTargets((string)$project['id'], (string)$project['owner_id'])
                 : [],
+            'chapters' => $this->chapters((string)$project['id']),
+            'characters' => $this->characters((string)$project['id']),
+            'backgrounds' => $this->backgrounds((string)$project['id']),
+            'relations' => $this->relationships->list((string)$project['id']),
+            'characterOptions' => $this->relationships->characterOptions((string)$project['id']),
             'error' => $error,
             'success' => null,
         ], $status);
