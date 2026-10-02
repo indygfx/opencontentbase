@@ -119,6 +119,7 @@ final class PagesController
             ], 422);
         }
 
+        $slug = $this->uniqueSlug($slug);
         $this->db->transaction(function (Database $db) use ($slug, $title, $body, $user): void {
             $objectId = Auth::uuid4();
             $db->run(
@@ -149,6 +150,20 @@ final class PagesController
     {
         $body = (string)($_POST['body'] ?? '');
         return Response::json(['html' => $this->renderer->render($body)]);
+    }
+
+    private function uniqueSlug(string $slug): string
+    {
+        $base = $slug;
+        $n = 2;
+        while ($this->db->one(
+            "SELECT 1 FROM content_objects WHERE type = 'page' AND slug = ?",
+            [$slug]
+        ) !== null) {
+            $slug = $base . '-' . $n;
+            $n++;
+        }
+        return $slug;
     }
 
     private function validateSlug(string $slug): ?string

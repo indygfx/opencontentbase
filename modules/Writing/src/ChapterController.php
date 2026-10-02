@@ -41,11 +41,18 @@ final class ChapterController
             return $this->notFound($user);
         }
         $title = trim((string)($_POST['title'] ?? ''));
-        $slug = slugify(trim((string)($_POST['slug'] ?? '')) ?: $title);
+        $slugInput = trim((string)($_POST['slug'] ?? ''));
+        $slug = slugify($slugInput ?: $title);
         $body = (string)($_POST['body'] ?? '');
         $error = $this->validate($projectId, $title, $slug);
+        if ($error === null && $slugInput !== '' && $this->slugTaken($projectId, $slug)) {
+            $error = 'A chapter with that slug already exists in this project.';
+        }
         if ($error !== null) {
-            return $this->editError($user, $projectId, null, $title, $slug, $body, $error);
+            return $this->editError($user, $projectId, null, $title, $slugInput, $body, $error);
+        }
+        if ($slugInput === '') {
+            $slug = $this->uniqueSlug($projectId, $slug);
         }
         $this->insertChapter($user, $projectId, $slug, $title, $body);
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug));
@@ -146,11 +153,27 @@ final class ChapterController
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
             return 'Could not derive a slug from the title (a-z, 0-9, hyphen).';
         }
-        $exists = $this->db->one(
-            "SELECT 1 FROM content_objects o JOIN chapters c ON c.id = o.id WHERE o.type = 'chapter' AND o.slug = ? AND c.project_id = ?",
+        return null;
+    }
+
+    private function uniqueSlug(string $projectId, string $slug): string
+    {
+        $base = $slug;
+        $n = 2;
+        while ($this->slugTaken($projectId, $slug)) {
+            $slug = $base . '-' . $n;
+            $n++;
+        }
+        return $slug;
+    }
+
+    private function slugTaken(string $projectId, string $slug): bool
+    {
+        return $this->db->one(
+            "SELECT 1 FROM content_objects o JOIN chapters c ON c.id = o.id
+             WHERE o.type = 'chapter' AND o.slug = ? AND c.project_id = ?",
             [$slug, $projectId]
-        );
-        return $exists !== null ? 'A chapter with that slug already exists in this project.' : null;
+        ) !== null;
     }
 
     private function insertChapter(User $user, string $projectId, string $slug, string $title, string $body): void
@@ -209,7 +232,7 @@ final class ChapterController
         string $body,
         string $error
     ): Response {
-        $chapter = $slug === null ? null : [
+        $chapter = [
             'slug' => $slugInput,
             'title' => $title,
             'body' => $body,

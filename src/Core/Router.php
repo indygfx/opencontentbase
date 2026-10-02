@@ -6,6 +6,9 @@ namespace Core;
 
 final class Router
 {
+    /** @var list<string> path segments that never match a placeholder (e.g. /pages/new vs /pages/{slug}) */
+    private const RESERVED = ['new', 'preview'];
+
     /** @var list<array{pattern: string, handler: callable, roles: list<string>}> */
     private array $routes = [];
 
@@ -59,7 +62,7 @@ final class Router
         $params = [];
         foreach ($patternParts as $i => $part) {
             if (preg_match('/^\{(\w+)\}$/', $part, $m) === 1) {
-                if ($pathParts[$i] === '') {
+                if ($pathParts[$i] === '' || in_array($pathParts[$i], self::RESERVED, true)) {
                     return null;
                 }
                 $params[$m[1]] = rawurldecode($pathParts[$i]);
