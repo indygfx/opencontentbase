@@ -26,6 +26,10 @@ final class UserAdminControllerTest extends TestCase
         $this->db = new Database($path);
         (new Migrator($this->db))->migrate('core', CoreMigrations::migrations());
         $auth = new Auth($this->db);
+        (new Migrator($this->db))->migrate(
+            'writing',
+            (new \Writing\WritingModule($this->db, new View($base), new Csrf($this->db, $auth)))->migrations()
+        );
         $this->controller = new UserAdminController(
             $this->db,
             $auth,

@@ -102,9 +102,10 @@ final class ProjectAccessTest extends TestCase
     {
         $shareTargets = $this->db->all(
             'SELECT id, username FROM users
-             WHERE id NOT IN (SELECT user_id FROM project_members WHERE project_id = ?)
+             WHERE id <> ?
+               AND id NOT IN (SELECT user_id FROM project_members WHERE project_id = ?)
              ORDER BY username',
-            ['p1']
+            ['o1', 'p1']
         );
         $this->assertSame(['other'], array_column($shareTargets, 'username'));
     }
