@@ -125,6 +125,22 @@ final class UserAdminControllerTest extends TestCase
         $this->assertNull($this->db->one("SELECT id FROM users WHERE id = 'u1'"));
     }
 
+    public function testDestroyRemovesMembershipsAndSessions(): void
+    {
+        $this->db->run(
+            "INSERT INTO projects (id, owner_id, title) VALUES ('p1', 'a1', 'Novel')"
+        );
+        $this->db->run(
+            "INSERT INTO project_members (project_id, user_id, role) VALUES ('p1', 'u1', 'member')"
+        );
+        $this->db->run(
+            "INSERT INTO sessions (id, user_id, token_hash, expires_at) VALUES ('s1', 'u1', 'hash1', '2999-01-01 00:00:00')"
+        );
+        $this->controller->destroy($this->admin, 'u1');
+        $this->assertSame(0, (int)$this->db->one("SELECT COUNT(*) AS c FROM project_members WHERE user_id = 'u1'")['c']);
+        $this->assertSame(0, (int)$this->db->one("SELECT COUNT(*) AS c FROM sessions WHERE user_id = 'u1'")['c']);
+    }
+
     public function testDestroyProtectsSelf(): void
     {
         $this->controller->destroy($this->admin, 'a1');

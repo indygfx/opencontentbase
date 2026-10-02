@@ -58,6 +58,7 @@ final class WritingController
             'project' => $project,
             'isOwner' => $isOwner,
             'members' => $this->access->members($id),
+            'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
             'error' => null,
             'success' => null,
         ]);
@@ -136,6 +137,18 @@ final class WritingController
         return Response::redirect('/writing/' . $id);
     }
 
+    /** @return list<array{id: string, username: string}> */
+    private function shareTargets(string $projectId, string $ownerId): array
+    {
+        return $this->db->all(
+            'SELECT id, username FROM users
+             WHERE id <> ?
+               AND id NOT IN (SELECT user_id FROM project_members WHERE project_id = ?)
+             ORDER BY username',
+            [$ownerId, $projectId]
+        );
+    }
+
     /** @return array<string, mixed>|null */
     private function findProject(string $id): ?array
     {
@@ -153,6 +166,9 @@ final class WritingController
             'project' => $project,
             'isOwner' => $this->access->isOwner($user, (string)$project['id']),
             'members' => $this->access->members((string)$project['id']),
+            'shareTargets' => $this->access->isOwner($user, (string)$project['id'])
+                ? $this->shareTargets((string)$project['id'], (string)$project['owner_id'])
+                : [],
             'error' => $error,
             'success' => null,
         ], $status);

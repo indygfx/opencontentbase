@@ -89,6 +89,8 @@ final class UserAdminController
         if ($target['username'] === 'admin') {
             return $this->page($user, ['error' => 'The main admin cannot be deleted.'], 422);
         }
+        $this->db->run('DELETE FROM project_members WHERE user_id = ?', [$id]);
+        $this->db->run('DELETE FROM sessions WHERE user_id = ?', [$id]);
         $this->db->run('DELETE FROM users WHERE id = ?', [$id]);
         return $this->page($user, ['success' => 'User deleted.']);
     }

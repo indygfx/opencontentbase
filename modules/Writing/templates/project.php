@@ -18,12 +18,21 @@
         </form>
 
         <h2>Share project</h2>
-        <form method="post" action="/writing/<?= e($project['id']) ?>/share">
-            <?= $csrf->field() ?>
-            <label for="username">Username</label>
-            <input id="username" name="username" required placeholder="who to invite">
-            <button type="submit">Share</button>
-        </form>
+        <?php if ($shareTargets !== []): ?>
+            <form method="post" action="/writing/<?= e($project['id']) ?>/share">
+                <?= $csrf->field() ?>
+                <label for="username">Username</label>
+                <select id="username" name="username" required>
+                    <option value="" disabled selected>who to invite</option>
+                    <?php foreach ($shareTargets as $t): ?>
+                        <option value="<?= e($t['username']) ?>"><?= e($t['username']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit">Share</button>
+            </form>
+        <?php else: ?>
+            <p class="muted">There is no other user left to share this project with.</p>
+        <?php endif; ?>
 
         <?php if ($members !== []): ?>
             <h3>Shared with</h3>

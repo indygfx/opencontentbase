@@ -98,6 +98,17 @@ final class ProjectAccessTest extends TestCase
         $this->assertSame(['member'], array_column($members, 'username'));
     }
 
+    public function testShareSelectsExistingUsersOnly(): void
+    {
+        $shareTargets = $this->db->all(
+            'SELECT id, username FROM users
+             WHERE id NOT IN (SELECT user_id FROM project_members WHERE project_id = ?)
+             ORDER BY username',
+            ['p1']
+        );
+        $this->assertSame(['other'], array_column($shareTargets, 'username'));
+    }
+
     protected function tearDown(): void
     {
         unset($this->db, $this->access, $this->owner, $this->other, $this->member);
