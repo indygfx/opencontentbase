@@ -21,6 +21,7 @@ final class ChapterAccessTest extends TestCase
     private Database $db;
     private ProjectAccess $access;
     private ChapterController $controller;
+    private \Writing\WritingModule $module;
     private User $owner;
     private User $member;
     private User $stranger;
@@ -38,6 +39,7 @@ final class ChapterAccessTest extends TestCase
         $registry->register($module);
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $this->access = new ProjectAccess($this->db);
+        $this->module = $module;
         $this->controller = new ChapterController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $this->access, $renderer);
 
         foreach ([['o1', 'owner'], ['m1', 'member'], ['s1', 'stranger']] as [$id, $name]) {
@@ -172,6 +174,42 @@ final class ChapterAccessTest extends TestCase
         $this->createChapter($this->owner, 'chapter-1');
         $response = $this->controller->destroy($this->stranger, 'p1', 'chapter-1');
         $this->assertSame(404, $response->status());
+    }
+
+    public function testPreviewRouteIsNotSwallowedBySlugRoute(): void
+    {
+        $router = new \Core\Router();
+        foreach ($this->module->routes($router) as $route) {
+            $router->{$route['method'] === 'GET' ? 'get' : 'post'}(
+                $route['pattern'],
+                $route['handler'],
+                $route['roles']
+            );
+        }
+        $dispatched = $router->dispatch('POST', '/writing/p1/chapters/preview');
+        $this->assertIsCallable($dispatched['handler']);
+        $this->assertSame([], $dispatched['params']);
+    }
+
+    public function testDuplicateTitleGetsAutoSlugSuffix(): void
+    {
+        $_POST = ['slug' => '', 'title' => 'Introduction', 'body' => 'a'];
+        $this->controller->store($this->owner, 'p1');
+        $_POST = ['slug' => '', 'title' => 'Introduction', 'body' => 'b'];
+        $this->controller->store($this->owner, 'p1');
+        $slugs = $this->db->all(
+            "SELECT o.slug FROM content_objects o JOIN chapters c ON c.id = o.id
+             WHERE o.type = 'chapter' AND c.project_id = 'p1' ORDER BY o.slug"
+        );
+        $this->assertSame(['introduction', 'introduction-2'], array_column($slugs, 'slug'));
+    }
+
+    public function testValidationErrorKeepsBody(): void
+    {
+        $_POST = ['slug' => '', 'title' => '', 'body' => 'My important text'];
+        $response = $this->controller->store($this->owner, 'p1');
+        $this->assertSame(422, $response->status());
+        $this->assertStringContainsString('My important text', $response->body());
     }
 
     protected function tearDown(): void

@@ -45,8 +45,9 @@ final class ChapterController
         $body = (string)($_POST['body'] ?? '');
         $error = $this->validate($projectId, $title, $slug);
         if ($error !== null) {
-            return $this->editError($user, $projectId, null, $title, $slug, $body, $error);
+            return $this->editError($user, $projectId, null, $title, trim((string)($_POST['slug'] ?? '')), $body, $error);
         }
+        $slug = $this->uniqueSlug($projectId, $slug);
         $this->insertChapter($user, $projectId, $slug, $title, $body);
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug));
     }
@@ -153,6 +154,26 @@ final class ChapterController
         return $exists !== null ? 'A chapter with that slug already exists in this project.' : null;
     }
 
+    private function uniqueSlug(string $projectId, string $slug): string
+    {
+        $base = $slug;
+        $n = 2;
+        while ($this->slugTaken($projectId, $slug)) {
+            $slug = $base . '-' . $n;
+            $n++;
+        }
+        return $slug;
+    }
+
+    private function slugTaken(string $projectId, string $slug): bool
+    {
+        return $this->db->one(
+            "SELECT 1 FROM content_objects o JOIN chapters c ON c.id = o.id
+             WHERE o.type = 'chapter' AND o.slug = ? AND c.project_id = ?",
+            [$slug, $projectId]
+        ) !== null;
+    }
+
     private function insertChapter(User $user, string $projectId, string $slug, string $title, string $body): void
     {
         $this->db->transaction(function (Database $db) use ($user, $projectId, $slug, $title, $body): void {
@@ -209,7 +230,7 @@ final class ChapterController
         string $body,
         string $error
     ): Response {
-        $chapter = $slug === null ? null : [
+        $chapter = [
             'slug' => $slugInput,
             'title' => $title,
             'body' => $body,
