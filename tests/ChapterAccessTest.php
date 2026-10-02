@@ -188,7 +188,7 @@ final class ChapterAccessTest extends TestCase
         }
         $dispatched = $router->dispatch('POST', '/writing/p1/chapters/preview');
         $this->assertIsCallable($dispatched['handler']);
-        $this->assertSame([], $dispatched['params']);
+        $this->assertSame(['id' => 'p1'], $dispatched['params']);
     }
 
     public function testDuplicateTitleGetsAutoSlugSuffix(): void
