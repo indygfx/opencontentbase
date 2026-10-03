@@ -18,7 +18,7 @@ use Writing\ProjectAccess;
 use Writing\WritingController;
 use Writing\WritingModule;
 
-final class SnowflakeFieldsTest extends TestCase
+final class OutlineFieldsTest extends TestCase
 {
     private Database $db;
     private ChapterController $chapters;
@@ -51,7 +51,7 @@ final class SnowflakeFieldsTest extends TestCase
 
     public function testChapterSummaryIsStoredAndKeptOnUpdate(): void
     {
-        $_POST = ['slug' => 'chapter-1', 'title' => 'Chapter one', 'summary' => 'Grundidee des Kapitels', 'body' => 'Body text'];
+        $_POST = ['slug' => 'chapter-1', 'title' => 'Chapter one', 'summary' => 'The basic idea of this chapter', 'body' => 'Body text'];
         $this->chapters->store($this->owner, 'p1');
         $_POST = [];
 
@@ -61,10 +61,10 @@ final class SnowflakeFieldsTest extends TestCase
              WHERE o.type = 'chapter' AND o.slug = 'chapter-1'"
         );
         $this->assertNotNull($revision);
-        $this->assertSame('Grundidee des Kapitels', (string)$revision['summary']);
+        $this->assertSame('The basic idea of this chapter', (string)$revision['summary']);
         $this->assertSame('Body text', (string)$revision['body']);
 
-        $_POST = ['slug' => 'chapter-1', 'title' => 'Chapter one', 'summary' => 'Neue Idee', 'body' => 'Longer body'];
+        $_POST = ['slug' => 'chapter-1', 'title' => 'Chapter one', 'summary' => 'A new idea', 'body' => 'Longer body'];
         $this->chapters->update($this->owner, 'p1', 'chapter-1');
         $_POST = [];
 
@@ -74,35 +74,35 @@ final class SnowflakeFieldsTest extends TestCase
              WHERE o.type = 'chapter' AND o.slug = 'chapter-1'
              ORDER BY r.created_at DESC, r.rowid DESC LIMIT 1"
         );
-        $this->assertSame('Neue Idee', (string)$latest['summary']);
+        $this->assertSame('A new idea', (string)$latest['summary']);
         $this->assertSame('Longer body', (string)$latest['body']);
     }
 
-    public function testProjectUpdatePersistsSnowflakeFields(): void
+    public function testProjectUpdatePersistsOutlineFields(): void
     {
         $_POST = [
             'title' => 'My novel',
-            'blurb' => 'Ein Absatz mit Setup, drei Wendepunkten und Ende.',
-            'synopsis' => "Kapitel 1: Aufbruch.\nKapitel 2: Wendepunkt.",
-            'synopsis_long' => 'Erweiterte Synopsis mit mehr Detail.',
+            'blurb' => 'One paragraph with setup, three turning points and ending.',
+            'synopsis' => "Chapter 1: Departure.\nChapter 2: Turning point.",
+            'synopsis_long' => 'Extended synopsis with more detail.',
         ];
         $response = $this->projects->update($this->owner, 'p1');
         $_POST = [];
 
         $this->assertSame(302, $response->status());
         $row = $this->db->one("SELECT title, blurb, synopsis, synopsis_long FROM projects WHERE id = 'p1'");
-        $this->assertSame('Ein Absatz mit Setup, drei Wendepunkten und Ende.', (string)$row['blurb']);
-        $this->assertSame("Kapitel 1: Aufbruch.\nKapitel 2: Wendepunkt.", (string)$row['synopsis']);
-        $this->assertSame('Erweiterte Synopsis mit mehr Detail.', (string)$row['synopsis_long']);
+        $this->assertSame('One paragraph with setup, three turning points and ending.', (string)$row['blurb']);
+        $this->assertSame("Chapter 1: Departure.\nChapter 2: Turning point.", (string)$row['synopsis']);
+        $this->assertSame('Extended synopsis with more detail.', (string)$row['synopsis_long']);
     }
 
-    public function testProjectShowRendersSnowflakeFields(): void
+    public function testProjectShowRendersOutlineFields(): void
     {
         $this->db->run(
-            "UPDATE projects SET blurb = 'Die Kurzbeschreibung.', synopsis = '', synopsis_long = '' WHERE id = 'p1'"
+            "UPDATE projects SET blurb = 'The blurb.', synopsis = '', synopsis_long = '' WHERE id = 'p1'"
         );
         $response = $this->projects->show($this->owner, 'p1');
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('Die Kurzbeschreibung.', $response->body());
+        $this->assertStringContainsString('The blurb.', $response->body());
     }
 }

@@ -159,7 +159,7 @@ final class WritingModule implements ModuleInterface
                 );
                 $db->run('CREATE INDEX idx_backgrounds_project ON backgrounds(project_id)');
             },
-            // v6: snowflake fields on projects (Kurzbeschreibung, Synopsis, Erweiterte Synopsis)
+            // v6: outline fields on projects (blurb, synopsis, extended synopsis)
             function (Database $db): void {
                 $db->run("ALTER TABLE projects ADD COLUMN blurb TEXT NOT NULL DEFAULT ''");
                 $db->run("ALTER TABLE projects ADD COLUMN synopsis TEXT NOT NULL DEFAULT ''");

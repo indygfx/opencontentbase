@@ -83,7 +83,7 @@ final class CoreMigrations
                 $db->pdo()->exec('ALTER TABLE content_objects_new RENAME TO content_objects');
                 $db->run('CREATE INDEX idx_objects_type_slug ON content_objects(type, slug)');
             },
-            // v5: chapter summaries (snowflake: idea first, prose later)
+            // v5: chapter summaries (idea first, prose later)
             function (Database $db): void {
                 $db->run("ALTER TABLE content_revisions ADD COLUMN summary TEXT NOT NULL DEFAULT ''");
             },
