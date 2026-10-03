@@ -39,7 +39,7 @@ final class OutlineFieldsTest extends TestCase
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $access = new ProjectAccess($this->db);
         $this->chapters = new ChapterController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer);
-        $this->projects = new WritingController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access);
+        $this->projects = new WritingController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer);
         $this->db->run(
             'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
             ['o1', 'owner', password_hash('x1234567', PASSWORD_BCRYPT), 'user']
@@ -78,22 +78,59 @@ final class OutlineFieldsTest extends TestCase
         $this->assertSame('Longer body', (string)$latest['body']);
     }
 
-    public function testProjectUpdatePersistsOutlineFields(): void
+    public function testProjectUpdatePersistsTitle(): void
     {
-        $_POST = [
-            'title' => 'My novel',
-            'blurb' => 'One paragraph with setup, three turning points and ending.',
-            'synopsis' => "Chapter 1: Departure.\nChapter 2: Turning point.",
-            'synopsis_long' => 'Extended synopsis with more detail.',
-        ];
+        $_POST = ['title' => 'Renamed novel'];
         $response = $this->projects->update($this->owner, 'p1');
         $_POST = [];
 
         $this->assertSame(302, $response->status());
-        $row = $this->db->one("SELECT title, blurb, synopsis, synopsis_long FROM projects WHERE id = 'p1'");
+        $row = $this->db->one("SELECT title FROM projects WHERE id = 'p1'");
+        $this->assertSame('Renamed novel', (string)$row['title']);
+    }
+
+    public function testOutlineUpdatePersistsField(): void
+    {
+        $_POST = ['text' => 'One paragraph with setup, three turning points and ending.'];
+        $response = $this->projects->outlineUpdate($this->owner, 'p1', 'blurb');
+        $_POST = [];
+
+        $this->assertSame(302, $response->status());
+        $row = $this->db->one("SELECT blurb FROM projects WHERE id = 'p1'");
         $this->assertSame('One paragraph with setup, three turning points and ending.', (string)$row['blurb']);
-        $this->assertSame("Chapter 1: Departure.\nChapter 2: Turning point.", (string)$row['synopsis']);
-        $this->assertSame('Extended synopsis with more detail.', (string)$row['synopsis_long']);
+
+        $_POST = ['text' => 'The core of the story in one sentence.'];
+        $this->projects->outlineUpdate($this->owner, 'p1', 'idea');
+        $_POST = [];
+        $row = $this->db->one("SELECT idea FROM projects WHERE id = 'p1'");
+        $this->assertSame('The core of the story in one sentence.', (string)$row['idea']);
+
+        $_POST = ['text' => 'A detailed draft of the whole story.'];
+        $this->projects->outlineUpdate($this->owner, 'p1', 'synopsis_long');
+        $_POST = [];
+        $row = $this->db->one("SELECT synopsis_long FROM projects WHERE id = 'p1'");
+        $this->assertSame('A detailed draft of the whole story.', (string)$row['synopsis_long']);
+    }
+
+    public function testOutlineUpdateRejectsUnknownField(): void
+    {
+        $response = $this->projects->outlineUpdate($this->owner, 'p1', 'nope');
+        $this->assertSame(404, $response->status());
+    }
+
+    public function testOutlineEditPageShowsCurrentText(): void
+    {
+        $this->db->run("UPDATE projects SET idea = 'A heist in reverse.' WHERE id = 'p1'");
+        $response = $this->projects->outlineEdit($this->owner, 'p1', 'idea');
+        $this->assertSame(200, $response->status());
+        $this->assertStringContainsString('A heist in reverse.', $response->body());
+    }
+
+    public function testSetupPageShowsTitleForm(): void
+    {
+        $response = $this->projects->setup($this->owner, 'p1');
+        $this->assertSame(200, $response->status());
+        $this->assertStringContainsString('Novel Setup', $response->body());
     }
 
     public function testProjectShowRendersOutlineFields(): void

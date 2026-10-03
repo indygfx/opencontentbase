@@ -1,20 +1,20 @@
 <section class="card">
-    <h1>Projects</h1>
+    <h1>Stories</h1>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
 
-    <h2>New project</h2>
+    <h2>New story</h2>
     <form method="post" action="/writing">
         <?= $csrf->field() ?>
         <label for="title">Title</label>
         <input id="title" name="title" required minlength="2" maxlength="200" placeholder="My novel" autofocus>
-        <button type="submit">Create project</button>
+        <button type="submit">Create story</button>
     </form>
 
-    <h2>My projects</h2>
+    <h2>My stories</h2>
     <?php if ($projects === []): ?>
-        <p class="muted">No projects yet. Create your first one above.</p>
+        <p class="muted">No stories yet. Create your first one above.</p>
     <?php else: ?>
         <table>
             <tr>

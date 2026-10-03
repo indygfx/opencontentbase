@@ -1,8 +1,10 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Writing;
 
+use Core\ContentRenderer;
 use Core\Csrf;
 use Core\Database;
 use Core\Response;
@@ -11,13 +13,20 @@ use Core\View;
 
 final class WritingController
 {
+    private const OUTLINE_FIELDS = [
+        'idea' => 'Idea',
+        'blurb' => 'Short Description',
+        'synopsis_long' => 'Extended Synopsis',
+    ];
+
     private RelationshipController $relationships;
 
     public function __construct(
         private Database $db,
         private View $view,
         private Csrf $csrf,
-        private ProjectAccess $access
+        private ProjectAccess $access,
+        private ContentRenderer $renderer
     ) {
         $this->relationships = new RelationshipController($db, $view, $csrf, $access);
     }
@@ -25,7 +34,7 @@ final class WritingController
     public function index(User $user): Response
     {
         return $this->page($user, 'modules/Writing/templates/index.php', [
-            'title' => 'Projects',
+            'title' => 'Stories',
             'projects' => $this->access->visibleProjects($user),
             'error' => null,
             'success' => null,
@@ -66,9 +75,26 @@ final class WritingController
             'characters' => $this->characters($id),
             'backgrounds' => $this->backgrounds($id),
             'relations' => $this->relationships->list($id),
-            'characterOptions' => $this->relationships->characterOptions($id),
             'error' => null,
             'success' => null,
+        ]);
+    }
+
+    public function setup(User $user, string $id): Response
+    {
+        $project = $this->findProject($id);
+        if ($project === null || !$this->access->canAccess($user, $id)) {
+            return $this->notFound($user);
+        }
+        if (!$this->access->isOwner($user, $id)) {
+            return $this->forbidden($user);
+        }
+        return $this->page($user, 'modules/Writing/templates/setup.php', [
+            'title' => 'Novel Setup: ' . (string)$project['title'],
+            'project' => $project,
+            'members' => $this->access->members($id),
+            'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
+            'error' => null,
         ]);
     }
 
@@ -83,16 +109,61 @@ final class WritingController
         }
         $title = trim((string)($_POST['title'] ?? ''));
         if ($title === '' || mb_strlen($title) < 2) {
-            return $this->projectError($user, $project, 'The title must be at least 2 characters long.', 422);
+            return $this->page($user, 'modules/Writing/templates/setup.php', [
+                'title' => 'Novel Setup: ' . (string)$project['title'],
+                'project' => $project,
+                'members' => $this->access->members($id),
+                'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
+                'error' => 'The title must be at least 2 characters long.',
+            ], 422);
         }
-        $blurb = trim((string)($_POST['blurb'] ?? ''));
-        $synopsis = trim((string)($_POST['synopsis'] ?? ''));
-        $synopsisLong = trim((string)($_POST['synopsis_long'] ?? ''));
-        $this->db->run(
-            'UPDATE projects SET title = ?, blurb = ?, synopsis = ?, synopsis_long = ? WHERE id = ?',
-            [$title, $blurb, $synopsis, $synopsisLong, $id]
-        );
+        $this->db->run('UPDATE projects SET title = ? WHERE id = ?', [$title, $id]);
+        return Response::redirect('/writing/' . $id . '/setup');
+    }
+
+    public function outlineEdit(User $user, string $id, string $field): Response
+    {
+        if (!isset(self::OUTLINE_FIELDS[$field])) {
+            return $this->notFound($user);
+        }
+        $project = $this->findProject($id);
+        if ($project === null || !$this->access->canAccess($user, $id)) {
+            return $this->notFound($user);
+        }
+        if (!$this->access->canEdit($user, $id)) {
+            return $this->forbidden($user);
+        }
+        return $this->page($user, 'modules/Writing/templates/outline_edit.php', [
+            'title' => self::OUTLINE_FIELDS[$field] . ': ' . (string)$project['title'],
+            'project' => $project,
+            'field' => $field,
+            'label' => self::OUTLINE_FIELDS[$field],
+            'text' => (string)$project[$field],
+            'error' => null,
+        ]);
+    }
+
+    public function outlineUpdate(User $user, string $id, string $field): Response
+    {
+        if (!isset(self::OUTLINE_FIELDS[$field])) {
+            return $this->notFound($user);
+        }
+        $project = $this->findProject($id);
+        if ($project === null || !$this->access->canAccess($user, $id)) {
+            return $this->notFound($user);
+        }
+        if (!$this->access->canEdit($user, $id)) {
+            return $this->forbidden($user);
+        }
+        $text = trim((string)($_POST['text'] ?? ''));
+        $this->db->run("UPDATE projects SET {$field} = ? WHERE id = ?", [$text, $id]);
         return Response::redirect('/writing/' . $id);
+    }
+
+    public function outlinePreview(User $user): Response
+    {
+        $text = (string)($_POST['text'] ?? '');
+        return Response::json(['html' => $this->renderer->render($text)]);
     }
 
     public function destroy(User $user, string $id): Response
@@ -121,14 +192,14 @@ final class WritingController
             return $this->projectError($user, $project, "User \"{$username}\" does not exist.", 422);
         }
         if ((string)$target['id'] === $user->id()) {
-            return $this->projectError($user, $project, 'You cannot share a project with yourself.', 422);
+            return $this->projectError($user, $project, 'You cannot share a story with yourself.', 422);
         }
         $existing = $this->db->one(
             'SELECT user_id FROM project_members WHERE project_id = ? AND user_id = ?',
             [$id, (string)$target['id']]
         );
         if ($existing !== null) {
-            return $this->projectError($user, $project, 'This project is already shared with that user.', 422);
+            return $this->projectError($user, $project, 'This story is already shared with that user.', 422);
         }
         $this->db->run(
             'INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, ?)',
@@ -185,11 +256,12 @@ final class WritingController
         );
     }
 
-    /** @return list<array{slug: string, title: string}> */
+    /** @return list<array{slug: string, title: string, summary: string, body: string}> */
     private function chapters(string $projectId): array
     {
         return $this->db->all(
-            "SELECT o.slug, COALESCE(r.title, o.slug) AS title, COALESCE(r.summary, '') AS summary
+            "SELECT o.slug, COALESCE(r.title, o.slug) AS title,
+                    COALESCE(r.summary, '') AS summary, COALESCE(r.body, '') AS body
              FROM content_objects o
              JOIN chapters c ON c.id = o.id
              LEFT JOIN content_revisions r ON r.object_id = o.id
@@ -218,7 +290,9 @@ final class WritingController
     private function findProject(string $id): ?array
     {
         return $this->db->one(
-            'SELECT id, owner_id, title, blurb, synopsis, synopsis_long, created_at FROM projects WHERE id = ?',
+            "SELECT p.id, p.owner_id, p.title, p.idea, p.blurb, p.synopsis, p.synopsis_long, p.created_at,
+                    u.username AS owner_name
+             FROM projects p JOIN users u ON u.id = p.owner_id WHERE p.id = ?",
             [$id]
         );
     }
@@ -226,19 +300,18 @@ final class WritingController
     /** @param array<string, mixed> $project */
     private function projectError(User $user, array $project, string $error, int $status): Response
     {
+        $id = (string)$project['id'];
+        $isOwner = $this->access->isOwner($user, $id);
         return $this->page($user, 'modules/Writing/templates/project.php', [
             'title' => (string)$project['title'],
             'project' => $project,
-            'isOwner' => $this->access->isOwner($user, (string)$project['id']),
-            'members' => $this->access->members((string)$project['id']),
-            'shareTargets' => $this->access->isOwner($user, (string)$project['id'])
-                ? $this->shareTargets((string)$project['id'], (string)$project['owner_id'])
-                : [],
-            'chapters' => $this->chapters((string)$project['id']),
-            'characters' => $this->characters((string)$project['id']),
-            'backgrounds' => $this->backgrounds((string)$project['id']),
-            'relations' => $this->relationships->list((string)$project['id']),
-            'characterOptions' => $this->relationships->characterOptions((string)$project['id']),
+            'isOwner' => $isOwner,
+            'members' => $this->access->members($id),
+            'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
+            'chapters' => $this->chapters($id),
+            'characters' => $this->characters($id),
+            'backgrounds' => $this->backgrounds($id),
+            'relations' => $this->relationships->list($id),
             'error' => $error,
             'success' => null,
         ], $status);
@@ -247,7 +320,7 @@ final class WritingController
     private function indexError(User $user, string $error): Response
     {
         return $this->page($user, 'modules/Writing/templates/index.php', [
-            'title' => 'Projects',
+            'title' => 'Stories',
             'projects' => $this->access->visibleProjects($user),
             'error' => $error,
             'success' => null,
@@ -273,7 +346,7 @@ final class WritingController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Project not found.',
+            'message' => 'Story not found.',
         ], 404);
     }
 
@@ -282,7 +355,7 @@ final class WritingController
         return $this->page($user, 'templates/error.php', [
             'title' => '403',
             'code' => 403,
-            'message' => 'Only the project owner may do that.',
+            'message' => 'Only the story owner may do that.',
         ], 403);
     }
 

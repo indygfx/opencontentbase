@@ -24,7 +24,7 @@ final class WritingModule implements ModuleInterface
         \Core\ContentRenderer $renderer
     ) {
         $this->access = new ProjectAccess($db);
-        $this->controller = new WritingController($db, $view, $csrf, $this->access);
+        $this->controller = new WritingController($db, $view, $csrf, $this->access, $renderer);
         $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer);
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
@@ -58,6 +58,8 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/chapters/{slug}/edit', 'handler' => fn ($params, $user) => $ch->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}', 'handler' => fn ($params, $user) => $ch->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/delete', 'handler' => fn ($params, $user) => $ch->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/chapters/{slug}/summary', 'handler' => fn ($params, $user) => $ch->summaryEdit($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/summary', 'handler' => fn ($params, $user) => $ch->summaryUpdate($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/new', 'handler' => fn ($params, $user) => $ca->create($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters', 'handler' => fn ($params, $user) => $ca->store($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
@@ -72,8 +74,19 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/backgrounds/{slug}/edit', 'handler' => fn ($params, $user) => $bg->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/{slug}', 'handler' => fn ($params, $user) => $bg->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/{slug}/delete', 'handler' => fn ($params, $user) => $bg->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/setup', 'handler' => fn ($params, $user) => $c->setup($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/outline/preview', 'handler' => fn ($params, $user) => $c->outlinePreview($user), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/outline/idea', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'idea'), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/outline/idea', 'handler' => fn ($params, $user) => $c->outlineUpdate($user, $params['id'], 'idea'), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/outline/blurb', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'blurb'), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/outline/blurb', 'handler' => fn ($params, $user) => $c->outlineUpdate($user, $params['id'], 'blurb'), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/outline/synopsis_long', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'synopsis_long'), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/outline/synopsis_long', 'handler' => fn ($params, $user) => $c->outlineUpdate($user, $params['id'], 'synopsis_long'), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/relations/new', 'handler' => fn ($params, $user) => $rel->create($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/relations', 'handler' => fn ($params, $user) => $rel->store($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/relations/delete', 'handler' => fn ($params, $user) => $rel->destroy($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/relations/{rid}/edit', 'handler' => fn ($params, $user) => $rel->edit($user, $params['id'], $params['rid']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/relations/{rid}', 'handler' => fn ($params, $user) => $rel->update($user, $params['id'], $params['rid']), 'roles' => ['user']],
         ];
     }
 
@@ -164,6 +177,10 @@ final class WritingModule implements ModuleInterface
                 $db->run("ALTER TABLE projects ADD COLUMN blurb TEXT NOT NULL DEFAULT ''");
                 $db->run("ALTER TABLE projects ADD COLUMN synopsis TEXT NOT NULL DEFAULT ''");
                 $db->run("ALTER TABLE projects ADD COLUMN synopsis_long TEXT NOT NULL DEFAULT ''");
+            },
+            // v7: logline idea on projects
+            function (Database $db): void {
+                $db->run("ALTER TABLE projects ADD COLUMN idea TEXT NOT NULL DEFAULT ''");
             },
         ];
     }

@@ -46,7 +46,7 @@ final class CharacterController
         $body = (string)($_POST['body'] ?? '');
         $error = $this->validate($projectId, $title, $slug);
         if ($error === null && $slugInput !== '' && $this->slugTaken($projectId, $slug)) {
-            $error = 'A character with that slug already exists in this project.';
+            $error = 'A character with that slug already exists in this story.';
         }
         if ($error !== null) {
             return $this->editError($user, $projectId, null, $title, $slugInput, $body, $error);

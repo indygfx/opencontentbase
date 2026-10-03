@@ -31,6 +31,7 @@ final class ChapterController
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => null,
+            'isEdit' => false,
             'error' => null,
         ]);
     }
@@ -47,7 +48,7 @@ final class ChapterController
         $body = (string)($_POST['body'] ?? '');
         $error = $this->validate($projectId, $title, $slug);
         if ($error === null && $slugInput !== '' && $this->slugTaken($projectId, $slug)) {
-            $error = 'A chapter with that slug already exists in this project.';
+            $error = 'A chapter with that slug already exists in this story.';
         }
         if ($error !== null) {
             return $this->editError($user, $projectId, null, $title, $slugInput, $summary, $body, $error);
@@ -87,6 +88,7 @@ final class ChapterController
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => $chapter,
+            'isEdit' => true,
             'error' => null,
         ]);
     }
@@ -138,6 +140,45 @@ final class ChapterController
             $db->run('DELETE FROM chapters WHERE id = ?', [(string)$chapter['id']]);
             $db->run('DELETE FROM content_objects WHERE id = ?', [(string)$chapter['object_id']]);
         });
+        return Response::redirect('/writing/' . $projectId);
+    }
+
+    public function summaryEdit(User $user, string $projectId, string $slug): Response
+    {
+        $chapter = $this->findChapter($projectId, $slug);
+        if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        return $this->page($user, 'modules/Writing/templates/chapter_summary.php', [
+            'title' => 'Chapter outline: ' . (string)$chapter['title'],
+            'projectId' => $projectId,
+            'projectTitle' => $this->projectTitle($projectId),
+            'chapter' => $chapter,
+            'error' => null,
+        ]);
+    }
+
+    public function summaryUpdate(User $user, string $projectId, string $slug): Response
+    {
+        $chapter = $this->findChapter($projectId, $slug);
+        if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $title = trim((string)($_POST['title'] ?? ''));
+        $summary = trim((string)($_POST['summary'] ?? ''));
+        if ($title === '') {
+            return $this->page($user, 'modules/Writing/templates/chapter_summary.php', [
+                'title' => 'Chapter outline: ' . (string)$chapter['title'],
+                'projectId' => $projectId,
+                'projectTitle' => $this->projectTitle($projectId),
+                'chapter' => ['slug' => $chapter['slug'], 'title' => $title, 'summary' => $summary, 'body' => (string)$chapter['body']],
+                'error' => 'The title must not be empty.',
+            ], 422);
+        }
+        $this->db->run(
+            'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [\Core\Auth::uuid4(), (string)$chapter['object_id'], $title, $summary, (string)$chapter['body'], $user->id()]
+        );
         return Response::redirect('/writing/' . $projectId);
     }
 
@@ -246,6 +287,7 @@ final class ChapterController
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => $chapter,
+            'isEdit' => $slug !== null,
             'error' => $error,
         ], 422);
     }

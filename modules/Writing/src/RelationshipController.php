@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Writing;
@@ -21,6 +22,35 @@ final class RelationshipController
     ) {
     }
 
+    public function create(User $user, string $projectId): Response
+    {
+        if ($this->findProject($projectId) === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        if (count($this->characterOptions($projectId)) < 2) {
+            return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
+                'title' => 'New relationship',
+                'projectId' => $projectId,
+                'projectTitle' => $this->projectTitle($projectId),
+                'relation' => null,
+                'characterOptions' => [],
+                'kinds' => self::KINDS,
+                'error' => null,
+                'notice' => 'Create at least two characters to define relationships.',
+            ]);
+        }
+        return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
+            'title' => 'New relationship',
+            'projectId' => $projectId,
+            'projectTitle' => $this->projectTitle($projectId),
+            'relation' => null,
+            'characterOptions' => $this->characterOptions($projectId),
+            'kinds' => self::KINDS,
+            'error' => null,
+            'notice' => null,
+        ]);
+    }
+
     public function store(User $user, string $projectId): Response
     {
         if ($this->findProject($projectId) === null || !$this->access->canEdit($user, $projectId)) {
@@ -30,17 +60,63 @@ final class RelationshipController
         $toId = (string)($_POST['to_character_id'] ?? '');
         $kind = (string)($_POST['kind'] ?? 'related');
         $description = trim((string)($_POST['description'] ?? ''));
-
-        $error = $this->validate($projectId, $fromId, $toId, $kind);
+        $error = $this->validate($projectId, $fromId, $toId, $kind, null);
         if ($error !== null) {
-            return $this->projectPage($user, $projectId, $error, 422);
+            return $this->formError($user, $projectId, null, $fromId, $toId, $kind, $description, $error);
         }
         $this->db->run(
             'INSERT INTO character_relations (id, project_id, from_character_id, to_character_id, kind, description)
              VALUES (?, ?, ?, ?, ?, ?)',
             [\Core\Auth::uuid4(), $projectId, $fromId, $toId, $kind, $description]
         );
-        return Response::redirect('/writing/' . $projectId);
+        return Response::redirect('/writing/' . $projectId . '#relationships');
+    }
+
+    public function edit(User $user, string $projectId, string $relationId): Response
+    {
+        if ($this->findProject($projectId) === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $relation = $this->findRelation($projectId, $relationId);
+        if ($relation === null) {
+            return $this->notFound($user);
+        }
+        return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
+            'title' => 'Edit relationship',
+            'projectId' => $projectId,
+            'projectTitle' => $this->projectTitle($projectId),
+            'relation' => $relation,
+            'characterOptions' => $this->characterOptions($projectId),
+            'kinds' => self::KINDS,
+            'error' => null,
+            'notice' => null,
+        ]);
+    }
+
+    public function update(User $user, string $projectId, string $relationId): Response
+    {
+        if ($this->findProject($projectId) === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $relation = $this->findRelation($projectId, $relationId);
+        if ($relation === null) {
+            return $this->notFound($user);
+        }
+        $fromId = (string)($_POST['from_character_id'] ?? '');
+        $toId = (string)($_POST['to_character_id'] ?? '');
+        $kind = (string)($_POST['kind'] ?? 'related');
+        $description = trim((string)($_POST['description'] ?? ''));
+        $error = $this->validate($projectId, $fromId, $toId, $kind, $relationId);
+        if ($error !== null) {
+            return $this->formError($user, $projectId, $relation, $fromId, $toId, $kind, $description, $error);
+        }
+        $this->db->run(
+            'UPDATE character_relations
+             SET from_character_id = ?, to_character_id = ?, kind = ?, description = ?
+             WHERE id = ? AND project_id = ?',
+            [$fromId, $toId, $kind, $description, $relationId, $projectId]
+        );
+        return Response::redirect('/writing/' . $projectId . '#relationships');
     }
 
     public function destroy(User $user, string $projectId): Response
@@ -61,8 +137,8 @@ final class RelationshipController
     {
         return $this->db->all(
             "SELECT r.id, r.kind, r.description,
-                    f.id AS from_id, o1.slug AS from_slug, COALESCE(rf.title, o1.slug) AS from_title,
-                    t.id AS to_id, o2.slug AS to_slug, COALESCE(rt.title, o2.slug) AS to_title
+                   f.id AS from_id, o1.slug AS from_slug, COALESCE(rf.title, o1.slug) AS from_title,
+                   t.id AS to_id, o2.slug AS to_slug, COALESCE(rt.title, o2.slug) AS to_title
              FROM character_relations r
              JOIN characters f ON f.id = r.from_character_id
              JOIN content_objects o1 ON o1.id = f.id AND o1.type = 'character'
@@ -78,7 +154,11 @@ final class RelationshipController
         );
     }
 
-    private function validate(string $projectId, string $fromId, string $toId, string $kind): ?string
+    /**
+     * Direction-aware duplicate check: A loves B and B loves A are distinct,
+     * but the exact same pair in the same direction (regardless of kind) is rejected.
+     */
+    private function validate(string $projectId, string $fromId, string $toId, string $kind, ?string $ignoreId): ?string
     {
         if ($fromId === '' || $toId === '') {
             return 'Both characters must be selected.';
@@ -94,14 +174,20 @@ final class RelationshipController
                 'SELECT id FROM characters WHERE id = ? AND project_id = ?',
                 [$characterId, $projectId]
             ) === null) {
-                return 'Both characters must belong to this project.';
+                return 'Both characters must belong to this story.';
             }
         }
-        $exists = $this->db->one(
-            'SELECT id FROM character_relations WHERE project_id = ? AND from_character_id = ? AND to_character_id = ? AND kind = ?',
-            [$projectId, $fromId, $toId, $kind]
-        );
-        return $exists !== null ? 'This relationship already exists.' : null;
+        $sql = 'SELECT id FROM character_relations
+                 WHERE project_id = ? AND from_character_id = ? AND to_character_id = ?';
+        $params = [$projectId, $fromId, $toId];
+        if ($ignoreId !== null) {
+            $sql .= ' AND id <> ?';
+            $params[] = $ignoreId;
+        }
+        $exists = $this->db->one($sql, $params);
+        return $exists !== null
+            ? 'This relationship already exists. The same pair can only be linked once per direction.'
+            : null;
     }
 
     /** @return list<array{id: string, title: string}> */
@@ -119,20 +205,55 @@ final class RelationshipController
         );
     }
 
-    private function projectPage(User $user, string $projectId, string $error, int $status): Response
+    /** @return array<string, mixed>|null */
+    private function findRelation(string $projectId, string $relationId): ?array
     {
-        $project = $this->findProject($projectId);
-        return $this->page($user, 'templates/error.php', [
-            'title' => '400',
-            'code' => $status,
-            'message' => $error,
-        ], $status);
+        return $this->db->one(
+            'SELECT id, from_character_id, to_character_id, kind, description
+             FROM character_relations WHERE id = ? AND project_id = ?',
+            [$relationId, $projectId]
+        );
+    }
+
+    /** @param array<string, mixed>|null $relation */
+    private function formError(
+        User $user,
+        string $projectId,
+        ?array $relation,
+        string $fromId,
+        string $toId,
+        string $kind,
+        string $description,
+        string $error
+    ): Response {
+        return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
+            'title' => $relation === null ? 'New relationship' : 'Edit relationship',
+            'projectId' => $projectId,
+            'projectTitle' => $this->projectTitle($projectId),
+            'relation' => [
+                'id' => $relation['id'] ?? null,
+                'from_character_id' => $fromId,
+                'to_character_id' => $toId,
+                'kind' => $kind,
+                'description' => $description,
+            ],
+            'characterOptions' => $this->characterOptions($projectId),
+            'kinds' => self::KINDS,
+            'error' => $error,
+            'notice' => null,
+        ], 422);
     }
 
     /** @return array<string, mixed>|null */
     private function findProject(string $projectId): ?array
     {
         return $this->db->one('SELECT id, title FROM projects WHERE id = ?', [$projectId]);
+    }
+
+    private function projectTitle(string $projectId): string
+    {
+        $project = $this->findProject($projectId);
+        return $project === null ? '' : (string)$project['title'];
     }
 
     /** @param array<string, mixed> $data */
@@ -154,7 +275,7 @@ final class RelationshipController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Project not found.',
+            'message' => 'Relationship not found.',
         ], 404);
     }
 }

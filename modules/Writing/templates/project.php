@@ -1,39 +1,99 @@
+<?php
+
+/**
+ * @param string $text
+ * @return string first sentence of a text
+ */
+function firstSentence(string $text): string
+{
+    $text = trim($text);
+    if ($text === '') {
+        return '';
+    }
+    if (preg_match('/^(.*?[.!?])(?:\s|$)/us', $text, $m) === 1) {
+        return $m[1];
+    }
+    return $text;
+}
+
+/**
+ * @param string $text
+ * @return string text clamped to 250 words
+ */
+function clampWords(string $text, int $max = 250): string
+{
+    $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+    if ($words === false || count($words) <= $max) {
+        return trim($text);
+    }
+    return implode(' ', array_slice($words, 0, $max)) . ' …';
+}
+?>
 <section class="card">
-    <p class="muted"><a href="/writing">&larr; All projects</a></p>
+    <p class="muted"><a href="/writing">&larr; All stories</a></p>
     <h1><?= e($project['title']) ?></h1>
+    <?php if ($isOwner): ?>
+        <p><a class="button" href="/writing/<?= e($project['id']) ?>/setup">Novel Setup</a></p>
+    <?php endif; ?>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
 
-    <h2>Outline</h2>
-    <dl>
-        <dt>Blurb <span class="muted">(one paragraph: setup, three turning points, ending)</span></dt>
-        <dd><?= $project['blurb'] !== '' ? nl2br(e($project['blurb'])) : '<span class="muted">Not written yet.</span>' ?></dd>
-        <dt>Synopsis <span class="muted">(chapter outline)</span></dt>
-        <dd><?= $project['synopsis'] !== '' ? nl2br(e($project['synopsis'])) : '<span class="muted">Not written yet.</span>' ?></dd>
-        <dt>Extended synopsis</dt>
-        <dd><?= $project['synopsis_long'] !== '' ? nl2br(e($project['synopsis_long'])) : '<span class="muted">Not written yet.</span>' ?></dd>
-    </dl>
+    <h2>Idea</h2>
+    <p class="muted">Your story's core in one sentence (logline).</p>
+    <?php if ((string)$project['idea'] !== ''): ?>
+        <p><?= e(firstSentence((string)$project['idea'])) ?></p>
+    <?php else: ?>
+        <p class="muted">Not written yet.</p>
+    <?php endif; ?>
+    <?php if ($isOwner): ?>
+        <p><a href="/writing/<?= e($project['id']) ?>/outline/idea">Edit</a></p>
+    <?php endif; ?>
 
-    <h2>Chapters</h2>
+    <h2>Short Description</h2>
+    <p class="muted">Your story in one paragraph: setup, three turning points, ending.</p>
+    <?php if ((string)$project['blurb'] !== ''): ?>
+        <p><?= e(clampWords((string)$project['blurb'])) ?></p>
+    <?php else: ?>
+        <p class="muted">Not written yet.</p>
+    <?php endif; ?>
+    <?php if ($isOwner): ?>
+        <p><a href="/writing/<?= e($project['id']) ?>/outline/blurb">Edit</a></p>
+    <?php endif; ?>
+
+    <h2>Synopsis by Chapters</h2>
+    <p class="muted">Each element of the short description expanded into a chapter outline.</p>
     <?php if ($chapters !== []): ?>
         <table>
-            <tr><th>Title</th><th>Summary</th><th>Slug</th><th></th></tr>
-            <?php foreach ($chapters as $ch): ?>
+            <tr><th>#</th><th>Chapter</th><th>Summary</th><th>Prose</th><th></th></tr>
+            <?php foreach ($chapters as $i => $ch): ?>
                 <tr>
+                    <td><?= $i + 1 ?></td>
                     <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
-                    <td class="muted"><?= e(mb_strimwidth((string)($ch['summary'] ?? ''), 0, 60, '…')) ?></td>
-                    <td class="muted"><?= e($ch['slug']) ?></td>
-                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>">Open</a></td>
+                    <td class="muted"><?= e(mb_strimwidth((string)$ch['summary'], 0, 80, '…')) ?></td>
+                    <td><?= (string)$ch['body'] !== '' ? 'written' : '<span class="muted">open</span>' ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>/summary">Outline</a></td>
                 </tr>
             <?php endforeach; ?>
         </table>
     <?php else: ?>
-        <p class="muted">No chapters yet.</p>
+        <p class="muted">No chapter outlines yet.</p>
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/chapters/new">New chapter</a></p>
 
+    <h2>Extended Synopsis</h2>
+    <p class="muted">Think about the course of your story. Describe the whole story line in one detailed draft.</p>
+    <?php if ((string)$project['synopsis_long'] !== ''): ?>
+        <p><?= e(clampWords((string)$project['synopsis_long'])) ?></p>
+    <?php else: ?>
+        <p class="muted">Not written yet.</p>
+    <?php endif; ?>
+    <?php if ($isOwner): ?>
+        <p><a href="/writing/<?= e($project['id']) ?>/outline/synopsis_long">Edit</a></p>
+    <?php endif; ?>
+
     <h2>Characters</h2>
+    <p class="muted">Give your characters a face &mdash; appearance, biography, motivation and the wounds that drive them.</p>
     <?php if ($characters !== []): ?>
         <table>
             <tr><th>Name</th><th>Slug</th><th></th></tr>
@@ -50,7 +110,28 @@
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/characters/new">New character</a></p>
 
+    <h2>Relationship Web</h2>
+    <p class="muted">Who knows whom, how they are connected &mdash; and where the conflict lies.</p>
+    <?php if ($relations !== []): ?>
+        <table>
+            <tr><th>From</th><th>Kind</th><th>To</th><th>Conflict</th><th></th></tr>
+            <?php foreach ($relations as $r): ?>
+                <tr>
+                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($r['from_slug'] ?? '') ?>"><?= e($r['from_title']) ?></a></td>
+                    <td><?= e($r['kind']) ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($r['to_slug'] ?? '') ?>"><?= e($r['to_title']) ?></a></td>
+                    <td class="muted"><?= e($r['description']) ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/relations/<?= e($r['id']) ?>/edit">Edit</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p class="muted">No relationships yet.</p>
+    <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/relations/new">New relationship</a></p>
+
     <h2>Backgrounds</h2>
+    <p class="muted">The world your story stands on &mdash; its historical, geographical, religious and political context.</p>
     <?php if ($backgrounds !== []): ?>
         <table>
             <tr><th>Title</th><th>Slug</th><th></th></tr>
@@ -67,117 +148,26 @@
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/backgrounds/new">New background</a></p>
 
-    <h2>Relationships</h2>
-    <?php if ($relations !== []): ?>
+    <h2>Written Chapters</h2>
+    <p class="muted">The actual prose &mdash; turn your chapter outlines into finished text, chapter by chapter.</p>
+    <?php $written = array_filter($chapters, fn ($ch) => (string)$ch['body'] !== ''); ?>
+    <?php if ($written !== []): ?>
         <table>
-            <tr><th>From</th><th>Kind</th><th>To</th><th>Description</th><th></th></tr>
-            <?php foreach ($relations as $r): ?>
+            <tr><th>#</th><th>Chapter</th><th></th></tr>
+            <?php $i = 0; foreach ($chapters as $ch): ?>
+                <?php if ((string)$ch['body'] === '') { continue; } $i++; ?>
                 <tr>
-                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($r['from_slug'] ?? '') ?>"><?= e($r['from_title']) ?></a></td>
-                    <td><?= e($r['kind']) ?></td>
-                    <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($r['to_slug'] ?? '') ?>"><?= e($r['to_title']) ?></a></td>
-                    <td class="muted"><?= e($r['description']) ?></td>
-                    <td>
-                        <form class="inline" method="post" action="/writing/<?= e($project['id']) ?>/relations/delete">
-                            <?= $csrf->field() ?>
-                            <input type="hidden" name="relation_id" value="<?= e($r['id']) ?>">
-                            <button type="submit">Delete</button>
-                        </form>
-                    </td>
+                    <td><?= $i ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>/edit">Open</a></td>
                 </tr>
             <?php endforeach; ?>
         </table>
     <?php else: ?>
-        <p class="muted">No relationships yet.</p>
-    <?php endif; ?>
-    <?php if (count($characterOptions) >= 2): ?>
-        <h3>New relationship</h3>
-        <form method="post" action="/writing/<?= e($project['id']) ?>/relations">
-            <?= $csrf->field() ?>
-            <label for="from_character_id">From</label>
-            <select id="from_character_id" name="from_character_id" required>
-                <?php foreach ($characterOptions as $c): ?>
-                    <option value="<?= e($c['id']) ?>"><?= e($c['title']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <label for="kind">Kind</label>
-            <select id="kind" name="kind">
-                <?php foreach (['related', 'family', 'friend', 'rival', 'lover', 'mentor', 'ally', 'enemy'] as $k): ?>
-                    <option value="<?= e($k) ?>"><?= e($k) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <label for="to_character_id">To</label>
-            <select id="to_character_id" name="to_character_id" required>
-                <?php foreach ($characterOptions as $c): ?>
-                    <option value="<?= e($c['id']) ?>"><?= e($c['title']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <label for="description">Description <small class="muted">(optional)</small></label>
-            <input id="description" name="description" maxlength="500" placeholder="how they relate">
-            <button type="submit">Add</button>
-        </form>
-    <?php else: ?>
-        <p class="muted">Create at least two characters to define relationships.</p>
+        <p class="muted">No written chapters yet. Open a chapter above and start writing.</p>
     <?php endif; ?>
 
-    <?php if ($isOwner): ?>
-        <h2>Edit project</h2>
-        <form method="post" action="/writing/<?= e($project['id']) ?>">
-            <?= $csrf->field() ?>
-            <label for="title">Title</label>
-            <input id="title" name="title" required minlength="2" maxlength="200" value="<?= e($project['title']) ?>">
-            <label for="blurb">Blurb <small class="muted">(one paragraph)</small></label>
-            <textarea id="blurb" name="blurb" rows="4" placeholder="setup, three turning points, ending"><?= e($project['blurb']) ?></textarea>
-            <label for="synopsis">Synopsis</label>
-            <textarea id="synopsis" name="synopsis" rows="6" placeholder="chapter outline"><?= e($project['synopsis']) ?></textarea>
-            <label for="synopsis_long">Extended synopsis</label>
-            <textarea id="synopsis_long" name="synopsis_long" rows="6"><?= e($project['synopsis_long']) ?></textarea>
-            <button type="submit">Save</button>
-        </form>
-
-        <h2>Share project</h2>
-        <?php if ($shareTargets !== []): ?>
-            <form method="post" action="/writing/<?= e($project['id']) ?>/share">
-                <?= $csrf->field() ?>
-                <label for="username">Username</label>
-                <select id="username" name="username" required>
-                    <option value="" disabled selected>who to invite</option>
-                    <?php foreach ($shareTargets as $t): ?>
-                        <option value="<?= e($t['username']) ?>"><?= e($t['username']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-                <button type="submit">Share</button>
-            </form>
-        <?php else: ?>
-            <p class="muted">There is no other user left to share this project with.</p>
-        <?php endif; ?>
-
-        <?php if ($members !== []): ?>
-            <h3>Shared with</h3>
-            <table>
-                <tr><th>User</th><th>Role</th><th></th></tr>
-                <?php foreach ($members as $m): ?>
-                    <tr>
-                        <td><?= e($m['username']) ?></td>
-                        <td><?= e($m['role']) ?></td>
-                        <td>
-                            <form class="inline" method="post" action="/writing/<?= e($project['id']) ?>/unshare">
-                                <?= $csrf->field() ?>
-                                <input type="hidden" name="user_id" value="<?= e($m['user_id']) ?>">
-                                <button type="submit">Revoke</button>
-                            </form>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </table>
-        <?php endif; ?>
-
-        <h2>Danger zone</h2>
-        <form method="post" action="/writing/<?= e($project['id']) ?>/delete">
-            <?= $csrf->field() ?>
-            <button type="submit">Delete project</button>
-        </form>
-    <?php else: ?>
-        <p class="muted">Shared with you by <?= e($project['owner_name'] ?? '') ?>. You can read and edit texts, but not manage the project.</p>
+    <?php if (!$isOwner): ?>
+        <p class="muted">Shared with you by <?= e($project['owner_name'] ?? '') ?>. You can read and edit texts, but not manage the story.</p>
     <?php endif; ?>
 </section>

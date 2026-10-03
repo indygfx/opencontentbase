@@ -117,14 +117,42 @@ final class RelationshipAccessTest extends TestCase
         $this->assertSame(1, $count);
     }
 
-    public function testSamePairDifferentKindAllowed(): void
+    public function testSamePairSameDirectionRejectedRegardlessOfKind(): void
     {
         $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'friend'];
         $this->controller->store($this->owner, 'p1');
         $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'rival'];
         $response = $this->controller->store($this->owner, 'p1');
+        $this->assertSame(422, $response->status());
+        $count = (int)$this->db->one("SELECT COUNT(*) AS c FROM character_relations")['c'];
+        $this->assertSame(1, $count);
+    }
+
+    public function testReversedDirectionIsAllowed(): void
+    {
+        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'lover'];
+        $this->controller->store($this->owner, 'p1');
+        $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'enemy'];
+        $response = $this->controller->store($this->owner, 'p1');
+        $this->assertSame(302, $response->status());
         $count = (int)$this->db->one("SELECT COUNT(*) AS c FROM character_relations")['c'];
         $this->assertSame(2, $count);
+    }
+
+    public function testEditRelationPageAndDirectionalDuplicateOnUpdate(): void
+    {
+        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'friend'];
+        $this->controller->store($this->owner, 'p1');
+        $relationId = (string)$this->db->one("SELECT id FROM character_relations")['id'];
+        $response = $this->controller->edit($this->owner, 'p1', $relationId);
+        $this->assertSame(200, $response->status());
+        $this->assertStringContainsString('Edit relationship', $response->body());
+        $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'enemy', 'description' => 'hate'];
+        $response = $this->controller->update($this->owner, 'p1', $relationId);
+        $this->assertSame(302, $response->status());
+        $row = $this->db->one("SELECT * FROM character_relations WHERE id = ?", [$relationId]);
+        $this->assertSame('c2', (string)$row['from_character_id']);
+        $this->assertSame('enemy', (string)$row['kind']);
     }
 
     public function testMemberCanDeleteRelation(): void
