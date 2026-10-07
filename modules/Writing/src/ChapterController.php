@@ -17,7 +17,8 @@ final class ChapterController
         private View $view,
         private Csrf $csrf,
         private ProjectAccess $access,
-        private ContentRenderer $rendererService
+        private ContentRenderer $rendererService,
+        private ChapterSynopsisController $synopses
     ) {
     }
 
@@ -31,6 +32,8 @@ final class ChapterController
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => null,
+            'synopsis' => null,
+            'synopses' => $this->synopses->unassigned($projectId),
             'isEdit' => false,
             'error' => null,
         ]);
@@ -41,22 +44,31 @@ final class ChapterController
         if ($this->findProject($projectId) === null || !$this->access->canEdit($user, $projectId)) {
             return $this->notFound($user);
         }
-        $title = trim((string)($_POST['title'] ?? ''));
+        $synopsisId = trim((string)($_POST['synopsis_id'] ?? ''));
         $slugInput = trim((string)($_POST['slug'] ?? ''));
-        $slug = slugify($slugInput ?: $title);
-        $summary = trim((string)($_POST['summary'] ?? ''));
         $body = (string)($_POST['body'] ?? '');
-        $error = $this->validate($projectId, $title, $slug);
+        $synopsis = $synopsisId === '' ? null : $this->synopses->findSynopsisRow($projectId, $synopsisId);
+        if ($synopsis === null) {
+            return $this->editError($user, $projectId, null, $slugInput, $body,
+                'Pick a chapter outline for this chapter.');
+        }
+        $assigned = $this->assignedChapter($projectId, $synopsis['id']);
+        if ($assigned !== null) {
+            return $this->editError($user, $projectId, null, $slugInput, $body,
+                'That chapter outline is already assigned to a written chapter.');
+        }
+        $slug = slugify($slugInput ?: $synopsis['title']);
+        $error = $this->validate($slug);
         if ($error === null && $slugInput !== '' && $this->slugTaken($projectId, $slug)) {
             $error = 'A chapter with that slug already exists in this story.';
         }
         if ($error !== null) {
-            return $this->editError($user, $projectId, null, $title, $slugInput, $summary, $body, $error);
+            return $this->editError($user, $projectId, null, $slugInput, $body, $error, $synopsis);
         }
         if ($slugInput === '') {
             $slug = $this->uniqueSlug($projectId, $slug);
         }
-        $this->insertChapter($user, $projectId, $slug, $title, $summary, $body);
+        $this->insertChapter($user, $projectId, $slug, $synopsis['title'], $synopsis['id'], $body);
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug));
     }
 
@@ -83,11 +95,14 @@ final class ChapterController
         if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
             return $this->notFound($user);
         }
+        $synopsis = $this->synopses->findSynopsisRow($projectId, (string)$chapter['chapter_synopsis_id']);
         return $this->page($user, 'modules/Writing/templates/chapter_edit.php', [
             'title' => 'Edit: ' . (string)$chapter['title'],
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => $chapter,
+            'synopsis' => $synopsis,
+            'synopses' => $this->synopses->unassigned($projectId, $synopsis['id'] ?? null),
             'isEdit' => true,
             'error' => null,
         ]);
@@ -99,28 +114,56 @@ final class ChapterController
         if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
             return $this->notFound($user);
         }
-        $title = trim((string)($_POST['title'] ?? ''));
-        $newSlug = slugify(trim((string)($_POST['slug'] ?? '')) ?: $title);
-        $summary = trim((string)($_POST['summary'] ?? ''));
+        $currentSynopsisId = (string)$chapter['chapter_synopsis_id'];
+        $synopsisId = trim((string)($_POST['synopsis_id'] ?? ''));
+        $newSlug = slugify(trim((string)($_POST['slug'] ?? '')) ?: (string)$chapter['slug']);
         $body = (string)($_POST['body'] ?? '');
-        if ($newSlug !== $slug) {
-            $error = $this->validate($projectId, $title, $newSlug);
+        if ($synopsisId !== $currentSynopsisId) {
+            $synopsis = $synopsisId === '' ? null : $this->synopses->findSynopsisRow($projectId, $synopsisId);
+            if ($synopsis === null) {
+                return $this->editError($user, $projectId, $slug, $newSlug, $body,
+                    'Pick a chapter outline for this chapter.', null, true);
+            }
+            $assigned = $this->assignedChapter($projectId, $synopsis['id']);
+            if ($assigned !== null) {
+                return $this->editError($user, $projectId, $slug, $newSlug, $body,
+                    'That chapter outline is already assigned to a written chapter.', $synopsis, true);
+            }
+            $newSynopsisId = $synopsis['id'];
+            $newTitle = $synopsis['title'];
         } else {
-            $error = $title === '' ? 'The title must not be empty.' : null;
+            $newSynopsisId = $currentSynopsisId;
+            $newTitle = (string)$chapter['title'];
+        }
+        if ($newSlug !== $slug) {
+            $error = $this->validate($newSlug);
+            if ($error === null && $this->slugTaken($projectId, $newSlug)) {
+                $error = 'A chapter with that slug already exists in this story.';
+            }
+        } else {
+            $error = null;
         }
         if ($error !== null) {
-            return $this->editError($user, $projectId, $slug, $title, $newSlug, $summary, $body, $error);
+            return $this->editError($user, $projectId, $slug, $newSlug, $body, $error, null, true);
         }
-        $this->db->transaction(function (Database $db) use ($chapter, $newSlug, $title, $summary, $body, $user): void {
+        $currentSynopsis = $this->synopses->findSynopsisRow($projectId, $currentSynopsisId);
+        $summaryText = (string)($currentSynopsis['summary_text'] ?? '');
+        $this->db->transaction(function (Database $db) use ($chapter, $newSlug, $newSynopsisId, $newTitle, $summaryText, $body, $user): void {
             if ($newSlug !== (string)$chapter['slug']) {
                 $db->run(
                     'UPDATE content_objects SET slug = ? WHERE id = ?',
                     [$newSlug, (string)$chapter['object_id']]
                 );
+                $db->run('UPDATE chapters SET slug = ? WHERE id = ?', [$newSlug, (string)$chapter['id']]);
             }
             $db->run(
+                'UPDATE chapters SET chapter_synopsis_id = ? WHERE id = ?',
+                [$newSynopsisId, (string)$chapter['id']]
+            );
+            $db->run(
                 'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id) VALUES (?, ?, ?, ?, ?, ?)',
-                [\Core\Auth::uuid4(), (string)$chapter['object_id'], $title, $summary, $body, $user->id()]
+                [\Core\Auth::uuid4(), (string)$chapter['object_id'], $newTitle,
+                    $summaryText, $body, $user->id()]
             );
         });
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($newSlug));
@@ -143,56 +186,14 @@ final class ChapterController
         return Response::redirect('/writing/' . $projectId);
     }
 
-    public function summaryEdit(User $user, string $projectId, string $slug): Response
-    {
-        $chapter = $this->findChapter($projectId, $slug);
-        if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
-            return $this->notFound($user);
-        }
-        return $this->page($user, 'modules/Writing/templates/chapter_summary.php', [
-            'title' => 'Chapter outline: ' . (string)$chapter['title'],
-            'projectId' => $projectId,
-            'projectTitle' => $this->projectTitle($projectId),
-            'chapter' => $chapter,
-            'error' => null,
-        ]);
-    }
-
-    public function summaryUpdate(User $user, string $projectId, string $slug): Response
-    {
-        $chapter = $this->findChapter($projectId, $slug);
-        if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
-            return $this->notFound($user);
-        }
-        $title = trim((string)($_POST['title'] ?? ''));
-        $summary = trim((string)($_POST['summary'] ?? ''));
-        if ($title === '') {
-            return $this->page($user, 'modules/Writing/templates/chapter_summary.php', [
-                'title' => 'Chapter outline: ' . (string)$chapter['title'],
-                'projectId' => $projectId,
-                'projectTitle' => $this->projectTitle($projectId),
-                'chapter' => ['slug' => $chapter['slug'], 'title' => $title, 'summary' => $summary, 'body' => (string)$chapter['body']],
-                'error' => 'The title must not be empty.',
-            ], 422);
-        }
-        $this->db->run(
-            'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id) VALUES (?, ?, ?, ?, ?, ?)',
-            [\Core\Auth::uuid4(), (string)$chapter['object_id'], $title, $summary, (string)$chapter['body'], $user->id()]
-        );
-        return Response::redirect('/writing/' . $projectId);
-    }
-
     public function preview(User $user): Response
     {
         $body = (string)($_POST['body'] ?? '');
         return Response::json(['html' => $this->rendererService->render($body)]);
     }
 
-    private function validate(string $projectId, string $title, string $slug): ?string
+    private function validate(string $slug): ?string
     {
-        if ($title === '') {
-            return 'The title must not be empty.';
-        }
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
             return 'Could not derive a slug from the title (a-z, 0-9, hyphen).';
         }
@@ -213,24 +214,34 @@ final class ChapterController
     private function slugTaken(string $projectId, string $slug): bool
     {
         return $this->db->one(
-            "SELECT 1 FROM content_objects o JOIN chapters c ON c.id = o.id
-             WHERE o.type = 'chapter' AND o.slug = ? AND c.project_id = ?",
+            'SELECT 1 FROM content_objects o JOIN chapters c ON c.id = o.id
+             WHERE o.type = \'chapter\' AND o.slug = ? AND c.project_id = ?',
             [$slug, $projectId]
         ) !== null;
     }
 
-    private function insertChapter(User $user, string $projectId, string $slug, string $title, string $summary, string $body): void
-    {
-        $this->db->transaction(function (Database $db) use ($user, $projectId, $slug, $title, $summary, $body): void {
+    private function insertChapter(
+        User $user,
+        string $projectId,
+        string $slug,
+        string $title,
+        string $synopsisId,
+        string $body
+    ): void {
+        $this->db->transaction(function (Database $db) use ($user, $projectId, $slug, $title, $synopsisId, $body): void {
             $objectId = \Core\Auth::uuid4();
             $db->run(
                 "INSERT INTO content_objects (id, type, slug, owner_id) VALUES (?, 'chapter', ?, ?)",
                 [$objectId, $slug, $user->id()]
             );
             $db->run(
-                'INSERT INTO chapters (id, project_id, slug) VALUES (?, ?, ?)',
-                [$objectId, $projectId, $slug]
+                'INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES (?, ?, ?, ?)',
+                [$objectId, $projectId, $synopsisId, $slug]
             );
+            $summary = (string)($db->one(
+                'SELECT summary_text FROM chapter_synopses WHERE id = ?',
+                [$synopsisId]
+            )['summary_text'] ?? '');
             $db->run(
                 'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id) VALUES (?, ?, ?, ?, ?, ?)',
                 [\Core\Auth::uuid4(), $objectId, $title, $summary, $body, $user->id()]
@@ -239,12 +250,26 @@ final class ChapterController
     }
 
     /** @return array<string, mixed>|null */
+    private function assignedChapter(string $projectId, string $synopsisId): ?array
+    {
+        return $this->db->one(
+            'SELECT c.slug, s.title FROM chapters c
+             JOIN chapter_synopses s ON s.id = c.chapter_synopsis_id
+             WHERE c.project_id = ? AND c.chapter_synopsis_id = ?',
+            [$projectId, $synopsisId]
+        );
+    }
+
+    /** @return array<string, mixed>|null */
     private function findChapter(string $projectId, string $slug): ?array
     {
         return $this->db->one(
-            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, r.title, r.summary, r.body
+            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, c.chapter_synopsis_id,
+                    COALESCE(s.title, r.title, o.slug) AS title,
+                    COALESCE(s.summary_text, r.summary, '') AS summary, r.body
              FROM content_objects o
              JOIN chapters c ON c.id = o.id
+             LEFT JOIN chapter_synopses s ON s.id = c.chapter_synopsis_id
              LEFT JOIN content_revisions r ON r.object_id = o.id
               AND r.created_at = (
                   SELECT MAX(r2.created_at) FROM content_revisions r2 WHERE r2.object_id = o.id
@@ -270,24 +295,27 @@ final class ChapterController
         User $user,
         string $projectId,
         ?string $slug,
-        string $title,
         string $slugInput,
-        string $summary,
         string $body,
-        string $error
+        string $error,
+        ?array $synopsis = null,
+        bool $isEdit = false
     ): Response {
         $chapter = [
             'slug' => $slugInput,
-            'title' => $title,
-            'summary' => $summary,
+            'title' => $synopsis['title'] ?? '',
             'body' => $body,
         ];
+        $currentId = $synopsis['id'] ?? '';
+        $synopses = $this->synopses->unassigned($projectId, $currentId !== '' ? $currentId : null);
         return $this->page($user, 'modules/Writing/templates/chapter_edit.php', [
-            'title' => 'New chapter',
+            'title' => $isEdit ? 'Edit: ' . (string)($chapter['title'] ?? '') : 'New chapter',
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => $chapter,
-            'isEdit' => $slug !== null,
+            'synopsis' => $synopsis,
+            'synopses' => $synopses,
+            'isEdit' => $isEdit || $slug !== null,
             'error' => $error,
         ], 422);
     }

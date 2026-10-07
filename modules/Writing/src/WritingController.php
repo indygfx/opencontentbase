@@ -72,6 +72,7 @@ final class WritingController
             'members' => $this->access->members($id),
             'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
             'chapters' => $this->chapters($id),
+            'synopses' => $this->synopses($id),
             'characters' => $this->characters($id),
             'backgrounds' => $this->backgrounds($id),
             'relations' => $this->relationships->list($id),
@@ -260,16 +261,30 @@ final class WritingController
     private function chapters(string $projectId): array
     {
         return $this->db->all(
-            "SELECT o.slug, COALESCE(r.title, o.slug) AS title,
-                    COALESCE(r.summary, '') AS summary, COALESCE(r.body, '') AS body
+            "SELECT o.slug, COALESCE(s.title, o.slug) AS title,
+                    COALESCE(r.body, '') AS body
              FROM content_objects o
              JOIN chapters c ON c.id = o.id
+             LEFT JOIN chapter_synopses s ON s.id = c.chapter_synopsis_id
              LEFT JOIN content_revisions r ON r.object_id = o.id
               AND r.created_at = (
                   SELECT MAX(r2.created_at) FROM content_revisions r2 WHERE r2.object_id = o.id
               )
              WHERE o.type = 'chapter' AND c.project_id = ?
-             ORDER BY r.created_at ASC, o.slug ASC",
+             ORDER BY c.created_at ASC, o.slug ASC",
+            [$projectId]
+        );
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function synopses(string $projectId): array
+    {
+        return $this->db->all(
+            'SELECT s.slug, s.title, s.summary_text,
+                    (SELECT c.slug FROM chapters c WHERE c.chapter_synopsis_id = s.id) AS chapter_slug
+             FROM chapter_synopses s
+             WHERE s.project_id = ?
+             ORDER BY s.created_at ASC, s.title ASC',
             [$projectId]
         );
     }
@@ -309,6 +324,7 @@ final class WritingController
             'members' => $this->access->members($id),
             'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
             'chapters' => $this->chapters($id),
+            'synopses' => $this->synopses($id),
             'characters' => $this->characters($id),
             'backgrounds' => $this->backgrounds($id),
             'relations' => $this->relationships->list($id),

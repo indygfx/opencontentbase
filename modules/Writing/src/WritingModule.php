@@ -13,6 +13,7 @@ final class WritingModule implements ModuleInterface
     private ProjectAccess $access;
 
     private ChapterController $chapters;
+    private ChapterSynopsisController $synopses;
     private CharacterController $characters;
     private BackgroundController $backgrounds;
     private RelationshipController $relationships;
@@ -25,7 +26,8 @@ final class WritingModule implements ModuleInterface
     ) {
         $this->access = new ProjectAccess($db);
         $this->controller = new WritingController($db, $view, $csrf, $this->access, $renderer);
-        $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer);
+        $this->synopses = new ChapterSynopsisController($db, $view, $csrf, $this->access);
+        $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer, $this->synopses);
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
@@ -40,6 +42,7 @@ final class WritingModule implements ModuleInterface
     {
         $c = $this->controller;
         $ch = $this->chapters;
+        $sy = $this->synopses;
         $ca = $this->characters;
         $bg = $this->backgrounds;
         $rel = $this->relationships;
@@ -58,8 +61,12 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/chapters/{slug}/edit', 'handler' => fn ($params, $user) => $ch->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}', 'handler' => fn ($params, $user) => $ch->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/delete', 'handler' => fn ($params, $user) => $ch->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
-            ['method' => 'GET', 'pattern' => '/writing/{id}/chapters/{slug}/summary', 'handler' => fn ($params, $user) => $ch->summaryEdit($user, $params['id'], $params['slug']), 'roles' => ['user']],
-            ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/summary', 'handler' => fn ($params, $user) => $ch->summaryUpdate($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/synopses/new', 'handler' => fn ($params, $user) => $sy->create($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/synopses', 'handler' => fn ($params, $user) => $sy->store($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/synopses/{slug}', 'handler' => fn ($params, $user) => $sy->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/synopses/{slug}/edit', 'handler' => fn ($params, $user) => $sy->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/synopses/{slug}', 'handler' => fn ($params, $user) => $sy->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/synopses/{slug}/delete', 'handler' => fn ($params, $user) => $sy->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/new', 'handler' => fn ($params, $user) => $ca->create($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters', 'handler' => fn ($params, $user) => $ca->store($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
@@ -182,17 +189,80 @@ final class WritingModule implements ModuleInterface
             function (Database $db): void {
                 $db->run("ALTER TABLE projects ADD COLUMN idea TEXT NOT NULL DEFAULT ''");
             },
+            // v8: standalone chapter synopses (title owned by the synopsis, optional summary)
+            function (Database $db): void {
+                $db->run(
+                    'CREATE TABLE chapter_synopses (
+                        id TEXT PRIMARY KEY,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        slug TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        summary_text TEXT NOT NULL DEFAULT \'\',
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (project_id, slug)
+                    )'
+                );
+                $db->run('CREATE INDEX idx_synopses_project ON chapter_synopses(project_id)');
+            },
+            // v9: chapters get a mandatory synopsis; existing chapters are backfilled
+            function (Database $db): void {
+                $chapters = $db->all(
+                    'SELECT c.id, c.project_id, c.slug, c.created_at, o.owner_id,
+                            COALESCE((
+                                SELECT r.title FROM content_revisions r
+                                WHERE r.object_id = c.id
+                                ORDER BY r.created_at DESC, r.rowid DESC LIMIT 1
+                            ), c.slug) AS title,
+                            COALESCE((
+                                SELECT r.summary FROM content_revisions r
+                                WHERE r.object_id = c.id
+                                ORDER BY r.created_at DESC, r.rowid DESC LIMIT 1
+                            ), \'\') AS summary
+                     FROM chapters c
+                     JOIN content_objects o ON o.id = c.id'
+                );
+                $db->run('ALTER TABLE chapters RENAME TO chapters_old');
+                $db->run(
+                    'CREATE TABLE chapters (
+                        id TEXT PRIMARY KEY,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        chapter_synopsis_id TEXT NOT NULL REFERENCES chapter_synopses(id),
+                        slug TEXT NOT NULL,
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE (project_id, slug),
+                        UNIQUE (chapter_synopsis_id)
+                    )'
+                );
+                foreach ($chapters as $chapter) {
+                    $synopsisId = \Core\Auth::uuid4();
+                    $db->run(
+                        'INSERT INTO chapter_synopses (id, project_id, slug, title, summary_text)
+                         VALUES (?, ?, ?, ?, ?)',
+                        [$synopsisId, (string)$chapter['project_id'], (string)$chapter['slug'],
+                            (string)$chapter['title'], (string)$chapter['summary']]
+                    );
+                    $db->run(
+                        'INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug, created_at)
+                         VALUES (?, ?, ?, ?, ?)',
+                        [(string)$chapter['id'], (string)$chapter['project_id'], $synopsisId,
+                            (string)$chapter['slug'], (string)$chapter['created_at']]
+                    );
+                }
+                $db->run('DROP TABLE chapters_old');
+                $db->run('CREATE INDEX idx_chapters_project ON chapters(project_id)');
+                $db->run('CREATE INDEX idx_chapters_synopsis ON chapters(chapter_synopsis_id)');
+            },
         ];
     }
 
     public function contentTypes(): array
     {
-        return ['chapter', 'character', 'background'];
+        return ['chapter', 'chapter_synopsis', 'character', 'background'];
     }
 
     public function resolveLink(Database $db, string $slug): ?array
     {
-        foreach (['chapter', 'character', 'background'] as $type) {
+        foreach (['chapter', 'chapter_synopsis', 'character', 'background'] as $type) {
             $row = $this->findObject($db, $type, $slug);
             if ($row !== null) {
                 return ['url' => $this->url($type, (string)$row['project_id'], (string)$row['slug'])];
@@ -216,6 +286,11 @@ final class WritingModule implements ModuleInterface
              UNION
              SELECT o.type, k.project_id, o.slug
              FROM content_objects o
+             JOIN chapter_synopses k ON k.id = o.id AND o.type = 'chapter_synopsis'
+             WHERE o.slug IN ($placeholders)
+             UNION
+             SELECT o.type, k.project_id, o.slug
+             FROM content_objects o
              JOIN characters k ON k.id = o.id AND o.type = 'character'
              WHERE o.slug IN ($placeholders)
              UNION
@@ -223,7 +298,7 @@ final class WritingModule implements ModuleInterface
              FROM content_objects o
              JOIN backgrounds b ON b.id = o.id AND o.type = 'background'
              WHERE o.slug IN ($placeholders)",
-            array_merge($slugs, $slugs, $slugs)
+            array_merge($slugs, $slugs, $slugs, $slugs)
         );
         foreach ($rows as $row) {
             $result[(string)$row['slug']] = [
@@ -238,6 +313,7 @@ final class WritingModule implements ModuleInterface
         $db->run('DELETE FROM character_relations WHERE from_character_id = ?', [$uuid]);
         $db->run('DELETE FROM character_relations WHERE to_character_id = ?', [$uuid]);
         $db->run('DELETE FROM chapters WHERE id = ?', [$uuid]);
+        $db->run('DELETE FROM chapter_synopses WHERE id = ?', [$uuid]);
         $db->run('DELETE FROM characters WHERE id = ?', [$uuid]);
         $db->run('DELETE FROM backgrounds WHERE id = ?', [$uuid]);
     }
@@ -245,7 +321,8 @@ final class WritingModule implements ModuleInterface
     /** @return array{project_id: string, slug: string}|null */
     private function findObject(Database $db, string $type, string $slug): ?array
     {
-        $table = ['chapter' => 'chapters', 'character' => 'characters', 'background' => 'backgrounds'][$type]
+        $table = ['chapter' => 'chapters', 'chapter_synopsis' => 'chapter_synopses',
+            'character' => 'characters', 'background' => 'backgrounds'][$type]
             ?? throw new \InvalidArgumentException("Unknown type {$type}");
         $row = $db->one(
             "SELECT t.project_id, o.slug
@@ -259,7 +336,8 @@ final class WritingModule implements ModuleInterface
 
     private function url(string $type, string $projectId, string $slug): string
     {
-        $segment = ['chapter' => 'chapters', 'character' => 'characters', 'background' => 'backgrounds'][$type]
+        $segment = ['chapter' => 'chapters', 'chapter_synopsis' => 'synopses',
+            'character' => 'characters', 'background' => 'backgrounds'][$type]
             ?? throw new \InvalidArgumentException("Unknown type {$type}");
         return '/writing/' . rawurlencode($projectId) . '/' . $segment . '/' . rawurlencode($slug);
     }
