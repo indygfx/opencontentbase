@@ -120,8 +120,6 @@ final class ChapterAccessTest extends TestCase
     {
         $this->db->run("INSERT INTO projects (id, owner_id, title) VALUES ('p2', 'o1', 'Other novel')");
         $this->createChapter($this->owner, 'chapter-1');
-        $synopsisId = $this->createSynopsis($this->owner, 'Other title');
-        $_POST = ['slug' => 'chapter-1', 'synopsis_id' => $synopsisId, 'body' => 'x'];
         $this->db->run(
             "INSERT INTO chapter_synopses (id, project_id, slug, title) VALUES ('syn-p2', 'p2', 'syn-p2', 'P2 outline')"
         );
@@ -208,17 +206,20 @@ final class ChapterAccessTest extends TestCase
     public function testSynopsisUniqueAssignmentEnforced(): void
     {
         $synopsisId = $this->createSynopsis($this->owner, 'Shared outline');
-        $this->createChapter($this->owner, 'chapter-1', 'First outline');
-        $_POST = ['slug' => '', 'synopsis_id' => $synopsisId, 'body' => 'x'];
-        $response = $this->controller->store($this->owner, 'p1');
+        $_POST = ['slug' => 'chapter-1', 'synopsis_id' => $synopsisId, 'body' => 'x'];
+        $first = $this->controller->store($this->owner, 'p1');
         $_POST = [];
-        $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('already assigned', $response->body());
+        $this->assertSame(302, $first->status());
+        $_POST = ['slug' => 'chapter-2', 'synopsis_id' => $synopsisId, 'body' => 'x'];
+        $second = $this->controller->store($this->owner, 'p1');
+        $_POST = [];
+        $this->assertSame(422, $second->status());
+        $this->assertStringContainsString('already assigned', $second->body());
         $count = (int)$this->db->one(
             "SELECT COUNT(*) AS c FROM chapters WHERE chapter_synopsis_id = ?",
             [$synopsisId]
         )['c'];
-        $this->assertSame(0, $count);
+        $this->assertSame(1, $count);
     }
 
     public function testEditPageShowsSynopsisSummaryReadonlyWithoutEditLink(): void
@@ -315,12 +316,16 @@ final class ChapterAccessTest extends TestCase
         $this->assertSame('The summary survives.', (string)$synopsis['summary_text']);
         $offered = $this->synopses->unassigned('p1');
         $this->assertContains(['id' => $synopsisId, 'title' => 'Kept outline'], $offered);
-        $this->createChapter($this->owner, 'chapter-again', 'Kept outline');
+        $_POST = ['slug' => 'chapter-again', 'synopsis_id' => $synopsisId, 'body' => 'Rewritten prose'];
+        $reassigned = $this->controller->store($this->owner, 'p1');
+        $_POST = [];
+        $this->assertSame(302, $reassigned->status());
         $assigned = $this->db->one(
             "SELECT c.slug FROM chapters c WHERE c.chapter_synopsis_id = ?",
             [$synopsisId]
         );
         $this->assertNotNull($assigned);
+        $this->assertSame('chapter-again', (string)$assigned['slug']);
     }
 
     public function testDeletingAssignedSynopsisBlockedWithMessage(): void
@@ -329,7 +334,7 @@ final class ChapterAccessTest extends TestCase
         $slug = $this->db->one("SELECT slug FROM chapter_synopses WHERE title = 'Assigned outline'")['slug'];
         $response = $this->synopses->destroy($this->owner, 'p1', (string)$slug);
         $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('delete that chapter text first', $response->body());
+        $this->assertStringContainsString('Delete that chapter text first', $response->body());
         $this->assertStringContainsString('reassign it', $response->body());
         $this->assertNotNull($this->db->one("SELECT id FROM chapter_synopses WHERE slug = ?", [(string)$slug]));
     }
