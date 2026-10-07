@@ -36,14 +36,12 @@
     <a class="brand" href="/">ContentBase</a>
     <nav>
         <?php if (($user ?? null) !== null): ?>
-            <a href="/pages">Pages</a>
-            <a href="/writing">Writing</a>
             <?php if ($user->isAdmin()): ?>
+                <a href="/pages">Pages</a>
+                <a href="/pages/new">New page</a>
                 <a href="/users">Users</a>
             <?php endif; ?>
-            <?php if ($user->hasAtLeast('editor')): ?>
-                <a href="/pages/new">New page</a>
-            <?php endif; ?>
+            <a href="/writing">Writing</a>
             <a href="/profile"><?= e($user->username()) ?></a>
             <form class="inline" method="post" action="/logout">
                 <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
