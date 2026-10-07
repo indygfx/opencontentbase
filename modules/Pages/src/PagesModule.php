@@ -32,15 +32,15 @@ final class PagesModule implements ModuleInterface
 
         return [
             ['method' => 'GET', 'pattern' => '/', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
-            ['method' => 'GET', 'pattern' => '/pages', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
-            ['method' => 'GET', 'pattern' => '/pages/new', 'handler' => fn ($params, $user) => $c->create($user), 'roles' => ['editor']],
-            ['method' => 'POST', 'pattern' => '/pages', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['editor']],
-            ['method' => 'POST', 'pattern' => '/pages/preview', 'handler' => fn ($params, $user) => $c->preview($user), 'roles' => ['editor']],
-            ['method' => 'GET', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->show($params['slug'], $user), 'roles' => ['user']],
-            ['method' => 'GET', 'pattern' => '/pages/{slug}/edit', 'handler' => fn ($params, $user) => $c->edit($params['slug'], $user), 'roles' => ['editor']],
-            ['method' => 'POST', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->update($params['slug'], $user), 'roles' => ['editor']],
+            ['method' => 'GET', 'pattern' => '/pages', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['admin']],
+            ['method' => 'GET', 'pattern' => '/pages/new', 'handler' => fn ($params, $user) => $c->create($user), 'roles' => ['admin']],
+            ['method' => 'POST', 'pattern' => '/pages', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['admin']],
+            ['method' => 'POST', 'pattern' => '/pages/preview', 'handler' => fn ($params, $user) => $c->preview($user), 'roles' => ['admin']],
+            ['method' => 'GET', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->show($params['slug'], $user), 'roles' => ['admin']],
+            ['method' => 'GET', 'pattern' => '/pages/{slug}/edit', 'handler' => fn ($params, $user) => $c->edit($params['slug'], $user), 'roles' => ['admin']],
+            ['method' => 'POST', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->update($params['slug'], $user), 'roles' => ['admin']],
             ['method' => 'POST', 'pattern' => '/pages/{slug}/delete', 'handler' => fn ($params, $user) => $c->destroy($params['slug'], $user), 'roles' => ['admin']],
-            ['method' => 'POST', 'pattern' => '/pages/{slug}/preview', 'handler' => fn ($params, $user) => $c->preview($user), 'roles' => ['editor']],
+            ['method' => 'POST', 'pattern' => '/pages/{slug}/preview', 'handler' => fn ($params, $user) => $c->preview($user), 'roles' => ['admin']],
         ];
     }
 
