@@ -61,6 +61,20 @@ function clampWords(string $text, int $max = 250): string
         <p><a href="/writing/<?= e($project['id']) ?>/outline/blurb">Edit</a></p>
     <?php endif; ?>
 
+
+    <h2>Extended Synopsis</h2>
+    <p class="muted">Think about the course of your story. Describe the whole story line in one detailed draft.</p>
+    <?php if ((string)$project['synopsis_long'] !== ''): ?>
+        <p><?= e(clampWords((string)$project['synopsis_long'])) ?></p>
+    <?php else: ?>
+        <p class="muted">Not written yet.</p>
+    <?php endif; ?>
+    <?php if ($isOwner): ?>
+        <p><a href="/writing/<?= e($project['id']) ?>/outline/synopsis_long">Edit</a></p>
+    <?php endif; ?>
+
+
+
     <h2>Chapter Outlines</h2>
     <p class="muted">The plan for each chapter &mdash; title and a short summary of what happens.</p>
     <?php if ($synopses !== []): ?>
@@ -82,17 +96,6 @@ function clampWords(string $text, int $max = 250): string
         <p class="muted">No chapter outlines yet.</p>
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/synopses/new">New chapter outline</a></p>
-
-    <h2>Extended Synopsis</h2>
-    <p class="muted">Think about the course of your story. Describe the whole story line in one detailed draft.</p>
-    <?php if ((string)$project['synopsis_long'] !== ''): ?>
-        <p><?= e(clampWords((string)$project['synopsis_long'])) ?></p>
-    <?php else: ?>
-        <p class="muted">Not written yet.</p>
-    <?php endif; ?>
-    <?php if ($isOwner): ?>
-        <p><a href="/writing/<?= e($project['id']) ?>/outline/synopsis_long">Edit</a></p>
-    <?php endif; ?>
 
     <h2>Characters</h2>
     <p class="muted">Give your characters a face &mdash; appearance, biography, motivation and the wounds that drive them.</p>
