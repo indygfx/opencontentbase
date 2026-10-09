@@ -40,7 +40,7 @@ final class OutlineFieldsTest extends TestCase
         $registry->register($module);
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $access = new ProjectAccess($this->db);
-        $this->synopses = new ChapterSynopsisController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access);
+        $this->synopses = new ChapterSynopsisController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer);
         $this->chapters = new ChapterController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer, $this->synopses);
         $this->projects = new WritingController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer);
         $this->db->run(

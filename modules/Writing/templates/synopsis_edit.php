@@ -12,7 +12,7 @@
         <input id="title" name="title" value="<?= e($synopsis['title'] ?? '') ?>" required maxlength="200">
         <label for="slug">Slug <small class="muted">(leave empty = derived from the title)</small></label>
         <input id="slug" name="slug" value="<?= e($synopsis['slug'] ?? '') ?>" placeholder="automatic" pattern="[a-z0-9-]*" title="a-z, 0-9, hyphen; leave empty to derive automatically" <?= $isEdit ? 'readonly' : '' ?>>
-        <label for="summary">Summary <small class="muted">(optional &mdash; what happens in this chapter)</small></label>
+        <label for="summary">Summary <small class="muted">(optional &mdash; what happens in this chapter, Markdown supported)</small></label>
         <textarea id="summary" name="summary" rows="6" placeholder="What happens in this chapter?"><?= e($synopsis['summary_text'] ?? '') ?></textarea>
         <button type="submit">Save</button>
     </form>

@@ -33,6 +33,7 @@ final class ChapterController
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => null,
             'synopsis' => null,
+            'synopsisSummaryHtml' => '',
             'synopses' => $this->synopses->unassigned($projectId),
             'isEdit' => false,
             'error' => null,
@@ -102,6 +103,9 @@ final class ChapterController
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => $chapter,
             'synopsis' => $synopsis,
+            'synopsisSummaryHtml' => $synopsis !== null && (string)($synopsis['summary_text'] ?? '') !== ''
+                ? $this->rendererService->render((string)$synopsis['summary_text'])
+                : '',
             'synopses' => $this->synopses->unassigned($projectId, $synopsis['id'] ?? null),
             'isEdit' => true,
             'error' => null,
@@ -308,6 +312,9 @@ final class ChapterController
             'projectTitle' => $this->projectTitle($projectId),
             'chapter' => $chapter,
             'synopsis' => $synopsis,
+            'synopsisSummaryHtml' => $synopsis !== null && (string)($synopsis['summary_text'] ?? '') !== ''
+                ? $this->rendererService->render((string)$synopsis['summary_text'])
+                : '',
             'synopses' => $synopses,
             'isEdit' => $isEdit || $slug !== null,
             'error' => $error,

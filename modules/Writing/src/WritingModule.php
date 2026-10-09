@@ -26,7 +26,7 @@ final class WritingModule implements ModuleInterface
     ) {
         $this->access = new ProjectAccess($db);
         $this->controller = new WritingController($db, $view, $csrf, $this->access, $renderer);
-        $this->synopses = new ChapterSynopsisController($db, $view, $csrf, $this->access);
+        $this->synopses = new ChapterSynopsisController($db, $view, $csrf, $this->access, $renderer);
         $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer, $this->synopses);
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);

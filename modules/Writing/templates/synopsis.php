@@ -6,7 +6,7 @@
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
     <?php if ((string)$synopsis['summary_text'] !== ''): ?>
-        <p><?= nl2br(e((string)$synopsis['summary_text'])) ?></p>
+        <div class="content"><?= $summaryHtml ?></div>
     <?php else: ?>
         <p class="muted">No summary written yet.</p>
     <?php endif; ?>

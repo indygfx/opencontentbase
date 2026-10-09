@@ -7,7 +7,7 @@
     <?php if ($synopsis !== null): ?>
         <div class="outline-box">
             <h2>Chapter outline (read only)</h2>
-            <p><?= nl2br(e((string)$synopsis['summary_text'])) ?></p>
+            <?= $synopsisSummaryHtml ?>
         </div>
     <?php endif; ?>
     <form method="post" action="<?= $isEdit

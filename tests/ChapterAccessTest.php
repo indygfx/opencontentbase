@@ -43,7 +43,7 @@ final class ChapterAccessTest extends TestCase
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $this->access = new ProjectAccess($this->db);
         $this->module = $module;
-        $this->synopses = new ChapterSynopsisController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $this->access);
+        $this->synopses = new ChapterSynopsisController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $this->access, $renderer);
         $this->controller = new ChapterController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $this->access, $renderer, $this->synopses);
         foreach ([['o1', 'owner'], ['m1', 'member'], ['s1', 'stranger']] as [$id, $name]) {
             $this->db->run(

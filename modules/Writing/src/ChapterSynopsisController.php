@@ -15,7 +15,8 @@ final class ChapterSynopsisController
         private Database $db,
         private View $view,
         private Csrf $csrf,
-        private ProjectAccess $access
+        private ProjectAccess $access,
+        private \Core\ContentRenderer $renderer
     ) {
     }
 
@@ -78,6 +79,7 @@ final class ChapterSynopsisController
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'synopsis' => $synopsis,
+            'summaryHtml' => (string)$synopsis['summary_text'] !== '' ? $this->renderer->render((string)$synopsis['summary_text']) : '',
             'chapter' => $this->assignedChapter($projectId, (string)$synopsis['id']),
             'canEdit' => $this->access->canEdit($user, $projectId),
             'error' => null,
@@ -136,6 +138,7 @@ final class ChapterSynopsisController
                 'projectId' => $projectId,
                 'projectTitle' => $this->projectTitle($projectId),
                 'synopsis' => $synopsis,
+                'summaryHtml' => (string)$synopsis['summary_text'] !== '' ? $this->renderer->render((string)$synopsis['summary_text']) : '',
                 'chapter' => $chapter,
                 'canEdit' => $this->access->canEdit($user, $projectId),
                 'error' => 'This outline is assigned to the written chapter "'
