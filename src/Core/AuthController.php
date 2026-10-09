@@ -36,7 +36,7 @@ final class AuthController
                 ]),
             ]), 401);
         }
-        return Response::redirect('/pages');
+        return Response::redirect('/writing');
     }
 
     public function logout(): Response
