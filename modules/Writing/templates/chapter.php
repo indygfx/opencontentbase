@@ -10,7 +10,7 @@
     <?php if ($canEdit): ?>
         <p>
             <a href="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/edit">Edit</a>
-            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/delete" data-confirm="Delete this chapter?">
+            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/delete" data-confirm="Delete only the chapter text? The outline (title and summary) stays intact and can be used for a new chapter.">
                 <?= $csrf->field() ?>
                 <button type="submit">Delete</button>
             </form>

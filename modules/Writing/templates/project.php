@@ -61,25 +61,6 @@ function clampWords(string $text, int $max = 250): string
         <p><a href="/writing/<?= e($project['id']) ?>/outline/blurb">Edit</a></p>
     <?php endif; ?>
 
-    <h2>Synopsis by Chapters</h2>
-    <p class="muted">Each element of the short description expanded into a chapter outline.</p>
-    <?php if ($chapters !== []): ?>
-        <table>
-            <tr><th>#</th><th>Chapter</th><th>Summary</th><th>Prose</th><th></th></tr>
-            <?php foreach ($chapters as $i => $ch): ?>
-                <tr>
-                    <td><?= $i + 1 ?></td>
-                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
-                    <td class="muted"><?= e(mb_strimwidth((string)$ch['summary'], 0, 80, '…')) ?></td>
-                    <td><?= (string)$ch['body'] !== '' ? 'written' : '<span class="muted">open</span>' ?></td>
-                    <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>/summary">Outline</a></td>
-                </tr>
-            <?php endforeach; ?>
-        </table>
-    <?php else: ?>
-        <p class="muted">No chapter outlines yet.</p>
-    <?php endif; ?>
-    <p><a class="button" href="/writing/<?= e($project['id']) ?>/chapters/new">New chapter</a></p>
 
     <h2>Extended Synopsis</h2>
     <p class="muted">Think about the course of your story. Describe the whole story line in one detailed draft.</p>
@@ -91,6 +72,30 @@ function clampWords(string $text, int $max = 250): string
     <?php if ($isOwner): ?>
         <p><a href="/writing/<?= e($project['id']) ?>/outline/synopsis_long">Edit</a></p>
     <?php endif; ?>
+
+
+
+    <h2>Chapter Outlines</h2>
+    <p class="muted">The plan for each chapter &mdash; title and a short summary of what happens.</p>
+    <?php if ($synopses !== []): ?>
+        <table>
+            <tr><th>#</th><th>Outline</th><th>Summary</th><th>Prose</th><th></th></tr>
+            <?php foreach ($synopses as $i => $s): ?>
+                <tr>
+                    <td><?= $i + 1 ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/synopses/<?= e($s['slug']) ?>"><?= e($s['title']) ?></a></td>
+                    <td class="muted"><?= e(mb_strimwidth((string)$s['summary_text'], 0, 80, '…')) ?></td>
+                    <td><?= $s['chapter_slug'] !== null
+                        ? '<a href="/writing/' . e($project['id']) . '/chapters/' . e($s['chapter_slug']) . '">written</a>'
+                        : '<span class="muted">open</span>' ?></td>
+                    <td><a href="/writing/<?= e($project['id']) ?>/synopses/<?= e($s['slug']) ?>/edit">Edit</a></td>
+                </tr>
+            <?php endforeach; ?>
+        </table>
+    <?php else: ?>
+        <p class="muted">No chapter outlines yet.</p>
+    <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/synopses/new">New chapter outline</a></p>
 
     <h2>Characters</h2>
     <p class="muted">Give your characters a face &mdash; appearance, biography, motivation and the wounds that drive them.</p>
@@ -149,23 +154,22 @@ function clampWords(string $text, int $max = 250): string
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/backgrounds/new">New background</a></p>
 
     <h2>Written Chapters</h2>
-    <p class="muted">The actual prose &mdash; turn your chapter outlines into finished text, chapter by chapter.</p>
-    <?php $written = array_filter($chapters, fn ($ch) => (string)$ch['body'] !== ''); ?>
-    <?php if ($written !== []): ?>
+    <p class="muted">The actual prose, chapter by chapter &mdash; written from your outlines above.</p>
+    <?php if ($chapters !== []): ?>
         <table>
             <tr><th>#</th><th>Chapter</th><th></th></tr>
-            <?php $i = 0; foreach ($chapters as $ch): ?>
-                <?php if ((string)$ch['body'] === '') { continue; } $i++; ?>
+            <?php foreach ($chapters as $i => $ch): ?>
                 <tr>
-                    <td><?= $i ?></td>
+                    <td><?= $i + 1 ?></td>
                     <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>"><?= e($ch['title']) ?></a></td>
                     <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>/edit">Open</a></td>
                 </tr>
             <?php endforeach; ?>
         </table>
     <?php else: ?>
-        <p class="muted">No written chapters yet. Open a chapter above and start writing.</p>
+        <p class="muted">No written chapters yet. Pick an outline above and start writing.</p>
     <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/chapters/new">New chapter</a></p>
 
     <?php if (!$isOwner): ?>
         <p class="muted">Shared with you by <?= e($project['owner_name'] ?? '') ?>. You can read and edit texts, but not manage the story.</p>

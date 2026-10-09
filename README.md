@@ -60,8 +60,38 @@ On first start the user **admin / admin** is created automatically (change it im
 ```
 src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry
 modules/Pages/     Reference module (routes, migration, controller, templates)
+modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
 templates/         Layout, Login, Error
 public/index.php   Front controller
+```
+
+## Writing module: chapters are created from chapter synopses
+
+The writing module separates planning from prose:
+
+- **Chapter outlines (chapter_synopses)**: standalone entities per story that own the chapter title and an optional summary. Managed on the story dashboard ("Chapter Outlines") and on their own pages (`/writing/{id}/synopses/...`).
+- **Written chapters (chapters)**: the actual prose. Every chapter has a mandatory, UNIQUE link to exactly one chapter synopsis (`chapters.chapter_synopsis_id`); the chapter takes its title from the assigned synopsis.
+- **Create flow**: "New chapter" shows a dropdown of unassigned synopses of the story (server-side validated); the selected synopsis summary is displayed read-only above the Markdown editor with live preview.
+- **Edit flow**: the assigned synopsis can be changed via dropdown (unassigned synopses plus the current one); the synopsis summary stays read-only; there is no title field on the chapter page (titles are edited only on the synopsis pages).
+- **Delete rules**:
+  - Deleting a written chapter deletes only the chapter text and detaches it from its synopsis; the synopsis (title + summary) remains intact and becomes available for a new chapter.
+  - Deleting a synopsis that is currently assigned to a written chapter is blocked; the user is told to delete the assigned chapter text first or reassign it to another (or a new) synopsis.
+- **Migration safety**: existing chapters are backfilled automatically - for each pre-existing chapter a matching synopsis (title from the chapter, summary from the chapter summary) is created and linked, so no data is lost.
+
+Routes (per story `{id}`):
+
+```
+GET  /writing/{id}/synopses/new            new outline form (POST /writing/{id}/synopses creates it)
+GET  /writing/{id}/synopses/{slug}         outline page
+GET  /writing/{id}/synopses/{slug}/edit    edit outline (title + summary)
+POST /writing/{id}/synopses/{slug}         update outline
+POST /writing/{id}/synopses/{slug}/delete  delete outline (blocked while assigned)
+GET  /writing/{id}/chapters/new            new chapter (synopsis dropdown + prose editor)
+POST /writing/{id}/chapters                create chapter from a synopsis
+GET  /writing/{id}/chapters/{slug}         chapter page
+GET  /writing/{id}/chapters/{slug}/edit    edit chapter (prose + synopsis reassignment)
+POST /writing/{id}/chapters/{slug}         update chapter
+POST /writing/{id}/chapters/{slug}/delete  delete chapter text (synopsis is kept)
 ```
 
 ## Security (current state)

@@ -14,6 +14,7 @@ use Core\ModuleRegistry;
 use Core\User;
 use PHPUnit\Framework\TestCase;
 use Writing\ChapterController;
+use Writing\ChapterSynopsisController;
 use Writing\ProjectAccess;
 use Writing\WritingController;
 use Writing\WritingModule;
@@ -22,6 +23,7 @@ final class OutlineFieldsTest extends TestCase
 {
     private Database $db;
     private ChapterController $chapters;
+    private ChapterSynopsisController $synopses;
     private WritingController $projects;
     private User $owner;
 
@@ -38,7 +40,8 @@ final class OutlineFieldsTest extends TestCase
         $registry->register($module);
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $access = new ProjectAccess($this->db);
-        $this->chapters = new ChapterController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer);
+        $this->synopses = new ChapterSynopsisController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access);
+        $this->chapters = new ChapterController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer, $this->synopses);
         $this->projects = new WritingController($this->db, new \Core\View($base), new Csrf($this->db, $auth), $access, $renderer);
         $this->db->run(
             'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
@@ -49,33 +52,26 @@ final class OutlineFieldsTest extends TestCase
         $_POST = [];
     }
 
-    public function testChapterSummaryIsStoredAndKeptOnUpdate(): void
+    public function testChapterTakesTitleFromSynopsis(): void
     {
-        $_POST = ['slug' => 'chapter-1', 'title' => 'Chapter one', 'summary' => 'The basic idea of this chapter', 'body' => 'Body text'];
+        $_POST = ['title' => 'Chapter one', 'summary' => 'The basic idea of this chapter'];
+        $this->synopses->store($this->owner, 'p1');
+        $_POST = [];
+        $synopsisId = (string)$this->db->one(
+            "SELECT id FROM chapter_synopses WHERE project_id = 'p1' AND slug = 'chapter-one'"
+        )['id'];
+        $_POST = ['slug' => '', 'synopsis_id' => $synopsisId, 'body' => 'Body text'];
         $this->chapters->store($this->owner, 'p1');
         $_POST = [];
 
         $revision = $this->db->one(
-            "SELECT title, summary, body FROM content_revisions r
+            "SELECT title, body FROM content_revisions r
              JOIN content_objects o ON o.id = r.object_id
-             WHERE o.type = 'chapter' AND o.slug = 'chapter-1'"
+             WHERE o.type = 'chapter' AND o.slug = 'chapter-one'"
         );
         $this->assertNotNull($revision);
-        $this->assertSame('The basic idea of this chapter', (string)$revision['summary']);
+        $this->assertSame('Chapter one', (string)$revision['title']);
         $this->assertSame('Body text', (string)$revision['body']);
-
-        $_POST = ['slug' => 'chapter-1', 'title' => 'Chapter one', 'summary' => 'A new idea', 'body' => 'Longer body'];
-        $this->chapters->update($this->owner, 'p1', 'chapter-1');
-        $_POST = [];
-
-        $latest = $this->db->one(
-            "SELECT summary, body FROM content_revisions r
-             JOIN content_objects o ON o.id = r.object_id
-             WHERE o.type = 'chapter' AND o.slug = 'chapter-1'
-             ORDER BY r.created_at DESC, r.rowid DESC LIMIT 1"
-        );
-        $this->assertSame('A new idea', (string)$latest['summary']);
-        $this->assertSame('Longer body', (string)$latest['body']);
     }
 
     public function testProjectUpdatePersistsTitle(): void
