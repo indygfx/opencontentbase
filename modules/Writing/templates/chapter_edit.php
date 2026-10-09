@@ -26,7 +26,7 @@
         <label for="slug">Slug <small class="muted">(leave empty = derived from the outline title)</small></label>
         <input id="slug" name="slug" value="<?= e($chapter['slug'] ?? '') ?>" placeholder="automatic" pattern="[a-z0-9-]*" title="a-z, 0-9, hyphen; leave empty to derive automatically">
         <label for="body">Body (Markdown, internal links as [[chapter:slug]])</label>
-        <textarea id="body" name="body" rows="14"><?= e($chapter['body'] ?? '') ?></textarea>
+        <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($chapter['body'] ?? '') ?></textarea>
         <button type="submit">Save</button>
     </form>
     <script>

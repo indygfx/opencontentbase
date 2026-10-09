@@ -29,6 +29,7 @@
         .muted { color: var(--muted); }
         .success { color: #15803d; }
     </style>
+    <link rel="stylesheet" href="/assets/css/editor.css">
 </head>
 <body>
 <header class="topbar">
@@ -54,5 +55,6 @@
 <main>
 <?= $content ?>
 </main>
+<script src="/assets/js/editor.js" defer></script>
 </body>
 </html>

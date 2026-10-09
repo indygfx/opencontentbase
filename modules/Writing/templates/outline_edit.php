@@ -8,7 +8,7 @@
     <form method="post" action="/writing/<?= e($project['id']) ?>/outline/<?= e($field) ?>">
         <?= $csrf->field() ?>
         <label for="text"><?= e($label) ?> (Markdown, internal links as [[chapter:slug]])</label>
-        <textarea id="text" name="text" rows="14"><?= e($text) ?></textarea>
+        <textarea id="text" name="text" rows="14" data-editor="tiptap"><?= e($text) ?></textarea>
         <button type="submit">Save</button>
     </form>
     <script>

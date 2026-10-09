@@ -1,0 +1,19 @@
+{
+  "name": "opencontentbase-editor",
+  "private": true,
+  "description": "Tiptap-based WYSIWYG-style Markdown editor bundle for ContentBase",
+  "scripts": {
+    "build": "esbuild assets/editor/main.js --bundle --minify --outfile=public/assets/js/editor.js --legal-comments=none"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.0.0",
+    "@tiptap/extensions": "^3.0.0",
+    "@tiptap/extension-table": "^3.0.0",
+    "@tiptap/markdown": "^3.0.0",
+    "@tiptap/pm": "^3.0.0",
+    "@tiptap/starter-kit": "^3.0.0"
+  }
+}

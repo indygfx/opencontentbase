@@ -3,6 +3,28 @@
 ContentBase is a modular content platform that deliberately favors lightness: PHP 8.2 and SQLite instead of a heavy framework – Composer serves only as an autoloader. At its core the system works with generic content objects (UUID, type, slug) instead of fixed tables; actual functionality comes from modules that follow a uniform interface and bring their own tables and versioned migrations. The core knows nothing about module internals – it manages only what modules report through defined channels.
 
 Content is written in Markdown (CommonMark with GFM), with security taking priority: raw HTML is escaped, unsafe links are neutralized. Internal references use the `[[type:slug]]` syntax and are resolved through the module registry; unresolvable links render as broken-link markers.
+ 
+## Editor
+
+All Markdown fields (chapter prose, outline fields, chapter synopsis summaries, page/character/background bodies) use a single-surface WYSIWYG-style editor built on Tiptap/ProseMirror (like the Nextcloud Text editor): formatting renders subtly in place – bold shows bold, headings show as headings – with no separate preview pane. Markdown remains the storage format.
+
+- **Stack**: `@tiptap/core` directly (no Vue/React), StarterKit plus Underline, Link, Table, TaskList/TaskItem, Placeholder ("Start writing...") and CharacterCount extensions, and the official `@tiptap/markdown` extension (load with `contentType: 'markdown'`, save with `editor.getMarkdown()`).
+- **Toolbar** (top, sticky): undo/redo, paragraph/headings, bold, italic, strikethrough, underline, inline code, bullet/ordered/task list, quote, code block, table, link. Buttons reflect the active state at the cursor via `aria-pressed`.
+- **Shortcuts**: Ctrl/Cmd+B/I, Ctrl/Cmd+K (link), Ctrl/Cmd+S saves the surrounding form.
+- **Forms unchanged**: the editor writes `editor.getMarkdown()` back into the original hidden `<textarea>` on every update and on submit, so the server flow (CSRF, validation, Markdown persistence) is untouched; server-side rendering via league/commonmark stays the single source of truth for display.
+- **Progressive enhancement**: without JavaScript the plain `<textarea>` keeps working as fallback.
+
+### Build step (editor bundle)
+
+The editor sources live in `assets/editor/main.js` and are bundled with esbuild into a single committed file `public/assets/js/editor.js`:
+
+```bash
+npm install
+npm run build   # esbuild -> public/assets/js/editor.js
+```
+
+The built bundle is committed, so a plain PHP deployment needs no Node toolchain. Rebuild it whenever `assets/editor/` or the npm dependencies change.
+
 
 
 Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline and the pages reference module are done; next up are a writing app module (projects, characters, relationships, chapters) and editor refinements such as diffs, a graph UI and per-object revisions.
@@ -24,7 +46,7 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 | Dependencies | `league/commonmark ^2.4` |
 | Dev | `phpunit ^10`, `phpstan ^1.10` |
 | CI | GitHub Actions: syntax check, phpstan, phpunit on every push/PR |
-| Frontend | Server-rendered PHP templates, minimal vanilla JS (Cmd+S save, auto slugs) |
+| Frontend | Server-rendered PHP templates, Tiptap-based WYSIWYG Markdown editor (esbuild bundle), minimal vanilla JS (Cmd+S save, auto slugs) |
 
 ## Automated checks (CI)
 

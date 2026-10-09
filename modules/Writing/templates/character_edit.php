@@ -13,7 +13,7 @@
         <label for="title">Title</label>
         <input id="title" name="title" value="<?= e($character['title'] ?? '') ?>" required>
         <label for="body">Body (Markdown, internal links as [[character:slug]])</label>
-        <textarea id="body" name="body" rows="14"><?= e($character['body'] ?? '') ?></textarea>
+        <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($character['body'] ?? '') ?></textarea>
         <button type="submit">Save</button>
     </form>
     <script>

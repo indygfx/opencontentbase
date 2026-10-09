@@ -11,7 +11,7 @@
     <label for="title">Titel</label>
     <input id="title" name="title" value="<?= e($page['title'] ?? '') ?>" required>
     <label for="body">Inhalt (Markdown, interne Links als [[page:slug]])</label>
-    <textarea id="body" name="body" rows="14"><?= e($page['body'] ?? '') ?></textarea>
+    <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($page['body'] ?? '') ?></textarea>
     <button type="submit">Speichern</button>
 </form>
 

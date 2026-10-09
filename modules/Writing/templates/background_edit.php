@@ -13,7 +13,7 @@
         <label for="title">Title</label>
         <input id="title" name="title" value="<?= e($background['title'] ?? '') ?>" required>
         <label for="body">Body (Markdown, internal links as [[background:slug]])</label>
-        <textarea id="body" name="body" rows="14"><?= e($background['body'] ?? '') ?></textarea>
+        <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($background['body'] ?? '') ?></textarea>
         <button type="submit">Save</button>
     </form>
     <script>
