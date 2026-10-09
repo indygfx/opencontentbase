@@ -10,7 +10,7 @@
     <?php endif; ?>
 </article>
 
-<section class="preview">
+<section>
     <h2>Revisionen</h2>
     <table>
         <thead>

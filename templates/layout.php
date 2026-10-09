@@ -25,8 +25,7 @@
         .narrow { max-width: 24rem; margin: 3rem auto; }
         .content { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem; }
         .content table { border: 1px solid var(--line); }
-        .broken-link { color: #b91c1c; background: #fef2f2; border-bottom: 1px dashed #b91c1c; }
-        .preview { margin-top: 2rem; }        .outline-box { background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }        .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+        .broken-link { color: #b91c1c; background: #fef2f2; border-bottom: 1px dashed #b91c1c; }        .outline-box { background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }        .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
         .muted { color: var(--muted); }
         .success { color: #15803d; }
     </style>

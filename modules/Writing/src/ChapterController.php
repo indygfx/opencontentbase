@@ -182,12 +182,6 @@ final class ChapterController
         return Response::redirect('/writing/' . $projectId);
     }
 
-    public function preview(User $user): Response
-    {
-        $body = (string)($_POST['body'] ?? '');
-        return Response::json(['html' => $this->rendererService->render($body)]);
-    }
-
     private function validate(string $projectId, string $title, string $slug): ?string
     {
         if ($title === '') {

@@ -160,12 +160,6 @@ final class WritingController
         return Response::redirect('/writing/' . $id);
     }
 
-    public function outlinePreview(User $user): Response
-    {
-        $text = (string)($_POST['text'] ?? '');
-        return Response::json(['html' => $this->renderer->render($text)]);
-    }
-
     public function destroy(User $user, string $id): Response
     {
         $project = $this->findProject($id);

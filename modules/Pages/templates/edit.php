@@ -11,47 +11,15 @@
     <label for="title">Titel</label>
     <input id="title" name="title" value="<?= e($page['title'] ?? '') ?>" required>
     <label for="body">Inhalt (Markdown, interne Links als [[page:slug]])</label>
-    <textarea id="body" name="body" rows="14" data-preview="<?= $page !== null ? '/pages/' . e($page['slug']) . '/preview' : '/pages/preview' ?>"><?= e($page['body'] ?? '') ?></textarea>
+    <textarea id="body" name="body" rows="14"><?= e($page['body'] ?? '') ?></textarea>
     <button type="submit">Speichern</button>
 </form>
 
-<section class="preview">
-    <h2>Vorschau</h2>
-    <div id="preview" class="content" aria-live="polite"></div>
-</section>
 
 <script>
 (function () {
     'use strict';
-    var body = document.getElementById('body');
-    var preview = document.getElementById('preview');
-    var url = body.getAttribute('data-preview');    var csrfField = document.querySelector('input[name="_csrf"]');    var csrfToken = csrfField !== null ? csrfField.value : '';
-    var timer = null;
-
-    function fetchPreview() {
-        fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-            body: new URLSearchParams({body: body.value, _csrf: csrfToken}).toString()
-        }).then(function (r) {
-            return r.json();
-        }).then(function (data) {
-            preview.innerHTML = data.html;
-        }).catch(function () {
-            preview.textContent = 'Preview unavailable.';
-        });
-    }
-
-    body.addEventListener('input', function () {
-        if (timer !== null) {
-            clearTimeout(timer);
-        }
-        timer = setTimeout(fetchPreview, 400);
-    });
-
-    fetchPreview();
-
-    var slugInput = document.getElementById('slug');
+    var body = document.getElementById('body');    var slugInput = document.getElementById('slug');
     var titleInput = document.getElementById('title');
     if (slugInput !== null && titleInput !== null) {
         var syncSlug = function () {

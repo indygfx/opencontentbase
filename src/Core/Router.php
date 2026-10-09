@@ -7,7 +7,7 @@ namespace Core;
 final class Router
 {
     /** @var list<string> path segments that never match a placeholder (e.g. /pages/new vs /pages/{slug}) */
-    private const RESERVED = ['new', 'preview'];
+    private const RESERVED = ['new'];
 
     /** @var list<array{pattern: string, handler: callable, roles: list<string>}> */
     private array $routes = [];

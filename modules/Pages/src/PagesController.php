@@ -146,12 +146,6 @@ final class PagesController
         return Response::redirect('/pages');
     }
 
-    public function preview(User $user): Response
-    {
-        $body = (string)($_POST['body'] ?? '');
-        return Response::json(['html' => $this->renderer->render($body)]);
-    }
-
     private function uniqueSlug(string $slug): string
     {
         $base = $slug;

@@ -176,21 +176,6 @@ final class ChapterAccessTest extends TestCase
         $this->assertSame(404, $response->status());
     }
 
-    public function testPreviewRouteIsNotSwallowedBySlugRoute(): void
-    {
-        $router = new \Core\Router();
-        foreach ($this->module->routes($router) as $route) {
-            $router->{$route['method'] === 'GET' ? 'get' : 'post'}(
-                $route['pattern'],
-                $route['handler'],
-                $route['roles']
-            );
-        }
-        $dispatched = $router->dispatch('POST', '/writing/p1/chapters/preview');
-        $this->assertIsCallable($dispatched['handler']);
-        $this->assertSame(['id' => 'p1'], $dispatched['params']);
-    }
-
     public function testDuplicateTitleGetsAutoSlugSuffix(): void
     {
         $_POST = ['slug' => '', 'title' => 'Introduction', 'body' => 'a'];
