@@ -2,7 +2,7 @@
 
 ContentBase is a modular content platform that deliberately favors lightness: PHP 8.2 and SQLite instead of a heavy framework – Composer serves only as an autoloader. At its core the system works with generic content objects (UUID, type, slug) instead of fixed tables; actual functionality comes from modules that follow a uniform interface and bring their own tables and versioned migrations. The core knows nothing about module internals – it manages only what modules report through defined channels.
 
-Content is written in Markdown (CommonMark with GFM), with security taking priority: raw HTML is escaped, unsafe links are neutralized. Internal references use the `[[type:slug]]` syntax and are resolved through the module registry; unresolvable links render as broken-link markers. A server-side live preview ensures that editing and output always use the same rendering.
+Content is written in Markdown (CommonMark with GFM), with security taking priority: raw HTML is escaped, unsafe links are neutralized. Internal references use the `[[type:slug]]` syntax and are resolved through the module registry; unresolvable links render as broken-link markers.
 
 
 Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline and the pages reference module are done; next up are a writing app module (projects, characters, relationships, chapters) and editor refinements such as diffs, a graph UI and per-object revisions.
@@ -14,7 +14,6 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 - **Versioned migrations per module**: `schema_versions (module, version)`, executed by `Core\Migrator` in individual transactions.
 - **Generalized internal links**: `[[type:slug]]` in content, resolved via the module registry (`ModuleRegistry::resolveLink`); unresolvable links render as broken-link markers.
 - **CommonMark + GFM** via `league/commonmark` – raw HTML is escaped, unsafe links neutralized (`allow_unsafe_links: false`, `DisallowedRawHtml`).
-- **Server-side live preview**: one parser on the server, no JS parser mismatch.
 
 ## Stack
 
@@ -25,7 +24,7 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 | Dependencies | `league/commonmark ^2.4` |
 | Dev | `phpunit ^10`, `phpstan ^1.10` |
 | CI | GitHub Actions: syntax check, phpstan, phpunit on every push/PR |
-| Frontend | Server-rendered PHP templates, minimal vanilla JS (debounce, fetch preview, Cmd+S) |
+| Frontend | Server-rendered PHP templates, minimal vanilla JS (Cmd+S save, auto slugs) |
 
 ## Automated checks (CI)
 
@@ -65,13 +64,26 @@ templates/         Layout, Login, Error
 public/index.php   Front controller
 ```
 
+## Writing module: story dashboard (snowflake)
+
+Each story has a dashboard (`/writing/{id}`) that follows the snowflake method top-down:
+
+- **Novel Setup** (`/writing/{id}/setup`): title, genre, audience and similar metadata.
+- **Idea**: the story's core in one sentence (logline).
+- **Short Description** (blurb): the story in one paragraph – setup, three turning points, ending.
+- **Extended Synopsis**: the whole story line in one detailed draft.
+- **Chapter Outlines** (chapter synopses): the plan for each chapter – title and a short summary of what happens; each outline shows whether the prose is already written.
+- **Characters**: appearance, biography, motivation and wounds.
+- **Relationship Web**: who knows whom, how they are connected – and where the conflict lies.
+- **Backgrounds**: the world your story stands on – its historical, geographical, religious and political context.
+
 ## Writing module: chapters are created from chapter synopses
 
 The writing module separates planning from prose:
 
 - **Chapter outlines (chapter_synopses)**: standalone entities per story that own the chapter title and an optional summary. Managed on the story dashboard ("Chapter Outlines") and on their own pages (`/writing/{id}/synopses/...`).
 - **Written chapters (chapters)**: the actual prose. Every chapter has a mandatory, UNIQUE link to exactly one chapter synopsis (`chapters.chapter_synopsis_id`); the chapter takes its title from the assigned synopsis.
-- **Create flow**: "New chapter" shows a dropdown of unassigned synopses of the story (server-side validated); the selected synopsis summary is displayed read-only above the Markdown editor with live preview.
+- **Create flow**: "New chapter" shows a dropdown of unassigned synopses of the story (server-side validated); the selected synopsis summary is displayed read-only above the Markdown editor.
 - **Edit flow**: the assigned synopsis can be changed via dropdown (unassigned synopses plus the current one); the synopsis summary stays read-only; there is no title field on the chapter page (titles are edited only on the synopsis pages).
 - **Delete rules**:
   - Deleting a written chapter deletes only the chapter text and detaches it from its synopsis; the synopsis (title + summary) remains intact and becomes available for a new chapter.
