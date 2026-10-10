@@ -14,6 +14,20 @@
         <button type="submit">Save title</button>
     </form>
 
+    <h2>Album cover</h2>
+    <?php if ((string)$project['cover'] !== ''): ?>
+        <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="Album cover of <?= e($project['title']) ?>"></p>
+        <form method="post" action="/writing/<?= e($project['id']) ?>/cover/delete" data-confirm="Remove the album cover?">
+            <?= $csrf->field() ?>
+            <button type="submit">Remove cover</button>
+        </form>
+    <?php endif; ?>
+    <form method="post" action="/writing/<?= e($project['id']) ?>/cover" enctype="multipart/form-data">
+        <?= $csrf->field() ?>
+        <label for="cover">Cover image <small class="muted">(JPG, PNG, WebP or GIF, max 5 MB)</small></label>
+        <input type="file" id="cover" name="cover" accept="image/jpeg,image/png,image/webp,image/gif" required>
+        <button type="submit"><?= (string)$project['cover'] !== '' ? 'Replace cover' : 'Upload cover' ?></button>
+    </form>
     <h2>Share story</h2>
     <?php if ($shareTargets !== []): ?>
         <form method="post" action="/writing/<?= e($project['id']) ?>/share">

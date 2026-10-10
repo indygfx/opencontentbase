@@ -90,7 +90,7 @@ public/index.php   Front controller
 
 Each story has a dashboard (`/writing/{id}`) that follows the snowflake method top-down:
 
-- **Novel Setup** (`/writing/{id}/setup`): title, genre, audience and similar metadata.
+- **Novel Setup** (`/writing/{id}/setup`): title and album cover upload (JPG, PNG, WebP or GIF, max 5 MB). Covers are stored in `data/covers/` and delivered through an access-checked route (`GET /writing/{id}/cover`); only the story owner can upload or remove a cover.
 - **Idea**: the story's core in one sentence (logline).
 - **Short Description** (blurb): the story in one paragraph – setup, three turning points, ending.
 - **Extended Synopsis**: the whole story line in one detailed draft.

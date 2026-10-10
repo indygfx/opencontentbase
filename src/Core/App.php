@@ -39,7 +39,7 @@ final class App
         $pages = new PagesModule($this->db, $this->view, $this->renderer, $this->deleter, $this->csrf);
         $this->registry->register($pages);
         $this->migrator->migrate($pages->id(), $pages->migrations());
-        $writing = new WritingModule($this->db, $this->view, $this->csrf, $this->renderer);
+        $writing = new WritingModule($this->db, $this->view, $this->csrf, $this->renderer, $this->basePath);
         $this->registry->register($writing);
         $this->migrator->migrate($writing->id(), $writing->migrations());
 

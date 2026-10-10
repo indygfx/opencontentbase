@@ -22,10 +22,11 @@ final class WritingModule implements ModuleInterface
         Database $db,
         \Core\View $view,
         \Core\Csrf $csrf,
-        \Core\ContentRenderer $renderer
+        \Core\ContentRenderer $renderer,
+        string $basePath = ''
     ) {
         $this->access = new ProjectAccess($db);
-        $this->controller = new WritingController($db, $view, $csrf, $this->access, $renderer);
+        $this->controller = new WritingController($db, $view, $csrf, $this->access, $renderer, $basePath);
         $this->synopses = new ChapterSynopsisController($db, $view, $csrf, $this->access, $renderer);
         $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer, $this->synopses);
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
@@ -79,6 +80,9 @@ final class WritingModule implements ModuleInterface
             ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/{slug}', 'handler' => fn ($params, $user) => $bg->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds/{slug}/delete', 'handler' => fn ($params, $user) => $bg->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/setup', 'handler' => fn ($params, $user) => $c->setup($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/cover', 'handler' => fn ($params, $user) => $c->cover($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/cover', 'handler' => fn ($params, $user) => $c->uploadCover($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/cover/delete', 'handler' => fn ($params, $user) => $c->removeCover($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/outline/idea', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'idea'), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/outline/idea', 'handler' => fn ($params, $user) => $c->outlineUpdate($user, $params['id'], 'idea'), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/outline/blurb', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'blurb'), 'roles' => ['user']],
@@ -247,6 +251,10 @@ final class WritingModule implements ModuleInterface
                 $db->run('DROP TABLE chapters_old');
                 $db->run('CREATE INDEX idx_chapters_project ON chapters(project_id)');
                 $db->run('CREATE INDEX idx_chapters_synopsis ON chapters(chapter_synopsis_id)');
+            },
+            // v10: album cover image per project
+            function (Database $db): void {
+                $db->run("ALTER TABLE projects ADD COLUMN cover TEXT NOT NULL DEFAULT ''");
             },
         ];
     }

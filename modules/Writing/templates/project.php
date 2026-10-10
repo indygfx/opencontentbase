@@ -32,6 +32,9 @@ function clampWords(string $text, int $max = 250): string
 <section class="card">
     <p class="muted"><a href="/writing">&larr; All stories</a></p>
     <h1><?= e($project['title']) ?></h1>
+    <?php if ((string)($project['cover'] ?? '') !== ''): ?>
+        <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="Album cover of <?= e($project['title']) ?>"></p>
+    <?php endif; ?>
     <?php if ($isOwner): ?>
         <p><a class="button" href="/writing/<?= e($project['id']) ?>/setup">Novel Setup</a></p>
     <?php endif; ?>

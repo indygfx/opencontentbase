@@ -27,6 +27,7 @@
         .content table { border: 1px solid var(--line); }
         .broken-link { color: #b91c1c; background: #fef2f2; border-bottom: 1px dashed #b91c1c; }        .outline-box { background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }        .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
         .muted { color: var(--muted); }
+        .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }
         .success { color: #15803d; }
     </style>
     <link rel="stylesheet" href="/assets/css/editor.css">
