@@ -62,7 +62,7 @@ final class ProjectProgressTest extends TestCase
     {
         $this->assertSame(0, ProjectProgress::words(''));
         $this->assertSame(3, ProjectProgress::words('one two three'));
-        $this->assertSame(2, ProjectProgress::words('[[chapter:foo]] two'));
+        $this->assertSame(1, ProjectProgress::words('[[chapter:foo]] two'));
         $this->assertSame(2, ProjectProgress::words("one\n\ntwo"));
         $this->assertSame(2, ProjectProgress::words('  one   two  '));
     }

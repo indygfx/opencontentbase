@@ -138,7 +138,7 @@ final class WritingController
     public function updateTargets(User $user, string $id): Response
     {
         $project = $this->findProject($id);
-        if ($project === null || !$this->access->canAccess($user, $id)) {
+        if ($project === null) {
             return $this->notFound($user);
         }
         if (!$this->access->isOwner($user, $id)) {
@@ -180,9 +180,13 @@ final class WritingController
         }
         $this->db->run('UPDATE projects SET genre = ? WHERE id = ?', [$genre, $id]);
         $sets = implode(' = ?, ', array_keys($values)) . ' = ?';
+        $columns = implode(', ', array_keys($values));
+        $placeholders = implode(', ', array_fill(0, count($values), '?'));
         $this->db->run(
-            "UPDATE project_targets SET {$sets}, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?",
-            [...array_values($values), $id]
+            "INSERT INTO project_targets (project_id, {$columns}, updated_at)
+             VALUES (?, {$placeholders}, CURRENT_TIMESTAMP)
+             ON CONFLICT(project_id) DO UPDATE SET {$sets}, updated_at = CURRENT_TIMESTAMP",
+            [$id, ...array_values($values), ...array_values($values)]
         );
         return Response::redirect('/writing/' . $id);
     }
@@ -413,7 +417,7 @@ final class WritingController
     public function uploadCover(User $user, string $id): Response
     {
         $project = $this->findProject($id);
-        if ($project === null || !$this->access->canAccess($user, $id)) {
+        if ($project === null) {
             return $this->notFound($user);
         }
         if (!$this->access->isOwner($user, $id)) {
