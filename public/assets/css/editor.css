@@ -150,3 +150,56 @@
 }
 
 .editor-source[hidden] { display: none; }
+
+/* Highlight mark */
+.editor-prose mark {
+    background: #fef08a;
+    padding: 0 0.1rem;
+    border-radius: 2px;
+}
+
+/* Dropdown menus (headings, lists, blocks) */
+.editor-menu {
+    position: relative;
+    display: inline-block;
+}
+
+.editor-menu__dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100;
+    min-width: 10rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    padding: 0.25rem;
+}
+
+.editor-menu__dropdown.is-open {
+    display: block;
+}
+
+.editor-menu__entry {
+    display: block;
+    width: 100%;
+    text-align: left;
+    border: none;
+    background: transparent;
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: inherit;
+}
+
+.editor-menu__entry:hover {
+    background: #f1f5f9;
+}
+
+.editor-menu__entry[aria-pressed="true"] {
+    background: var(--accent);
+    color: #fff;
+}
