@@ -28,6 +28,13 @@
         .broken-link { color: #b91c1c; background: #fef2f2; border-bottom: 1px dashed #b91c1c; }        .outline-box { background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }        .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
         .muted { color: var(--muted); }
         .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }
+        .progress { display: flex; align-items: center; gap: 0.6rem; margin: 0.25rem 0 0.75rem 0; }
+        .progress-track { flex: 1 1 auto; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+        .progress-bar { height: 100%; background: #f59e0b; border-radius: 3px; }
+        .progress-bar.is-done { background: #16a34a; }
+        .progress-bar.is-partial { background: #f59e0b; }
+        .progress-label { flex: 0 0 auto; font-size: 0.75rem; color: var(--muted); text-align: right; }
+        .progress--overall { margin-bottom: 1.25rem; }
         .success { color: #15803d; }
     </style>
     <link rel="stylesheet" href="/assets/css/editor.css">

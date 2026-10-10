@@ -83,6 +83,7 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/cover', 'handler' => fn ($params, $user) => $c->cover($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/cover', 'handler' => fn ($params, $user) => $c->uploadCover($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/cover/delete', 'handler' => fn ($params, $user) => $c->removeCover($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/targets', 'handler' => fn ($params, $user) => $c->updateTargets($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/outline/idea', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'idea'), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/outline/idea', 'handler' => fn ($params, $user) => $c->outlineUpdate($user, $params['id'], 'idea'), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/outline/blurb', 'handler' => fn ($params, $user) => $c->outlineEdit($user, $params['id'], 'blurb'), 'roles' => ['user']],
@@ -255,6 +256,31 @@ final class WritingModule implements ModuleInterface
             // v10: album cover image per project
             function (Database $db): void {
                 $db->run("ALTER TABLE projects ADD COLUMN cover TEXT NOT NULL DEFAULT ''");
+            },
+            // v11: progress targets per project + genre
+            function (Database $db): void {
+                $db->run("ALTER TABLE projects ADD COLUMN genre TEXT NOT NULL DEFAULT 'General'");
+                $db->run(
+                    'CREATE TABLE project_targets (
+                        project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+                        target_chapters INTEGER NOT NULL DEFAULT 40,
+                        target_words_total INTEGER NOT NULL DEFAULT 90000,
+                        target_words_blurb INTEGER NOT NULL DEFAULT 150,
+                        target_words_synopsis INTEGER NOT NULL DEFAULT 600,
+                        target_min_characters INTEGER NOT NULL DEFAULT 3,
+                        target_min_relations INTEGER NOT NULL DEFAULT 2,
+                        target_backgrounds INTEGER NOT NULL DEFAULT 4,
+                        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )'
+                );
+                foreach ($db->all('SELECT id, genre FROM projects') as $project) {
+                    $genre = (string)$project['genre'] !== '' ? (string)$project['genre'] : 'General';
+                    $words = ProjectProgress::genreWordTarget($genre);
+                    $db->run(
+                        'INSERT INTO project_targets (project_id, target_words_total) VALUES (?, ?)',
+                        [(string)$project['id'], $words]
+                    );
+                }
             },
         ];
     }

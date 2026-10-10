@@ -20,6 +20,7 @@ final class WritingController
     ];
 
     private RelationshipController $relationships;
+    private ProjectProgress $progress;
 
     public function __construct(
         private Database $db,
@@ -30,6 +31,7 @@ final class WritingController
         private string $basePath = ''
     ) {
         $this->relationships = new RelationshipController($db, $view, $csrf, $access);
+        $this->progress = new ProjectProgress($db);
     }
 
     public function index(User $user): Response
@@ -56,6 +58,10 @@ final class WritingController
             'INSERT INTO projects (id, owner_id, title, created_at) VALUES (?, ?, ?, ?)',
             [$id, $user->id(), $title, gmdate('Y-m-d H:i:s')]
         );
+        $this->db->run(
+            'INSERT INTO project_targets (project_id, target_words_total) VALUES (?, ?)',
+            [$id, ProjectProgress::genreWordTarget('General')]
+        );
         return Response::redirect('/writing/' . $id);
     }
 
@@ -77,6 +83,8 @@ final class WritingController
             'characters' => $this->characters($id),
             'backgrounds' => $this->backgrounds($id),
             'relations' => $this->relationships->list($id),
+            'progress' => $this->progress->calculate($id),
+            'overall' => $this->progress->overall($id),
             'error' => null,
             'success' => null,
         ]);
@@ -96,6 +104,8 @@ final class WritingController
             'project' => $project,
             'members' => $this->access->members($id),
             'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
+            'targets' => $this->progress->targets($id),
+            'genres' => ProjectProgress::GENRES,
             'error' => null,
         ]);
     }
@@ -116,11 +126,65 @@ final class WritingController
                 'project' => $project,
                 'members' => $this->access->members($id),
                 'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
+                'targets' => $this->progress->targets($id),
+                'genres' => ProjectProgress::GENRES,
                 'error' => 'The title must be at least 2 characters long.',
             ], 422);
         }
         $this->db->run('UPDATE projects SET title = ? WHERE id = ?', [$title, $id]);
         return Response::redirect('/writing/' . $id . '/setup');
+    }
+
+    public function updateTargets(User $user, string $id): Response
+    {
+        $project = $this->findProject($id);
+        if ($project === null || !$this->access->canAccess($user, $id)) {
+            return $this->notFound($user);
+        }
+        if (!$this->access->isOwner($user, $id)) {
+            return $this->forbidden($user);
+        }
+        $genre = (string)($_POST['genre'] ?? 'General');
+        if (!in_array($genre, ProjectProgress::GENRES, true)) {
+            $genre = 'General';
+        }
+        $fields = [
+            'target_chapters' => 1,
+            'target_words_total' => 1,
+            'target_words_blurb' => 1,
+            'target_words_synopsis' => 1,
+            'target_min_characters' => 1,
+            'target_min_relations' => 1,
+            'target_backgrounds' => 1,
+        ];
+        $values = [];
+        $error = null;
+        foreach ($fields as $name => $min) {
+            $value = filter_var($_POST[$name] ?? null, FILTER_VALIDATE_INT);
+            if ($value === false || $value < $min || $value > 10000000) {
+                $error = 'All targets must be positive whole numbers.';
+                break;
+            }
+            $values[$name] = $value;
+        }
+        if ($error !== null) {
+            return $this->page($user, 'modules/Writing/templates/setup.php', [
+                'title' => 'Novel Setup: ' . (string)$project['title'],
+                'project' => $project,
+                'members' => $this->access->members($id),
+                'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
+                'targets' => $this->progress->targets($id),
+                'genres' => ProjectProgress::GENRES,
+                'error' => $error,
+            ], 422);
+        }
+        $this->db->run('UPDATE projects SET genre = ? WHERE id = ?', [$genre, $id]);
+        $sets = implode(' = ?, ', array_keys($values)) . ' = ?';
+        $this->db->run(
+            "UPDATE project_targets SET {$sets}, updated_at = CURRENT_TIMESTAMP WHERE project_id = ?",
+            [...array_values($values), $id]
+        );
+        return Response::redirect('/writing/' . $id);
     }
 
     public function outlineEdit(User $user, string $id, string $field): Response
@@ -375,6 +439,8 @@ final class WritingController
                 'project' => $project,
                 'members' => $this->access->members($id),
                 'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
+                'targets' => $this->progress->targets($id),
+                'genres' => ProjectProgress::GENRES,
                 'error' => $error,
             ], 422);
         }

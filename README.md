@@ -90,7 +90,7 @@ public/index.php   Front controller
 
 Each story has a dashboard (`/writing/{id}`) that follows the snowflake method top-down:
 
-- **Novel Setup** (`/writing/{id}/setup`): title and album cover upload (JPG, PNG, WebP or GIF, max 5 MB). Covers are stored in `data/covers/` and delivered through an access-checked route (`GET /writing/{id}/cover`); only the story owner can upload or remove a cover.
+- **Novel Setup** (`/writing/{id}/setup`): title and album cover upload (JPG, PNG, WebP or GIF, max 5 MB). Covers are stored in `data/covers/` and delivered through an access-checked route (`GET /writing/{id}/cover`); only the story owner can upload or remove a cover. The setup page also holds the "Progress Targets" fieldset (see below), editable by the owner only.
 - **Idea**: the story's core in one sentence (logline).
 - **Short Description** (blurb): the story in one paragraph – setup, three turning points, ending.
 - **Extended Synopsis**: the whole story line in one detailed draft.
@@ -98,6 +98,17 @@ Each story has a dashboard (`/writing/{id}`) that follows the snowflake method t
 - **Characters**: appearance, biography, motivation and wounds.
 - **Relationship Web**: who knows whom, how they are connected – and where the conflict lies.
 - **Backgrounds**: the world your story stands on – its historical, geographical, religious and political context.
+
+## Writing module: progress targets and dashboard progress bars
+
+The owner defines measurable targets per section in **Novel Setup** ("Progress Targets" fieldset, `POST /writing/{id}/targets`, CSRF-protected). The dashboard then renders a slim progress bar under each section headline, computed server-side on every render (no JS, no persistence):
+
+- **Targets table** (`project_targets`, one row per project, created with defaults on story creation): `target_chapters` (40), `target_words_total` (genre-dependent), `target_words_blurb` (150), `target_words_synopsis` (600), `target_min_characters` (3), `target_min_relations` (2), `target_backgrounds` (4). The genre is stored on `projects.genre`; a genre `<select>` auto-fills the total-words field live (pure JS, overridable).
+- **Genre word defaults**: Fantasy 110,000 · Sci-Fi 100,000 · Romance 80,000 · Thriller/Crime 90,000 · Young Adult 70,000 · General 90,000. Existing stories are backfilled with `General`/90,000.
+- **Calculation** (`ProjectProgress::calculate()`): ratio = actual / target, capped at 0–1.0. Word counts use the raw Markdown (with `[[...]]` links stripped); chapter prose is counted from the latest revision per chapter. The relations target is `target_min_characters × target_min_relations` (at least N relations per main character). Table sections count rows (`12 / 40 chapters`), text sections count words (`18,450 / 90,000 words`), the Idea section shows only a "set/missing" badge.
+- **Overall progress**: a single weighted bar next to the title in the header – idea 5%, blurb 10%, synopsis 10%, outlines 15%, chapters 30%, characters 10%, relations 10%, backgrounds 10%.
+- **Visibility**: progress bars are visible to all story members; the targets form is owner-only. Changing targets never deletes content – the bars simply recompute.
+- **Tests**: `tests/ProjectProgressTest.php` covers word counting, genre defaults and fallbacks, the relations formula, latest-revision word counting, weighted overall progress and target updates (including invalid input and stranger access).
 
 ## Writing module: chapters are created from chapter synopses
 
