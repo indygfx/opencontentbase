@@ -48,6 +48,31 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 | CI | GitHub Actions: syntax check, phpstan, phpunit on every push/PR |
 | Frontend | Server-rendered PHP templates, Tiptap-based WYSIWYG Markdown editor (esbuild bundle), minimal vanilla JS (Cmd+S save, auto slugs) |
 
+## Smoke test (local, end-to-end)
+
+`smoke-test.sh` boots the built-in PHP server on **127.0.0.1 only** with a fresh temporary database (your `data/contentbase.sqlite` is not touched) and probes the critical paths:
+
+1. Login page renders
+2. Login as `admin`/`admin` (created on first start)
+3. Writing dashboard renders (`/writing`)
+4. Account language switch to German via `POST /profile/language` (incl. CSRF) and German UI check
+5. Language dropdown on the profile page
+6. Switch back to English
+7. Pages module and 404 handling
+
+```bash
+composer install
+./smoke-test.sh
+```
+
+Already running your own instance? Probe it instead (uses the real database):
+
+```bash
+BASE_URL=http://localhost:8080 ./smoke-test.sh
+```
+
+The script needs `php-cli`, `php-sqlite3` and a command-line HTTP client, exits non-zero on failure and cleans up the temp instance on exit.
+
 ## Automated checks (CI)
 
 On every push and every pull request, a check runs automatically via GitHub Actions (`.github/workflows/ci.yml`):
