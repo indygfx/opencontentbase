@@ -1,3 +1,28 @@
+<?php if (($slides ?? []) !== []): ?>
+<section class="story-slider" data-count="<?= count($slides) ?>" aria-label="Story excerpts">
+    <div class="story-slides">
+        <?php foreach ($slides as $i => $slide): ?>
+            <figure class="story-slide<?= $i === 0 ? ' is-active' : '' ?>">
+                <blockquote>&ldquo;<?= e($slide['text']) ?>&rdquo;</blockquote>
+                <figcaption>
+                    <span class="story-slide-book"><?= e($slide['project_title']) ?></span>
+                    <span class="story-slide-sep">&middot;</span>
+                    <a href="/writing/<?= e($slide['project_id']) ?>/chapters/<?= e($slide['chapter_slug']) ?>">
+                        <?= e($slide['chapter_title']) ?>
+                    </a>
+                </figcaption>
+            </figure>
+        <?php endforeach; ?>
+    </div>
+    <?php if (count($slides) > 1): ?>
+        <div class="story-slider-nav">
+            <?php foreach ($slides as $i => $slide): ?>
+                <button type="button" data-slide="<?= $i ?>"<?= $i === 0 ? ' class="is-active"' : '' ?> aria-label="Show excerpt <?= $i + 1 ?>"><?= $i + 1 ?></button>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+</section>
+<?php endif; ?>
 <section class="card">
     <h1>Stories</h1>
     <?php if (!empty($error)): ?>

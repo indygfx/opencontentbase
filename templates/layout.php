@@ -35,7 +35,7 @@
         .progress-bar.is-partial { background: #f59e0b; }
         .progress-label { flex: 0 0 auto; font-size: 0.75rem; color: var(--muted); text-align: right; }
         .progress--overall { margin-bottom: 1.25rem; }
-        .success { color: #15803d; }
+        .success { color: #15803d; } .story-slider { background: linear-gradient(135deg, #1f2430, #334155); border-radius: 6px; padding: 2.25rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; } .story-slides { position: relative; min-height: 9rem; } .story-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; } .story-slide.is-active { opacity: 1; pointer-events: auto; } .story-slide blockquote { margin: 0 0 0.75rem 0; color: #f1f5f9; font-size: 1.15rem; line-height: 1.6; font-style: italic; } .story-slide figcaption { color: #94a3b8; font-size: 0.85rem; } .story-slide figcaption a { color: #cbd5e1; } .story-slide-book { font-weight: 600; } .story-slide-sep { margin: 0 0.35rem; } .story-slider[data-count="1"] .story-slide { position: static; } .story-slider-nav { position: absolute; bottom: 0.75rem; right: 1rem; display: flex; gap: 0.4rem; } .story-slider-nav button { background: transparent; border: 1px solid #475569; color: #94a3b8; width: 1.6rem; height: 1.6rem; padding: 0; border-radius: 50%; font-size: 0.9rem; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; } .story-slider-nav button.is-active { background: #94a3b8; color: #1f2430; border-color: #94a3b8; }
     </style>
     <link rel="stylesheet" href="/assets/css/editor.css">
 </head>
@@ -63,6 +63,6 @@
 <main>
 <?= $content ?>
 </main>
-<script src="/assets/js/editor.js" defer></script>
+<script src="/assets/js/editor.js" defer></script><script src="/assets/js/story-slider.js" defer></script>
 </body>
 </html>

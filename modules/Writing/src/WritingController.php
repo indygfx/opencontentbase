@@ -36,9 +36,11 @@ final class WritingController
 
     public function index(User $user): Response
     {
+        $slider = new StorySlider($this->db);
         return $this->page($user, 'modules/Writing/templates/index.php', [
             'title' => 'Stories',
             'projects' => $this->access->visibleProjects($user),
+            'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
             'error' => null,
             'success' => null,
         ]);
@@ -398,9 +400,11 @@ final class WritingController
 
     private function indexError(User $user, string $error): Response
     {
+        $slider = new StorySlider($this->db);
         return $this->page($user, 'modules/Writing/templates/index.php', [
             'title' => 'Stories',
             'projects' => $this->access->visibleProjects($user),
+            'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
             'error' => $error,
             'success' => null,
         ], 422);
