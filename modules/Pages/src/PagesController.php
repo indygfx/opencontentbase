@@ -39,7 +39,7 @@ final class PagesController
               ORDER BY r.title COLLATE NOCASE"
         );
         return $this->page($user, 'modules/Pages/templates/index.php', [
-            'title' => 'Pages',
+            'title' => t('pages', 'title'),
             'pages' => $pages,
         ]);
     }
@@ -73,7 +73,7 @@ final class PagesController
             return $this->notFound($user);
         }
         return $this->page($user, 'modules/Pages/templates/edit.php', [
-            'title' => 'Edit: ' . (string)$page['title'],
+            'title' => t('pages', 'edit_page', ['title' => (string)$page['title']]),
             'page' => $page,
         ]);
     }
@@ -93,7 +93,7 @@ final class PagesController
     public function create(User $user): Response
     {
         return $this->page($user, 'modules/Pages/templates/edit.php', [
-            'title' => 'New page',
+            'title' => t('pages', 'new_page'),
             'page' => null,
         ]);
     }
@@ -113,7 +113,7 @@ final class PagesController
         $error = $this->validateSlug($slug);
         if ($error !== null) {
             return $this->page($user, 'modules/Pages/templates/edit.php', [
-                'title' => 'New page',
+                'title' => t('pages', 'new_page'),
                 'page' => null,
                 'error' => $error,
             ], 422);
@@ -163,7 +163,7 @@ final class PagesController
     private function validateSlug(string $slug): ?string
     {
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
-            return 'Konnte keinen Slug aus dem Titel ableiten (a-z, 0-9, Bindestrich).';
+            return t('pages', 'error_slug_derive');
         }
         $exists = $this->db->one(
             "SELECT 1 FROM content_objects WHERE type = 'page' AND slug = ?",
@@ -218,7 +218,7 @@ final class PagesController
     {
         $content = $this->view->render('templates/error.php', [
             'code' => 404,
-            'message' => 'Page not found.',
+            'message' => t('pages', 'error_not_found'),
         ]);
         return Response::html($this->view->render('templates/layout.php', [
             'title' => '404',

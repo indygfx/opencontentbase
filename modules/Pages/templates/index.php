@@ -1,12 +1,12 @@
-<h1>Pages</h1>
+<h1><?= e(t('pages', 'title')) ?></h1>
 <?php if (empty($pages)): ?>
-    <p class="muted">No pages yet.</p>
+    <p class="muted"><?= e(t('pages', 'no_pages')) ?></p>
 <?php else: ?>
     <table>
         <thead>
         <tr>
-            <th>Titel</th>
-            <th>Slug</th>
+            <th><?= e(t('pages', 'table_title')) ?></th>
+            <th><?= e(t('pages', 'table_slug')) ?></th>
         </tr>
         </thead>
         <tbody>

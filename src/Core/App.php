@@ -7,8 +7,14 @@ namespace Core;
 use Pages\PagesModule;
 use Writing\WritingModule;
 
+/**
+ * Bootstraps the translator from the request: user account language,
+ * then the language cookie, then the browser's Accept-Language header.
+
 final class App
 {
+    private const LANG_COOKIE = 'cb_lang';
+
     private Database $db;
     private Router $router;
     private Migrator $migrator;
@@ -30,6 +36,33 @@ final class App
         $this->registry = new ModuleRegistry();
         $this->renderer = new ContentRenderer($this->db, $this->registry);
         $this->deleter = new ObjectDeleter($this->db, $this->registry);
+        Translator::init($this->basePath . '/lang');
+    }
+
+    /**
+     * Picks the UI language: user account setting, language cookie,
+     * then the browser's Accept-Language header, then the English default.
+     */
+    private function detectLanguage(): string
+    {
+        $available = [];
+        foreach (glob($this->basePath . '/lang/*', GLOB_ONLYDIR) ?: [] as $dir) {
+            $available[] = basename($dir);
+        }
+        $cookie = $_COOKIE[self::LANG_COOKIE] ?? '';
+        $cookie = is_string($cookie) && in_array($cookie, $available, true) ? $cookie : null;
+        if ($cookie !== null) {
+            return $cookie;
+        }
+        $header = $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? '';
+        foreach (explode(',', (string)$header) as $part) {
+            $code = strtolower(trim(explode(';', trim($part))[0]));
+            $code = preg_replace('/[^a-z0-9_-]/', '', $code) ?? '';
+            if ($code !== '' && in_array($code, $available, true)) {
+                return $code;
+            }
+        }
+        return Translator::FALLBACK;
     }
 
     public function boot(): void
@@ -62,6 +95,7 @@ final class App
 
     public function run(): void
     {
+        Translator::instance()?->setLang($this->detectLanguage());
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
@@ -104,7 +138,7 @@ final class App
 
     private function registerCoreRoutes(): void
     {
-        $controller = new AuthController($this->auth, $this->view, $this->csrf);
+        $controller = new AuthController($this->auth, $this->view, $this->csrf, Translator::instance());
         $this->router->get('/login', fn ($params, $user) => $controller->showLogin());
         $this->router->post('/login', fn ($params, $user) => $controller->login());
         $this->router->post('/logout', fn ($params, $user) => $controller->logout());

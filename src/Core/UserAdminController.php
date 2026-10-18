@@ -36,7 +36,7 @@ final class UserAdminController
             'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
             [Auth::uuid4(), $username, password_hash($password, PASSWORD_BCRYPT), $role]
         );
-        return $this->page($user, ['success' => "User \"{$username}\" created."]);
+        return $this->page($user, ['success' => t('core', 'users_created')]);
     }
 
     public function updateRole(User $user, string $id): Response
@@ -44,10 +44,10 @@ final class UserAdminController
         $role = (string)($_POST['role'] ?? '');
         $target = $this->findUser($id);
         if ($target === null) {
-            return $this->page($user, ['error' => 'User not found.'], 404);
+            return $this->page($user, ['error' => t('core', 'users_not_found')], 404);
         }
         if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_EDITOR, User::ROLE_USER], true)) {
-            return $this->page($user, ['error' => 'Invalid role.'], 422);
+            return $this->page($user, ['error' => t('core', 'users_error_role')], 422);
         }
         if ($target['username'] === 'admin' && $role !== User::ROLE_ADMIN) {
             return $this->page($user, ['error' => 'The admin role cannot be removed from the main admin.'], 422);
@@ -56,35 +56,35 @@ final class UserAdminController
             return $this->page($user, ['error' => 'You cannot change your own role.'], 422);
         }
         $this->db->run('UPDATE users SET role = ? WHERE id = ?', [$role, $id]);
-        return $this->page($user, ['success' => 'Role updated.']);
+        return $this->page($user, ['success' => t('core', 'users_role_updated')]);
     }
 
     public function resetPassword(User $user, string $id): Response
     {
         $target = $this->findUser($id);
         if ($target === null) {
-            return $this->page($user, ['error' => 'User not found.'], 404);
+            return $this->page($user, ['error' => t('core', 'users_not_found')], 404);
         }
         $password = (string)($_POST['password_new'] ?? '');
         if (strlen($password) < 8) {
-            return $this->page($user, ['error' => 'The new password must be at least 8 characters long.'], 422);
+            return $this->page($user, ['error' => t('core', 'users_error_password')], 422);
         }
         $this->db->run(
             'UPDATE users SET password = ? WHERE id = ?',
             [password_hash($password, PASSWORD_BCRYPT), $id]
         );
         $this->db->run('DELETE FROM sessions WHERE user_id = ?', [$id]);
-        return $this->page($user, ['success' => 'Password reset; all of the user\'s sessions have been signed out.']);
+        return $this->page($user, ['success' => t('core', 'users_password_reset')]);
     }
 
     public function destroy(User $user, string $id): Response
     {
         $target = $this->findUser($id);
         if ($target === null) {
-            return $this->page($user, ['error' => 'User not found.'], 404);
+            return $this->page($user, ['error' => t('core', 'users_not_found')], 404);
         }
         if ($target['id'] === $user->id()) {
-            return $this->page($user, ['error' => 'You cannot delete your own account.'], 422);
+            return $this->page($user, ['error' => t('core', 'users_error_delete_self')], 422);
         }
         if ($target['username'] === 'admin') {
             return $this->page($user, ['error' => 'The main admin cannot be deleted.'], 422);
@@ -92,29 +92,29 @@ final class UserAdminController
         $this->db->run('DELETE FROM project_members WHERE user_id = ?', [$id]);
         $this->db->run('DELETE FROM sessions WHERE user_id = ?', [$id]);
         $this->db->run('DELETE FROM users WHERE id = ?', [$id]);
-        return $this->page($user, ['success' => 'User deleted.']);
+        return $this->page($user, ['success' => t('core', 'users_deleted')]);
     }
 
     private function validate(string $username, string $password, string $confirm, string $role): ?string
     {
         if ($username === '' || mb_strlen($username) < 3) {
-            return 'The username must be at least 3 characters long.';
+            return t('core', 'users_error_username_short');
         }
         if (!preg_match('/^[\p{L}\p{Nd}_.-]+$/u', $username)) {
-            return 'The username may only contain letters, numbers, underscore, dot and hyphen.';
+            return t('core', 'users_error_username_chars');
         }
         if ($password !== $confirm) {
-            return 'The passwords do not match.';
+            return t('core', 'users_error_confirm');
         }
         if (strlen($password) < 8) {
-            return 'The password must be at least 8 characters long.';
+            return t('core', 'users_error_password');
         }
         if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_EDITOR, User::ROLE_USER], true)) {
-            return 'Invalid role.';
+            return t('core', 'users_error_role');
         }
         $existing = $this->db->one('SELECT id FROM users WHERE username = ?', [$username]);
         if ($existing !== null) {
-            return 'This username is already taken.';
+            return t('core', 'users_error_duplicate');
         }
         return null;
     }
@@ -145,7 +145,7 @@ final class UserAdminController
             'success' => $flash['success'] ?? null,
         ]);
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'User management',
+            'title' => t('core', 'users_title'),
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $content,

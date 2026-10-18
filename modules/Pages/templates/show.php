@@ -5,19 +5,19 @@
     <?php if ($user->isAdmin()): ?>
     <form method="post" action="/pages/<?= e($page['slug']) ?>/delete">
         <?= $csrf->field() ?>
-        <button type="submit">Delete page</button>
+        <button type="submit"><?= e(t('pages', 'delete_page')) ?></button>
     </form>
     <?php endif; ?>
 </article>
 
 <section>
-    <h2>Revisionen</h2>
+    <h2><?= e(t('pages', 'revisions')) ?></h2>
     <table>
         <thead>
         <tr>
-            <th>Titel</th>
-            <th>Autor</th>
-            <th>Erstellt</th>
+            <th><?= e(t('pages', 'table_title')) ?></th>
+            <th><?= e(t('pages', 'table_author')) ?></th>
+            <th><?= e(t('pages', 'table_created')) ?></th>
         </tr>
         </thead>
         <tbody>

@@ -41,22 +41,22 @@
 </head>
 <body>
 <header class="topbar">
-    <a class="brand" href="/">ContentBase</a>
+    <a class="brand" href="/"><?= e(t('core', 'brand')) ?></a>
     <nav>
         <?php if (($user ?? null) !== null): ?>
             <?php if ($user->isAdmin()): ?>
-                <a href="/pages">Pages</a>
-                <a href="/pages/new">New page</a>
-                <a href="/users">Users</a>
+                <a href="/pages"><?= e(t('core', 'nav_pages')) ?></a>
+                <a href="/pages/new"><?= e(t('core', 'nav_new_page')) ?></a>
+                <a href="/users"><?= e(t('core', 'nav_users')) ?></a>
             <?php endif; ?>
-            <a href="/writing">Writing</a>
+            <a href="/writing"><?= e(t('core', 'nav_writing')) ?></a>
             <a href="/profile"><?= e($user->username()) ?></a>
             <form class="inline" method="post" action="/logout">
                 <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
-                <button type="submit">Sign out</button>
+                <button type="submit"><?= e(t('core', 'nav_sign_out')) ?></button>
             </form>
         <?php else: ?>
-            <a href="/login">Sign in</a>
+            <a href="/login"><?= e(t('core', 'nav_sign_in')) ?></a>
         <?php endif; ?>
     </nav>
 </header>

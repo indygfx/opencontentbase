@@ -1,14 +1,14 @@
 <section class="card narrow">
-    <h1>Sign in</h1>
+    <h1><?= e(t('core', 'login_title')) ?></h1>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
     <form method="post" action="/login">
         <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
-        <label for="username">Username</label>
+        <label for="username"><?= e(t('core', 'login_username')) ?></label>
         <input id="username" name="username" required autofocus autocomplete="username">
-        <label for="password">Password</label>
+        <label for="password"><?= e(t('core', 'login_password')) ?></label>
         <input id="password" type="password" name="password" required autocomplete="current-password">
-        <button type="submit">Sign in</button>
+        <button type="submit"><?= e(t('core', 'login_submit')) ?></button>
     </form>
 </section>

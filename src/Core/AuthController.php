@@ -6,14 +6,24 @@ namespace Core;
 
 final class AuthController
 {
-    public function __construct(private Auth $auth, private View $view, private Csrf $csrf)
+    public function __construct(
+        private Auth $auth,
+        private View $view,
+        private Csrf $csrf,
+        private ?Translator $translator = null
+    ) {
+    }
+
+    /** @return list<string> */
+    private function availableLanguages(): array
     {
+        return $this->translator?->availableLanguages() ?? [Translator::FALLBACK];
     }
 
     public function showLogin(): Response
     {
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'Sign in',
+            t('core', 'login_title'),
             'user' => null,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/login.php', ['csrf' => $this->csrf]),
@@ -27,11 +37,11 @@ final class AuthController
         $user = $this->auth->login($username, $password);
         if ($user === null) {
             return Response::html($this->view->render('templates/layout.php', [
-                'title' => 'Sign in',
+                t('core', 'login_title'),
                 'user' => null,
                 'csrf' => $this->csrf,
                 'content' => $this->view->render('templates/login.php', [
-                    'error' => 'Wrong username or password.',
+                    t('core', 'login_error'),
                     'csrf' => $this->csrf,
                 ]),
             ]), 401);
@@ -51,12 +61,13 @@ final class AuthController
             return Response::redirect('/login');
         }
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'Profile',
+            t('core', 'profile_title'),
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/profile.php', [
                 'user' => $user,
                 'csrf' => $this->csrf,
+                'availableLanguages' => $this->availableLanguages(),
                 'error' => null,
                 'success' => null,
             ]),
@@ -75,11 +86,12 @@ final class AuthController
         $content = $this->view->render('templates/profile.php', [
             'user' => $user,
             'csrf' => $this->csrf,
+            'availableLanguages' => $this->availableLanguages(),
             'error' => $error === null ? null : $error->getMessage(),
-            'success' => $error === null ? 'Password changed. Other sessions have been signed out.' : null,
+            'success' => $error === null ? t('core', 'profile_password_changed') : null,
         ]);
         return Response::html($this->view->render('templates/layout.php', [
-            'title' => 'Profile',
+            t('core', 'profile_title'),
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $content,

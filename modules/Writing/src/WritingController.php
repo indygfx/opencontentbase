@@ -38,7 +38,7 @@ final class WritingController
     {
         $slider = new StorySlider($this->db);
         return $this->page($user, 'modules/Writing/templates/index.php', [
-            'title' => 'Stories',
+            t('writing', 'stories_title'),
             'projects' => $this->access->visibleProjects($user),
             'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
             'error' => null,
@@ -50,10 +50,10 @@ final class WritingController
     {
         $title = trim((string)($_POST['title'] ?? ''));
         if ($title === '' || mb_strlen($title) < 2) {
-            return $this->indexError($user, 'The title must be at least 2 characters long.');
+            return $this->indexError($user, t('writing', 'error_title_length'));
         }
         if (mb_strlen($title) > 200) {
-            return $this->indexError($user, 'The title must not exceed 200 characters.');
+            return $this->indexError($user, t('writing', 'error_title_max'));
         }
         $id = $this->uuid4();
         $this->db->run(
@@ -402,7 +402,7 @@ final class WritingController
     {
         $slider = new StorySlider($this->db);
         return $this->page($user, 'modules/Writing/templates/index.php', [
-            'title' => 'Stories',
+            t('writing', 'stories_title'),
             'projects' => $this->access->visibleProjects($user),
             'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
             'error' => $error,
@@ -549,7 +549,7 @@ final class WritingController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Story not found.',
+            'message' => t('writing', 'story_not_found'),
         ], 404);
     }
 
@@ -558,7 +558,7 @@ final class WritingController
         return $this->page($user, 'templates/error.php', [
             'title' => '403',
             'code' => 403,
-            'message' => 'Only the story owner may do that.',
+            'message' => t('writing', 'owner_only'),
         ], 403);
     }
 

@@ -29,3 +29,22 @@ function slugify(string $text): string
     $text = trim($text, '-');
     return $text;
 }
+
+/**
+ * Translates a key in the given domain with {name} placeholder replacement.
+ * Falls back to English and finally to the raw key.
+ *
+ * @param array<string, string> $params
+ */
+function t(string $domain, string $key, array $params = []): string
+{
+    $translator = \Core\Translator::instance();
+    if ($translator === null) {
+        $text = $key;
+        foreach ($params as $name => $value) {
+            $text = str_replace('{' . $name . '}', $value, $text);
+        }
+        return $text;
+    }
+    return $translator->t($domain, $key, $params);
+}
