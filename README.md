@@ -217,5 +217,6 @@ POST /writing/{id}/chapters/{slug}/delete  delete chapter text (synopsis is kept
 3. pages reference module (done)
 4. Writing app module: projects -> characters (n), relationships (n:m with attributes), chapters -> text via content_revisions, backgrounds (4 categories) (open)
 5. Editor refinements, diffs, graph UI, board, revisions per content object (open)
+6. UI languages via array files, English default + German, per-account language setting (done)
 
 Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).
