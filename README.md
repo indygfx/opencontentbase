@@ -36,6 +36,7 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 - **Versioned migrations per module**: `schema_versions (module, version)`, executed by `Core\Migrator` in individual transactions.
 - **Generalized internal links**: `[[type:slug]]` in content, resolved via the module registry (`ModuleRegistry::resolveLink`); unresolvable links render as broken-link markers.
 - **CommonMark + GFM** via `league/commonmark` – raw HTML is escaped, unsafe links neutralized (`allow_unsafe_links: false`, `DisallowedRawHtml`).
+- **Array-based i18n**: `lang/<code>/<domain>.php` files (English default + German); lookup falls back to English, then to the raw key – missing translations never break the UI.
 
 ## Stack
 
@@ -104,12 +105,30 @@ On first start the user **admin / admin** is created automatically (change it im
 ## Structure
 
 ```
-src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry
+src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry, Translator
+lang/              Language files: en/ (default) and de/, one file per domain (core, writing, pages)
 modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
-templates/         Layout, Login, Error
+templates/         Layout, Login, Profile, Users, Error
 public/index.php   Front controller
 ```
+
+## Languages (i18n)
+
+The UI is fully translated via flat PHP array files – no gettext, no tooling, no build step.
+
+- **Files**: `lang/<code>/<domain>.php` returns a `key => string` map. Domains: `core` (auth, profile, users, nav), `writing`, `pages`. English (`en/`) is the **default and source of truth**; `de/` is a complete German translation with an identical key set (enforced by `tests/TranslatorTest.php`, which fails if keys drift apart).
+- **Lookup**: `t('domain', 'key', ['name' => $value])` – helper is globally available. Fallback chain: **active language → `en` → raw key**, so a half-finished language file never breaks the UI. `{name}` placeholders are replaced after lookup.
+- **Language selection** (in order): per-account setting (`users.language`, set via the profile page) → `cb_lang` cookie → `Accept-Language` header → English default.
+- **Account settings**: the profile page (`/profile`) has a language dropdown listing all available languages with their native names; `POST /profile/language` persists the choice (CSRF-protected, unknown codes rejected).
+
+**Add your own language** (this is the open-source workflow):
+
+1. `cp -r lang/en lang/fr` (copy the English default)
+2. Translate the values, keep the keys unchanged – a missing key simply falls back to English
+3. Done – the language automatically appears in the profile dropdown (`Translator::availableLanguages()` scans `lang/`); add a `'lang_fr' => 'Français'` entry in `core.php` for the native name
+
+For translators there is nothing to install: plain text editor, PHP array syntax, and the parity test reports untranslated keys on the next `phpunit` run.
 
 ## Writing module: story dashboard (snowflake)
 
