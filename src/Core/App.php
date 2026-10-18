@@ -10,7 +10,7 @@ use Writing\WritingModule;
 /**
  * Bootstraps the translator from the request: user account language,
  * then the language cookie, then the browser's Accept-Language header.
-
+ */
 final class App
 {
     private const LANG_COOKIE = 'cb_lang';
