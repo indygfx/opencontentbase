@@ -51,6 +51,10 @@ final class App
         }
         $cookie = $_COOKIE[self::LANG_COOKIE] ?? '';
         $cookie = is_string($cookie) && in_array($cookie, $available, true) ? $cookie : null;
+        $user = $this->auth->user();
+        if ($user !== null && $user->language() !== null && in_array($user->language(), $available, true)) {
+            return $user->language();
+        }
         if ($cookie !== null) {
             return $cookie;
         }
@@ -144,6 +148,7 @@ final class App
         $this->router->post('/logout', fn ($params, $user) => $controller->logout());
         $this->router->get('/profile', fn ($params, $user) => $controller->showProfile($user));
         $this->router->post('/profile/password', fn ($params, $user) => $controller->changePassword($user));
+        $this->router->post('/profile/language', fn ($params, $user) => $controller->changeLanguage($user), ['user']);
 
         $admin = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
         $this->router->get('/users', fn ($params, $user) => $admin->index($user), ['admin']);

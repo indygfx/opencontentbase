@@ -87,6 +87,10 @@ final class CoreMigrations
             function (Database $db): void {
                 $db->run("ALTER TABLE content_revisions ADD COLUMN summary TEXT NOT NULL DEFAULT ''");
             },
+            // v6: per-account UI language (NULL = detect from cookie/browser)
+            function (Database $db): void {
+                $db->run('ALTER TABLE users ADD COLUMN language TEXT');
+            },
         ];
     }
 }

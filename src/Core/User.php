@@ -19,7 +19,8 @@ final class User
     public function __construct(
         private readonly string $id,
         private readonly string $username,
-        private readonly string $role
+        private readonly string $role,
+        private readonly ?string $language = null
     ) {
         if (!isset(self::HIERARCHY[$role])) {
             throw new \InvalidArgumentException("Unbekannte Rolle: {$role}");
@@ -32,7 +33,8 @@ final class User
         return new self(
             (string)$row['id'],
             (string)$row['username'],
-            (string)$row['role']
+            (string)$row['role'],
+            isset($row['language']) ? (string)$row['language'] : null
         );
     }
 
@@ -49,6 +51,11 @@ final class User
     public function role(): string
     {
         return $this->role;
+    }
+
+    public function language(): ?string
+    {
+        return $this->language;
     }
 
     public function isAdmin(): bool

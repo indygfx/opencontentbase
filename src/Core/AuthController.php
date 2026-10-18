@@ -97,4 +97,26 @@ final class AuthController
             'content' => $content,
         ]), $error === null ? 200 : 422);
     }
+
+    public function changeLanguage(?User $user): Response
+    {
+        if ($user === null) {
+            return Response::redirect('/login');
+        }
+        $language = trim((string)($_POST['language'] ?? ''));
+        $ok = $this->auth->setLanguage($user, $language);
+        $content = $this->view->render('templates/profile.php', [
+            'user' => $user,
+            'csrf' => $this->csrf,
+            'availableLanguages' => $this->availableLanguages(),
+            'error' => $ok ? null : t('core', 'profile_language_invalid'),
+            'success' => $ok ? t('core', 'profile_language_changed') : null,
+        ]);
+        return Response::html($this->view->render('templates/layout.php', [
+            'title' => t('core', 'profile_title'),
+            'user' => $user,
+            'csrf' => $this->csrf,
+            'content' => $content,
+        ]), $ok ? 200 : 422);
+    }
 }

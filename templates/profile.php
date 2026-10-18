@@ -4,7 +4,20 @@
         <tr><th><?= e(t('core', 'profile_username')) ?></th><td><?= e($user->username()) ?></td></tr>
         <tr><th><?= e(t('core', 'profile_role')) ?></th><td><?= e($user->role()) ?></td></tr>
     </table>
-    <h2><?= e(t('core', 'profile_change_password')) ?></h2>
+    <h2><?= e(t('core', 'profile_language')) ?></h2>
+    <form method="post" action="/profile/language">
+        <?= $csrf->field() ?>
+        <label for="language"><?= e(t('core', 'profile_language')) ?></label>
+        <select id="language" name="language">
+            <?php foreach (($availableLanguages ?? []) as $code): ?>
+                <option value="<?= e($code) ?>" <?= ($user->language() ?? 'en') === $code ? 'selected' : '' ?>>
+                    <?= e(t('core', 'lang_' . $code)) ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit"><?= e(t('core', 'profile_language_submit')) ?></button>
+    </form>
+        <h2><?= e(t('core', 'profile_change_password')) ?></h2>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>

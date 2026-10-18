@@ -16,7 +16,7 @@ final class Auth
     public function login(string $username, string $password): ?User
     {
         $row = $this->db->one(
-            'SELECT id, username, password, role FROM users WHERE username = ?',
+            'SELECT id, username, password, role, language FROM users WHERE username = ?',
             [$username]
         );
         if ($row === null || !password_verify($password, (string)$row['password'])) {
@@ -64,7 +64,7 @@ final class Auth
             return null;
         }
         $row = $this->db->one(
-            'SELECT u.id, u.username, u.role
+            'SELECT u.id, u.username, u.role, u.language
                FROM sessions s
                JOIN users u ON u.id = s.user_id
               WHERE s.token_hash = ?
@@ -85,6 +85,19 @@ final class Auth
             [hash('sha256', $token)]
         );
         return $row === null ? null : (string)$row['id'];
+    }
+
+    public function setLanguage(User $user, string $language): bool
+    {
+        if (!preg_match('/^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/', $language)) {
+            return false;
+        }
+        $langDir = dirname(__DIR__, 2) . '/lang';
+        if (!is_dir($langDir . '/' . $language)) {
+            return false;
+        }
+        $this->db->run('UPDATE users SET language = ? WHERE id = ?', [$language, $user->id()]);
+        return true;
     }
 
     public function currentCsrfToken(): ?string
