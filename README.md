@@ -99,6 +99,17 @@ Each story has a dashboard (`/writing/{id}`) that follows the snowflake method t
 - **Relationship Web**: who knows whom, how they are connected – and where the conflict lies.
 - **Backgrounds**: the world your story stands on – its historical, geographical, religious and political context.
 
+## Writing module: story excerpt slider
+
+Once a user has written a real chapter (more than three paragraphs), the writing dashboard (`/writing`) shows a header slider with excerpts from their own stories:
+
+- **Qualifying chapters**: only chapters of projects the user owns, with more than three paragraphs (paragraphs are separated by blank lines; empty or non-text blocks do not count).
+- **Excerpt**: one random paragraph per qualifying chapter, reduced to plain text (Markdown markup stripped) and truncated to 80 words – at a sentence boundary if possible, otherwise with an ellipsis.
+- **Slides**: at most three excerpts, each labelled with the story title and a link to the chapter.
+- **Session-stable selection**: the random pick is deterministically seeded from the session CSRF token, so the same session always shows the same slides; a new session picks fresh excerpts.
+- **Rendering**: CSS cross-fade without JavaScript for a single slide; `public/assets/js/story-slider.js` adds automatic rotation (8 s) and navigation dots for two or more slides.
+- **Privacy**: only the user's own chapters are ever shown; shared stories of other users do not qualify.
+
 ## Writing module: progress targets and dashboard progress bars
 
 The owner defines measurable targets per section in **Novel Setup** ("Progress Targets" fieldset, `POST /writing/{id}/targets`, CSRF-protected). The dashboard then renders a slim progress bar under each section headline, computed server-side on every render (no JS, no persistence):
