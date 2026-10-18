@@ -16,6 +16,7 @@ return [
     'error_title_max' => 'The title must not exceed 200 characters.',
     'story_not_found' => 'Story not found.',
     'owner_only' => 'Only the story owner may do that.',
+    'export_story' => 'Export as Markdown bundle (ZIP)',
     'slider_label' => 'Story excerpts',
     'slider_excerpt' => 'Show excerpt {n}',
 

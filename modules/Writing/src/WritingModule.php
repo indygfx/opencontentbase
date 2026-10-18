@@ -17,6 +17,7 @@ final class WritingModule implements ModuleInterface
     private CharacterController $characters;
     private BackgroundController $backgrounds;
     private RelationshipController $relationships;
+    private StoryExportController $export;
 
     public function __construct(
         Database $db,
@@ -32,6 +33,7 @@ final class WritingModule implements ModuleInterface
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
+        $this->export = new StoryExportController($db, $this->access);
     }
 
     public function id(): string
@@ -51,6 +53,7 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}', 'handler' => fn ($params, $user) => $c->show($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/export', 'handler' => fn ($params, $user) => $this->export->export($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}', 'handler' => fn ($params, $user) => $c->update($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/delete', 'handler' => fn ($params, $user) => $c->destroy($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/share', 'handler' => fn ($params, $user) => $c->share($user, $params['id']), 'roles' => ['user']],

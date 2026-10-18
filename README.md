@@ -154,6 +154,38 @@ Once a user has written a real chapter (more than three paragraphs), the writing
 - **Rendering**: CSS cross-fade without JavaScript for a single slide; `public/assets/js/story-slider.js` adds automatic rotation (8 s) and navigation dots for two or more slides.
 - **Privacy**: only the user's own chapters are ever shown; shared stories of other users do not qualify.
 
+## Writing module: story export as a Markdown bundle (format version 1)
+
+Every story dashboard has an **Export** button (`GET /writing/{id}/export`, owner and members only) that downloads a ZIP archive – a portable, human-readable Markdown bundle with one file per object. The format is **stable (format version 1)** and documented here as the contract for import tools.
+
+### ZIP layout
+
+```
+story.md                       story overview
+synopses/{slug}.md             one file per chapter synopsis
+chapters/{slug}.md             one file per written chapter
+characters/{slug}.md           one file per character
+backgrounds/{slug}.md          one file per background
+relations.json                 relationship web as structured data
+bundle.json                    manifest: format version, story metadata, object counts
+```
+
+### File format
+
+- Each Markdown file starts with a **YAML frontmatter** block (`---` fenced): `uuid`, `slug` (where applicable), `type`, `title`, `created_at`, `updated_at` (latest revision, where tracked) and type-specific fields – chapters carry `synopsis_uuid` (the assigned synopsis).
+- Frontmatter values are always double-quoted with escaped backslashes/quotes/control characters, so titles containing colons, quotes or dashes cannot inject YAML structure.
+- The body below the frontmatter is the **stored raw Markdown, unmodified** (no re-rendering).
+- `story.md` contains the Novel Setup metadata in frontmatter and the Idea / Short Description / Extended Synopsis as `##` sections.
+- `relations.json` holds one entry per relation: `uuid`, `from_uuid`, `to_uuid`, `kind`, `conflict` (stored description) and a `uuids` object with all three ids for convenience.
+- `bundle.json` records `format_version: 1`, `story_uuid`, `story_title`, `exported_at` (UTC) and `object_counts` per entity type.
+
+### Implementation notes
+
+- Built on PHP's bundled `ZipArchive`, writing to a temp file (no dependency additions).
+- Slugs are sanitized to `[a-z0-9-]` for archive paths; download filename is the slugified story title (`{story-slug}.zip`).
+- Empty stories produce a valid ZIP containing only `story.md` + `bundle.json`; `relations.json` is omitted when no relations exist.
+- Tests: `tests/StoryExportTest.php` covers ZIP structure, frontmatter escaping and round-trip of special characters, exact body preservation, relations references, access control (stranger gets 403, no ZIP) and the empty-story case.
+
 ## Writing module: progress targets and dashboard progress bars
 
 The owner defines measurable targets per section in **Novel Setup** ("Progress Targets" fieldset, `POST /writing/{id}/targets`, CSRF-protected). The dashboard then renders a slim progress bar under each section headline, computed server-side on every render (no JS, no persistence):

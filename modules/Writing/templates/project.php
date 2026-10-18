@@ -56,6 +56,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?php if ($isOwner): ?>
         <p><a class="button" href="/writing/<?= e($project['id']) ?>/setup">Novel Setup</a></p>
     <?php endif; ?>
+    <p><a class="button" href="/writing/<?= e($project['id']) ?>/export"><?= e(t('writing', 'export_story')) ?></a></p>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>

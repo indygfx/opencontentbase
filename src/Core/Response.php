@@ -33,6 +33,11 @@ final class Response
         );
     }
 
+    public function header(string $name): ?string
+    {
+        return $this->headers[$name] ?? null;
+    }
+
     public function status(): int
     {
         return $this->status;

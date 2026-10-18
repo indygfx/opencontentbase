@@ -16,6 +16,7 @@ return [
     'error_title_max' => 'Der Titel darf maximal 200 Zeichen lang sein.',
     'story_not_found' => 'Story nicht gefunden.',
     'owner_only' => 'Das darf nur der Besitzer der Story.',
+    'export_story' => 'Als Markdown-Bundle exportieren (ZIP)',
     'slider_label' => 'Story-Auszüge',
     'slider_excerpt' => 'Auszug {n} anzeigen',
 
