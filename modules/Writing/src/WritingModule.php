@@ -11,6 +11,7 @@ final class WritingModule implements ModuleInterface
 {
     private WritingController $controller;
     private ProjectAccess $access;
+    private string $basePath;
 
     private ChapterController $chapters;
     private ChapterSynopsisController $synopses;
@@ -26,11 +27,12 @@ final class WritingModule implements ModuleInterface
         \Core\ContentRenderer $renderer,
         string $basePath = ''
     ) {
+        $this->basePath = $basePath;
         $this->access = new ProjectAccess($db);
         $this->controller = new WritingController($db, $view, $csrf, $this->access, $renderer, $basePath);
         $this->synopses = new ChapterSynopsisController($db, $view, $csrf, $this->access, $renderer);
         $this->chapters = new ChapterController($db, $view, $csrf, $this->access, $renderer, $this->synopses);
-        $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer);
+        $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer, $basePath);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
         $this->export = new StoryExportController($db, $this->access);
@@ -76,6 +78,9 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}/edit', 'handler' => fn ($params, $user) => $ca->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}', 'handler' => fn ($params, $user) => $ca->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}/delete', 'handler' => fn ($params, $user) => $ca->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}/image', 'handler' => fn ($params, $user) => $ca->uploadImage($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/characters/{slug}/image/delete', 'handler' => fn ($params, $user) => $ca->removeImage($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/characters/{slug}/image', 'handler' => fn ($params, $user) => $ca->image($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/backgrounds/new', 'handler' => fn ($params, $user) => $bg->create($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/backgrounds', 'handler' => fn ($params, $user) => $bg->store($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/backgrounds/{slug}', 'handler' => fn ($params, $user) => $bg->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
@@ -285,6 +290,10 @@ final class WritingModule implements ModuleInterface
                     );
                 }
             },
+            // v12: optional character portrait image (NULL means "no image")
+            function (Database $db): void {
+                $db->run('ALTER TABLE characters ADD COLUMN image_path TEXT');
+            },
         ];
     }
 
@@ -343,6 +352,11 @@ final class WritingModule implements ModuleInterface
 
     public function onDelete(Database $db, string $uuid): void
     {
+        $character = $db->one('SELECT image_path FROM characters WHERE id = ?', [$uuid]);
+        if ($character !== null && (string)($character['image_path'] ?? '') !== '') {
+            $store = new ImageStore($this->basePath);
+            $store->delete('characters', (string)$character['image_path']);
+        }
         $db->run('DELETE FROM character_relations WHERE from_character_id = ?', [$uuid]);
         $db->run('DELETE FROM character_relations WHERE to_character_id = ?', [$uuid]);
         $db->run('DELETE FROM chapters WHERE id = ?', [$uuid]);

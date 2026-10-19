@@ -28,6 +28,7 @@
         .broken-link { color: #b91c1c; background: #fef2f2; border-bottom: 1px dashed #b91c1c; }        .outline-box { background: #f8fafc; border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }        .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
         .muted { color: var(--muted); }
         .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }
+        .character-portrait { max-width: 10rem; max-height: 10rem; border: 1px solid var(--line); border-radius: 50%; display: block; margin-bottom: 1rem; }
         .progress { display: flex; align-items: center; gap: 0.6rem; margin: 0.25rem 0 0.75rem 0; }
         .progress-track { flex: 1 1 auto; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
         .progress-bar { height: 100%; background: #f59e0b; border-radius: 3px; }

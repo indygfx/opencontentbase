@@ -12,13 +12,17 @@ use Core\View;
 
 final class CharacterController
 {
+    private ImageStore $images;
+
     public function __construct(
         private Database $db,
         private View $view,
         private Csrf $csrf,
         private ProjectAccess $access,
-        private ContentRenderer $rendererService
+        private ContentRenderer $rendererService,
+        private string $basePath = ''
     ) {
+        $this->images = new ImageStore($basePath);
     }
 
     public function create(User $user, string $projectId): Response
@@ -58,7 +62,7 @@ final class CharacterController
         return Response::redirect('/writing/' . $projectId . '/characters/' . rawurlencode($slug));
     }
 
-    public function show(User $user, string $projectId, string $slug): Response
+    public function show(User $user, string $projectId, string $slug, ?string $imageError = null): Response
     {
         $character = $this->findChapter($projectId, $slug);
         if ($character === null || !$this->access->canAccess($user, $projectId)) {
@@ -71,6 +75,7 @@ final class CharacterController
             'character' => $character,
             'rendered' => $this->rendererService->render((string)$character['body']),
             'canEdit' => $this->access->canEdit($user, $projectId),
+            'imageError' => $imageError,
             'error' => null,
         ]);
     }
@@ -132,11 +137,76 @@ final class CharacterController
             && (string)($character['owner_id'] ?? '') !== $user->id()) {
             return $this->forbidden($user);
         }
+        $this->deleteImageFile((string)$character['id'], (string)($character['image_path'] ?? ''));
         $this->db->transaction(function (Database $db) use ($character): void {
             $db->run('DELETE FROM characters WHERE id = ?', [(string)$character['id']]);
             $db->run('DELETE FROM content_objects WHERE id = ?', [(string)$character['object_id']]);
         });
         return Response::redirect('/writing/' . $projectId);
+    }
+
+    public function uploadImage(User $user, string $projectId, string $slug): Response
+    {
+        $character = $this->findChapter($projectId, $slug);
+        if ($character === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $file = $_FILES['image'] ?? null;
+        $ext = $file !== null && is_array($file) ? $this->images->validateUpload($file) : null;
+        $error = match (true) {
+            $file === null || !is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+                => 'No file was uploaded.',
+            ($file['size'] ?? 0) > ImageStore::MAX_BYTES
+                => 'The character image must not be larger than 5 MB.',
+            $ext === null
+                => 'Only JPG, PNG, WebP and GIF images are allowed.',
+            default => null,
+        };
+        if ($error !== null) {
+            return $this->show($user, $projectId, $slug, $error);
+        }
+        $this->deleteImageFile((string)$character['id'], (string)($character['image_path'] ?? ''));
+        $name = $character['id'] . '.' . $ext;
+        $this->images->store($file, 'characters', $name);
+        $this->db->run('UPDATE characters SET image_path = ? WHERE id = ?', [$name, (string)$character['id']]);
+        return Response::redirect('/writing/' . $projectId . '/characters/' . rawurlencode($slug));
+    }
+
+    public function removeImage(User $user, string $projectId, string $slug): Response
+    {
+        $character = $this->findChapter($projectId, $slug);
+        if ($character === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $this->deleteImageFile((string)$character['id'], (string)($character['image_path'] ?? ''));
+        $this->db->run('UPDATE characters SET image_path = NULL WHERE id = ?', [(string)$character['id']]);
+        return Response::redirect('/writing/' . $projectId . '/characters/' . rawurlencode($slug));
+    }
+
+    public function image(User $user, string $projectId, string $slug): Response
+    {
+        $character = $this->findChapter($projectId, $slug);
+        if ($character === null || !$this->access->canAccess($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $name = (string)($character['image_path'] ?? '');
+        $file = $this->images->path('characters', $name);
+        $mime = $file === null ? null : $this->images->contentType('characters', $name);
+        if ($name === '' || $mime === null) {
+            return $this->notFound($user);
+        }
+        return new Response(
+            (string)file_get_contents($file),
+            200,
+            ['Content-Type' => $mime]
+        );
+    }
+
+    private function deleteImageFile(string $characterId, string $name): void
+    {
+        if ($name !== '') {
+            $this->images->delete('characters', $name);
+        }
     }
 
     private function validate(string $projectId, string $title, string $slug): ?string
@@ -193,7 +263,7 @@ final class CharacterController
     private function findChapter(string $projectId, string $slug): ?array
     {
         return $this->db->one(
-            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, r.title, r.body
+            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, c.image_path, r.title, r.body
              FROM content_objects o
              JOIN characters c ON c.id = o.id
              LEFT JOIN content_revisions r ON r.object_id = o.id
