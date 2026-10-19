@@ -29,6 +29,16 @@
         .muted { color: var(--muted); }
         .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }
         .character-portrait { max-width: 10rem; max-height: 10rem; border: 1px solid var(--line); border-radius: 50%; display: block; margin-bottom: 1rem; }
+        .graph-wrap { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem; margin-bottom: 1rem; }
+        .relationship-graph { width: 100%; height: auto; display: block; }
+        .graph-node-circle { fill: #cbd5e1; stroke: #64748b; stroke-width: 1.5; }
+        .graph-node-label-bg { fill: #fff; opacity: 0.85; }
+        .graph-node-label { font-size: 12px; fill: var(--ink); }
+        .graph-edge { stroke-width: 2; }
+        .graph-edge-label { font-size: 11px; }
+        .graph-legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
+        .graph-legend li { display: flex; align-items: center; gap: 0.35rem; }
+        .graph-legend-swatch { width: 1rem; height: 1rem; border-radius: 3px; display: inline-block; }
         .progress { display: flex; align-items: center; gap: 0.6rem; margin: 0.25rem 0 0.75rem 0; }
         .progress-track { flex: 1 1 auto; height: 6px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
         .progress-bar { height: 100%; background: #f59e0b; border-radius: 3px; }

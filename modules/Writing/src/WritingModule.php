@@ -19,6 +19,7 @@ final class WritingModule implements ModuleInterface
     private BackgroundController $backgrounds;
     private RelationshipController $relationships;
     private StoryExportController $export;
+    private GraphController $graph;
 
     public function __construct(
         Database $db,
@@ -36,6 +37,7 @@ final class WritingModule implements ModuleInterface
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
         $this->export = new StoryExportController($db, $this->access);
+        $this->graph = new GraphController($db, $view, $csrf, $this->access, new CharacterMentions($db), $this->relationships);
     }
 
     public function id(): string
@@ -103,6 +105,7 @@ final class WritingModule implements ModuleInterface
             ['method' => 'POST', 'pattern' => '/writing/{id}/relations/delete', 'handler' => fn ($params, $user) => $rel->destroy($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/relations/{rid}/edit', 'handler' => fn ($params, $user) => $rel->edit($user, $params['id'], $params['rid']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/relations/{rid}', 'handler' => fn ($params, $user) => $rel->update($user, $params['id'], $params['rid']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/graph', 'handler' => fn ($params, $user) => $this->graph->show($user, $params['id']), 'roles' => ['user']],
         ];
     }
 

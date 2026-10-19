@@ -142,7 +142,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/characters/new">New character</a></p>
 
-    <h2>Relationship Web</h2>
+    <h2>Relationship Web <a class="button" href="/writing/<?= e($project['id']) ?>/graph"><?= e(t('writing', 'graph_open')) ?></a></h2>
     <?= progressBar('relations', $progress['relations'], $progress['relations']['actual'] . ' / ' . $progress['relations']['target'] . ' relations') ?>
     <p class="muted">Who knows whom, how they are connected &mdash; and where the conflict lies.</p>
     <?php if ($relations !== []): ?>
