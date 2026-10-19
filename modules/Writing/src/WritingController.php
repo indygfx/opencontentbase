@@ -21,6 +21,7 @@ final class WritingController
 
     private RelationshipController $relationships;
     private ProjectProgress $progress;
+    private ImageStore $images;
 
     public function __construct(
         private Database $db,
@@ -32,6 +33,7 @@ final class WritingController
     ) {
         $this->relationships = new RelationshipController($db, $view, $csrf, $access);
         $this->progress = new ProjectProgress($db);
+        $this->images = new ImageStore($basePath);
     }
 
     public function index(User $user): Response
@@ -410,14 +412,6 @@ final class WritingController
         ], 422);
     }
 
-    private const COVER_TYPES = [
-        'image/jpeg' => 'jpg',
-        'image/png' => 'png',
-        'image/webp' => 'webp',
-        'image/gif' => 'gif',
-    ];
-    private const COVER_MAX_BYTES = 5242880;
-
     public function uploadCover(User $user, string $id): Response
     {
         $project = $this->findProject($id);
@@ -428,19 +422,16 @@ final class WritingController
             return $this->forbidden($user);
         }
         $file = $_FILES['cover'] ?? null;
-        $error = null;
-        if ($file === null || !is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-            $error = 'No file was uploaded.';
-        } elseif (($file['size'] ?? 0) > self::COVER_MAX_BYTES) {
-            $error = 'The cover image must not be larger than 5 MB.';
-        } else {
-            $ext = self::COVER_TYPES[(string)($file['type'] ?? '')] ?? null;
-            if ($ext === null) {
-                $error = 'Only JPG, PNG, WebP and GIF images are allowed.';
-            } elseif ($this->isImage($file['tmp_name']) === false) {
-                $error = 'The uploaded file is not a valid image.';
-            }
-        }
+        $ext = $file !== null && is_array($file) ? $this->images->validateUpload($file) : null;
+        $error = match (true) {
+            $file === null || !is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+                => 'No file was uploaded.',
+            ($file['size'] ?? 0) > ImageStore::MAX_BYTES
+                => 'The cover image must not be larger than 5 MB.',
+            $ext === null
+                => 'Only JPG, PNG, WebP and GIF images are allowed.',
+            default => null,
+        };
         if ($error !== null) {
             return $this->page($user, 'modules/Writing/templates/setup.php', [
                 'title' => 'Novel Setup: ' . (string)$project['title'],
@@ -453,12 +444,8 @@ final class WritingController
             ], 422);
         }
         $this->deleteCoverFile($id);
-        $dir = rtrim($this->basePath, '/') . '/data/covers';
-        if (!is_dir($dir)) {
-            mkdir($dir, 0775, true);
-        }
         $name = $id . '.' . $ext;
-        move_uploaded_file((string)$file['tmp_name'], $dir . '/' . $name);
+        $this->images->store($file, 'covers', $name);
         $this->db->run('UPDATE projects SET cover = ? WHERE id = ?', [$name, $id]);
         return Response::redirect('/writing/' . $id . '/setup');
     }
@@ -487,15 +474,15 @@ final class WritingController
         if ($name === '') {
             return $this->notFound($user);
         }
-        $ext = self::COVER_TYPES[(string)(mime_content_type($this->coverPath($name)) ?: '')] ?? null;
-        $file = $this->coverPath($name);
-        if ($ext === null || !is_file($file)) {
+        $file = $this->images->path('covers', $name);
+        $mime = $file === null ? null : $this->images->contentType('covers', $name);
+        if ($mime === null) {
             return $this->notFound($user);
         }
         return new Response(
             (string)file_get_contents($file),
             200,
-            ['Content-Type' => (string)array_search($ext, self::COVER_TYPES, true)]
+            ['Content-Type' => $mime]
         );
     }
 
@@ -504,30 +491,13 @@ final class WritingController
         return $cover === '' ? '' : '/writing/' . rawurlencode($projectId) . '/cover';
     }
 
-    private function coverPath(string $name): string
-    {
-        return rtrim($this->basePath, '/') . '/data/covers/' . basename($name);
-    }
-
     private function deleteCoverFile(string $id): void
     {
         $row = $this->db->one('SELECT cover FROM projects WHERE id = ?', [$id]);
         $name = (string)($row['cover'] ?? '');
         if ($name !== '') {
-            $file = $this->coverPath($name);
-            if (is_file($file)) {
-                unlink($file);
-            }
+            $this->images->delete('covers', $name);
         }
-    }
-
-    private function isImage(string $tmpName): bool
-    {
-        if (!is_file($tmpName)) {
-            return false;
-        }
-        $info = @getimagesize($tmpName);
-        return $info !== false;
     }
 
     /** @param array<string, mixed> $data */
