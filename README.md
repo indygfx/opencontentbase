@@ -226,6 +226,75 @@ POST /writing/{id}/chapters/{slug}         update chapter
 POST /writing/{id}/chapters/{slug}/delete  delete chapter text (synopsis is kept)
 ```
 
+## Writing module: character portrait images
+
+Characters can have one optional portrait image each (shown as a small
+portrait above the character details):
+
+- **Storage**: files live under `data/characters/<character-uuid>.<ext>`;
+  the shared `ImageStore` helper is used for story covers and character
+  portraits alike. The storage directory is never exposed directly -
+  all access goes through the delivery route.
+- **Upload rules** (server-side validated, same rules as story covers):
+  JPG, PNG, WebP or GIF only, max 5 MB; the MIME type and the actual
+  image content (`getimagesize`) are checked. Only story owner/members
+  may upload.
+- **One image per character**: uploading a new image replaces the old
+  file on disk. "Remove image" (POST, CSRF-protected) deletes the file
+  and sets `characters.image_path` to NULL (NULL = no image).
+- **Delivery route**: `GET /writing/{id}/characters/{slug}/image`
+  serves the stored file with the correct Content-Type; 404 when no
+  image exists. Only story owner/members can access it (strangers get
+  404, same guard pattern as the story cover route).
+- **Delete cleanup**: deleting a character (controller or the central
+  `ObjectDeleter` flow) removes its image file from disk.
+
+## Writing module: mention-based character weighting
+
+How often a character is *mentioned* in the chapter prose determines
+its weight in the relationship graph:
+
+- **Counting** (`modules/Writing/CharacterMentions.php`): case-insensitive
+  occurrences of each character title in the chapter prose. Only the
+  latest revision per chapter counts; alias support is out of scope.
+- **On-demand cache**: counts are stored in `character_mention_counts`
+  (story_id, character_id, total_mentions). A recount runs only when
+  the chapter prose changed since the last count - detected via a
+  cheap fingerprint (MAX revision timestamp + chapter count, stored in
+  `character_mention_meta`). Reading never recomputes.
+- **Level formula** (single authoritative place, `levelFor()`):
+  `level = min(10, round(sqrt(mentions) * 1.5))` - 0 means never
+  mentioned, 10 means protagonist-level.
+
+## Writing module: weighted circular relationship graph
+
+`GET /writing/{id}/graph` renders the character web as pure server-side
+SVG (no JavaScript):
+
+- **Layout** (`modules/Writing/RelationshipGraph.php`): characters with
+  level >= 7 form the protagonist zone in the center (multiple
+  protagonists on a small deterministic inner circle, sorted by level
+  desc, then name). All other characters sit evenly on the outer ring
+  (same deterministic order). Without a protagonist, everyone stays on
+  the outer ring.
+- **Nodes**: the radius scales with the level (~8px at level 0 up to
+  ~24px at level 10). Characters with an image render as a circular
+  clipped `<image>` (via the access-checked image route), others as a
+  plain circle. The label renders below the node as `Name · L<level>`
+  with a subtle background rectangle so edges stay readable. Nodes link
+  to the character pages.
+- **Edges**: reciprocal pairs (A->B and B->A) merge into ONE
+  outward-bowed Bezier curve with two labels - the A->B kind near B's
+  end, the B->A kind near A's end (colors per direction). One-directional
+  relations get an arrowhead pointing at the target. Unknown kinds fall
+  back to a neutral stroke color; the conflict text appears as a native
+  SVG `<title>` tooltip; self-references are skipped defensively.
+- **Page**: SVG plus a translated kind->color legend, a short
+  explanation of the level system and a link back to the relationship
+  section. Friendly empty states for 0 and 1 characters.
+- **Determinism**: the same characters and relations always produce an
+  identical SVG (fixed sort orders, no time or randomness).
+
 ## Security (current state)
 
 - Passwords: `password_hash()` (bcrypt)
