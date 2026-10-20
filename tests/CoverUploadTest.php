@@ -95,7 +95,7 @@ final class CoverUploadTest extends TestCase
         $response = $this->controller->uploadCover($this->owner, 'p1');
         $this->assertSame(422, $response->status());
         $this->assertStringContainsString('Only JPG, PNG, WebP and GIF', $response->body());
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testUploadRejectsMissingFile(): void
@@ -115,7 +115,7 @@ final class CoverUploadTest extends TestCase
         $response = $this->controller->uploadCover($this->stranger, 'p1');
         $this->assertSame(403, $response->status());
         $this->assertSame('', (string)$this->db->one("SELECT cover FROM projects WHERE id = 'p1'")['cover']);
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testUploadPersistsCoverName(): void
@@ -128,7 +128,7 @@ final class CoverUploadTest extends TestCase
         $this->assertSame(302, $response->status());
         $this->assertSame('p1.png', (string)$this->db->one("SELECT cover FROM projects WHERE id = 'p1'")['cover']);
         $this->assertFileExists($this->basePath . '/data/covers/p1.png');
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testRemoveCoverClearsFileAndColumn(): void
@@ -138,7 +138,7 @@ final class CoverUploadTest extends TestCase
         file_put_contents($tmp, $png);
         $this->fakeUpload($tmp, 'image/png');
         $this->controller->uploadCover($this->owner, 'p1');
-        unlink($tmp);
+        @unlink($tmp);
 
         $response = $this->controller->removeCover($this->owner, 'p1');
         $this->assertSame(302, $response->status());
