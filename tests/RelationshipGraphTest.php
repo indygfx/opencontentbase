@@ -190,7 +190,7 @@ final class RelationshipGraphTest extends TestCase
         $this->assertSame(1, substr_count($svg, '<path class="graph-edge'));
     }
 
-    public function testUnknownKindFallsBackToNeutralColor(): void
+    public function testUnknownKindFallsBackToNeutralClass(): void
     {
         $svg = $this->renderGraph(
             [
@@ -201,8 +201,10 @@ final class RelationshipGraphTest extends TestCase
                 ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'bonded', 'description' => ''],
             ]
         );
-        $this->assertStringContainsString('graph-edge-kind-bonded', $svg);
-        $this->assertStringContainsString('#9ca3af', $svg);
+        // Unknown kinds resolve to the neutral 'other' group class; the
+        // actual color lives in the stylesheet, never inline in the SVG.
+        $this->assertStringContainsString('rel-other', $svg);
+        $this->assertStringNotContainsString('stroke="#', $svg);
     }
 
     public function testConflictTextBecomesTitleTooltip(): void

@@ -48,7 +48,7 @@ final class GraphController
             'svg' => $svg,
             'characterCount' => count($graphCharacters),
             'relationCount' => count($this->relationships->list($projectId)),
-            'kindColors' => RelationshipGraph::KIND_COLORS,
+            'kindGroups' => RelationKinds::groups(),
             'levels' => $levels,
         ]);
     }

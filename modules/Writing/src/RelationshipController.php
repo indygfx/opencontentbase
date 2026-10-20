@@ -12,8 +12,6 @@ use Core\View;
 
 final class RelationshipController
 {
-    private const KINDS = ['family', 'friend', 'rival', 'lover', 'mentor', 'ally', 'enemy', 'related'];
-
     public function __construct(
         private Database $db,
         private View $view,
@@ -34,7 +32,7 @@ final class RelationshipController
                 'projectTitle' => $this->projectTitle($projectId),
                 'relation' => null,
                 'characterOptions' => [],
-                'kinds' => self::KINDS,
+                'kinds' => RelationKinds::allKinds(),
                 'error' => null,
                 'notice' => 'Create at least two characters to define relationships.',
             ]);
@@ -45,7 +43,7 @@ final class RelationshipController
             'projectTitle' => $this->projectTitle($projectId),
             'relation' => null,
             'characterOptions' => $this->characterOptions($projectId),
-            'kinds' => self::KINDS,
+            'kinds' => RelationKinds::allKinds(),
             'error' => null,
             'notice' => null,
         ]);
@@ -87,7 +85,7 @@ final class RelationshipController
             'projectTitle' => $this->projectTitle($projectId),
             'relation' => $relation,
             'characterOptions' => $this->characterOptions($projectId),
-            'kinds' => self::KINDS,
+            'kinds' => RelationKinds::allKinds(),
             'error' => null,
             'notice' => null,
         ]);
@@ -166,7 +164,7 @@ final class RelationshipController
         if ($fromId === $toId) {
             return 'A character cannot have a relationship with itself.';
         }
-        if (!in_array($kind, self::KINDS, true)) {
+        if (!in_array($kind, RelationKinds::allKinds(), true)) {
             return 'Invalid relationship kind.';
         }
         foreach ([$fromId, $toId] as $characterId) {
@@ -238,7 +236,7 @@ final class RelationshipController
                 'description' => $description,
             ],
             'characterOptions' => $this->characterOptions($projectId),
-            'kinds' => self::KINDS,
+            'kinds' => RelationKinds::allKinds(),
             'error' => $error,
             'notice' => null,
         ], 422);

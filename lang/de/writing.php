@@ -39,4 +39,10 @@ return [
     'kind_ally' => 'Verbündeter',
     'kind_enemy' => 'Feind',
     'kind_related' => 'Verwandt',
+    'kindgroup_family' => 'Familie',
+    'kindgroup_alliance' => 'Bündnis / Freundschaft',
+    'kindgroup_romance' => 'Romanze',
+    'kindgroup_conflict' => 'Konflikt / Feindschaft',
+    'kindgroup_mentorship' => 'Mentorschaft',
+    'kindgroup_other' => 'Weitere Verbindungen',
 ];

@@ -39,4 +39,10 @@ return [
     'kind_ally' => 'Ally',
     'kind_enemy' => 'Enemy',
     'kind_related' => 'Related',
+    'kindgroup_family' => 'Family',
+    'kindgroup_alliance' => 'Alliance / Friendship',
+    'kindgroup_romance' => 'Romance',
+    'kindgroup_conflict' => 'Conflict / Enmity',
+    'kindgroup_mentorship' => 'Mentorship',
+    'kindgroup_other' => 'Other connections',
 ];

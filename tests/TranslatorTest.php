@@ -47,6 +47,34 @@ final class TranslatorTest extends TestCase
         @rmdir($dir);
     }
 
+    /**
+     * Every RelationKinds kind and color group must have translations in
+     * both languages (kind_<key> / kindgroup_<group>).
+     */
+    public function testRelationKindLangParity(): void
+    {
+        foreach (['en', 'de'] as $langCode) {
+            $domain = $this->translator->domain($langCode, 'writing');
+            self::assertNotNull($domain);
+            foreach (\Writing\RelationKinds::allKinds() as $kind) {
+                $key = 'kind_' . $kind;
+                self::assertArrayHasKey(
+                    $key,
+                    $domain,
+                    "{$langCode}/writing.php is missing '{$key}'"
+                );
+            }
+            foreach (\Writing\RelationKinds::groups() as $group) {
+                $key = 'kindgroup_' . $group;
+                self::assertArrayHasKey(
+                    $key,
+                    $domain,
+                    "{$langCode}/writing.php is missing '{$key}'"
+                );
+            }
+        }
+    }
+
     public function testRawKeyWhenUnknownEverywhere(): void
     {
         $this->translator->setLang('de');

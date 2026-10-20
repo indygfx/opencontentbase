@@ -33,18 +33,6 @@ final class RelationshipGraph
     private const INNER_RADIUS = 80.0;
     private const BOW_FACTOR = 0.22;
 
-    /** Known relationship kinds with dedicated stroke colors. */
-    public const KIND_COLORS = [
-        'family' => '#7c3aed',
-        'friend' => '#16a34a',
-        'rival' => '#ea580c',
-        'lover' => '#db2777',
-        'mentor' => '#2563eb',
-        'ally' => '#0891b2',
-        'enemy' => '#b91c1c',
-        'related' => '#6b7280',
-    ];
-    private const FALLBACK_COLOR = '#9ca3af';
 
     /**
      * @param list<array{id: string, slug: string, title: string, level: int, has_image: bool}> $characters
@@ -201,9 +189,9 @@ final class RelationshipGraph
         [$x2, $y2] = $this->boundaryPoint($b, $cx, $cy);
 
         $title = trim($pair['ab']['description'] . ' / ' . $pair['ba']['description']);
-        $svg = '<path class="graph-edge graph-edge-kind-' . e($pair['ab']['kind']) . '" d="M ' . $this->num($x1) . ' '
+        $svg = '<path class="graph-edge ' . e($this->classFor($pair['ab']['kind'])) . '" d="M ' . $this->num($x1) . ' '
             . $this->num($y1) . ' Q ' . $this->num($cx) . ' ' . $this->num($cy) . ' ' . $this->num($x2) . ' '
-            . $this->num($y2) . '" fill="none" stroke="' . e($this->colorFor($pair['ab']['kind'])) . '">';
+            . $this->num($y2) . '" fill="none">';
         if ($title !== '') {
             $svg .= '<title>' . e($title) . '</title>';
         }
@@ -228,9 +216,9 @@ final class RelationshipGraph
         }
         [$x1, $y1] = $this->boundaryPoint($from, $to['x'], $to['y']);
         [$x2, $y2] = $this->boundaryPoint($to, $from['x'], $from['y']);
-        $svg = '<path class="graph-edge graph-edge-kind-' . e($edge['kind']) . '" d="M ' . $this->num($x1) . ' '
+        $svg = '<path class="graph-edge ' . e($this->classFor($edge['kind'])) . '" d="M ' . $this->num($x1) . ' '
             . $this->num($y1) . ' L ' . $this->num($x2) . ' ' . $this->num($y2)
-            . '" fill="none" marker-end="url(#graph-arrow)" stroke="' . e($this->colorFor($edge['kind'])) . '">';
+            . '" fill="none" marker-end="url(#graph-arrow)">';
         if (trim($edge['description']) !== '') {
             $svg .= '<title>' . e($edge['description']) . '</title>';
         }
@@ -276,12 +264,13 @@ final class RelationshipGraph
     /** @param array{0: float, 1: float} $position */
     private function edgeLabel(array $position, string $kind, string $description): string
     {
-        $svg = '<text class="graph-edge-label" x="' . $this->num($position[0]) . '" y="' . $this->num($position[1])
-            . '" text-anchor="middle" fill="' . e($this->colorFor($kind)) . '"';
+        $svg = '<text class="graph-edge-label ' . e($this->classFor($kind)) . '" x="' . $this->num($position[0])
+            . '" y="' . $this->num($position[1]) . '" text-anchor="middle"';
+        $label = e(t('writing', 'kind_' . $kind));
         if (trim($description) !== '') {
-            $svg .= '><title>' . e($description) . '</title>' . e($kind) . '</text>' . "\n";
+            $svg .= '><title>' . e($description) . '</title>' . $label . '</text>' . "\n";
         } else {
-            $svg .= '>' . e($kind) . "</text>\n";
+            $svg .= '>' . $label . "</text>\n";
         }
         return $svg;
     }
@@ -315,9 +304,9 @@ final class RelationshipGraph
         return $svg;
     }
 
-    private function colorFor(string $kind): string
+    private function classFor(string $kind): string
     {
-        return self::KIND_COLORS[$kind] ?? self::FALLBACK_COLOR;
+        return RelationKinds::classFor($kind);
     }
 
     private function num(float $value): string

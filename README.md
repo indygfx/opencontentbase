@@ -295,6 +295,36 @@ SVG (no JavaScript):
 - **Determinism**: the same characters and relations always produce an
   identical SVG (fixed sort orders, no time or randomness).
 
+### Extending the relation kind taxonomy (data-driven)
+
+The kind taxonomy and its color coding live in ONE place:
+`modules/Writing/src/RelationKinds.php`. Dropdown, validation, graph and
+legend all read from it - nowhere else is a kind or group list hardcoded.
+
+- `GROUPS` maps each fine kind to a color group; `groupFor()` resolves
+  unknown/legacy kinds to the neutral `other` group, so old data never
+  breaks rendering.
+- `CLASSES` maps each group to a CSS class; the actual stroke colors are
+  defined in the stylesheet (`templates/layout.php`), never inline in PHP.
+
+**Recipe - add a kind:**
+1. One line in `RelationKinds::GROUPS` (`'<kind>' => '<group>'`).
+2. One lang line per language: `kind_<key>` in `lang/en/writing.php`
+   and `lang/de/writing.php`. The parity test
+   (`TranslatorTest::testRelationKindLangParity`) enforces completeness.
+
+**Recipe - add a group:**
+1. One `GROUPS` entry (a kind assigned to the new group).
+2. One CSS class with a stroke color in `templates/layout.php`
+   (`.rel-<group>`).
+3. `kindgroup_<group>` lang lines in both languages. The legend picks
+   the group up automatically.
+
+**Guideline:** keep at most ~9 groups total for legend readability;
+prefer fitting a new kind into an existing group over creating a new one.
+Edge labels and tooltips always show the fine kind (translated); only the
+stroke color is group-level.
+
 ## Security (current state)
 
 - Passwords: `password_hash()` (bcrypt)
