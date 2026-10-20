@@ -168,9 +168,10 @@ final class RelationshipGraphTest extends TestCase
         // (the arrow marker's own <path> in <defs> does not count).
         $this->assertSame(1, substr_count($svg, '<path class="graph-edge'));
         $this->assertStringContainsString(' Q ', $svg);
-        // Both direction labels near their ends.
-        $this->assertStringContainsString('>friend</text>', $svg);
-        $this->assertStringContainsString('>lover</text>', $svg);
+        // Both direction labels near their ends (raw lang keys without
+        // an initialized Translator).
+        $this->assertStringContainsString('>kind_friend</text>', $svg);
+        $this->assertStringContainsString('>kind_lover</text>', $svg);
         $this->assertStringNotContainsString('marker-end', $svg);
     }
 
@@ -186,7 +187,7 @@ final class RelationshipGraphTest extends TestCase
             ]
         );
         $this->assertStringContainsString('marker-end="url(#graph-arrow)"', $svg);
-        $this->assertStringContainsString('>mentor</text>', $svg);
+        $this->assertStringContainsString('>kind_mentor</text>', $svg);
         $this->assertSame(1, substr_count($svg, '<path class="graph-edge'));
     }
 
@@ -295,7 +296,7 @@ final class RelationshipGraphTest extends TestCase
         $this->assertStringContainsString('<svg', $response->body());
         $this->assertStringContainsString('Jakob · L0', $response->body());
         $this->assertStringContainsString('Lena · L0', $response->body());
-        $this->assertStringContainsString('>friend</text>', $response->body());
+        $this->assertStringContainsString('>kind_friend</text>', $response->body());
         $this->assertStringContainsString('graph-legend', $response->body());
         $this->assertStringContainsString('#relationships', $response->body());
     }
