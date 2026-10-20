@@ -29,16 +29,22 @@ final class TranslatorTest extends TestCase
 
     public function testFallsBackToEnglishForMissingKey(): void
     {
-        $this->translator->setLang('de');
-        $en = $this->translator->domain('en', 'core');
-        $de = $this->translator->domain('de', 'core');
-        assert($en !== null && $de !== null);
-        $missing = array_diff(array_keys($en), array_keys($de));
-        $key = $missing === [] ? 'nav_pages' : (string)array_values($missing)[0];
-        $this->assertSame(
-            $en[$key],
-            $this->translator->t('core', $key)
-        );
+        // The real lang files are fully translated, so the fallback is
+        // verified against a fixture language directory that is missing
+        // one German key on purpose.
+        $dir = sys_get_temp_dir() . '/cb_lang_' . uniqid();
+        mkdir($dir . '/en', 0775, true);
+        mkdir($dir . '/de', 0775, true);
+        file_put_contents($dir . '/en/core.php', "<?php return ['greeting' => 'Hello'];");
+        file_put_contents($dir . '/de/core.php', "<?php return [];");
+        $translator = new Translator($dir);
+        $translator->setLang('de');
+        $this->assertSame('Hello', $translator->t('core', 'greeting'));
+        array_map('unlink', glob($dir . '/en/*') ?: []);
+        array_map('unlink', glob($dir . '/de/*') ?: []);
+        @rmdir($dir . '/en');
+        @rmdir($dir . '/de');
+        @rmdir($dir);
     }
 
     public function testRawKeyWhenUnknownEverywhere(): void

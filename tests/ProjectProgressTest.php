@@ -132,11 +132,18 @@ final class ProjectProgressTest extends TestCase
                 [$cid, 'p1', $cid]
             );
         }
-        $pairs = [['c1', 'c2'], ['c1', 'c3'], ['c2', 'c3'], ['c1', 'c2'], ['c1', 'c3'], ['c2', 'c3']];
-        foreach ($pairs as $i => [$from, $to]) {
+        // Three pairs in both directions make six relations; the kind
+        // alternates because the UNIQUE index forbids the exact same
+        // (from, to, kind) combination twice - but each pair appears only
+        // once per direction here anyway.
+        $pairs = [
+            ['c1', 'c2', 'friend'], ['c1', 'c3', 'friend'], ['c2', 'c3', 'friend'],
+            ['c2', 'c1', 'rival'], ['c3', 'c1', 'rival'], ['c3', 'c2', 'rival'],
+        ];
+        foreach ($pairs as $i => [$from, $to, $kind]) {
             $this->db->run(
                 'INSERT INTO character_relations (id, project_id, from_character_id, to_character_id, kind) VALUES (?, ?, ?, ?, ?)',
-                ['r' . $i, 'p1', $from, $to, 'friend']
+                ['r' . $i, 'p1', $from, $to, $kind]
             );
         }
         $result = $this->progress->calculate('p1');

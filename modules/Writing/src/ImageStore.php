@@ -59,7 +59,7 @@ final class ImageStore
         }
         $target = $dir . '/' . basename($name);
         $tmp = (string)($file['tmp_name'] ?? '');
-        if ($tmp === '' || (!move_uploaded_file($tmp, $target) && !@rename($tmp, $target))) {
+        if ($tmp === '' || (!@move_uploaded_file($tmp, $target) && !@rename($tmp, $target))) {
             throw new \RuntimeException('Could not store the uploaded file.');
         }
     }

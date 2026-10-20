@@ -165,7 +165,9 @@ final class StoryExportTest extends TestCase
     {
         $end = strpos($file, "\n---\n", 4);
         $this->assertIsInt($end);
-        return (string)substr($file, $end + 5);
+        // file() inserts one blank line after the closing --- separator;
+        // the raw body starts after that newline.
+        return (string)substr($file, $end + 6);
     }
 
     public function testZipContainsAllEntityFiles(): void

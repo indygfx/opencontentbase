@@ -108,6 +108,23 @@ final class CharacterImageTest extends TestCase
         return $tmp;
     }
 
+    /** Minimal 1x1 GIF. */
+    private const GIF = 'R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+    private function fakeUploadGif(): string
+    {
+        $tmp = $this->basePath . '/upload.gif';
+        file_put_contents($tmp, base64_decode(self::GIF));
+        $_FILES['image'] = [
+            'name' => 'portrait.gif',
+            'type' => 'image/gif',
+            'tmp_name' => $tmp,
+            'error' => UPLOAD_ERR_OK,
+            'size' => 42,
+        ];
+        return $tmp;
+    }
+
     private function imagePath(): ?string
     {
         $row = $this->db->one("SELECT image_path FROM characters WHERE id = 'c1'");
@@ -176,11 +193,14 @@ final class CharacterImageTest extends TestCase
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
         $old = $this->basePath . '/data/characters/c1.png';
         $this->assertFileExists($old);
-        $tmp = $this->fakeUpload();
+        // Second upload as GIF -> different extension, so the new file has a
+        // different name and we can assert the old PNG was deleted.
+        $tmp = $this->fakeUploadGif();
         $response = $this->controller->uploadImage($this->owner, 'p1', 'hero');
         $this->assertSame(302, $response->status());
         $this->assertFileDoesNotExist($old);
-        $this->assertFileExists($this->basePath . '/data/characters/c1.png');
+        $this->assertSame('c1.gif', $this->imagePath());
+        $this->assertFileExists($this->basePath . '/data/characters/c1.gif');
         unlink($tmp);
     }
 

@@ -5,6 +5,7 @@ namespace Tests\Writing;
 
 use Core\Auth;
 use Core\CoreMigrations;
+use Core\Csrf;
 use Core\Database;
 use Core\Migrator;
 use PHPUnit\Framework\TestCase;
@@ -27,7 +28,9 @@ final class CharacterMentionsTest extends TestCase
         $path = sys_get_temp_dir() . '/cb_mentions_' . uniqid() . '.sqlite';
         $this->db = new Database($path);
         (new Migrator($this->db))->migrate('core', CoreMigrations::migrations());
-        $module = new WritingModule($this->db, new \Core\View($base));
+        $auth = new Auth($this->db);
+        $renderer = new \Core\ContentRenderer($this->db, new \Core\ModuleRegistry());
+        $module = new WritingModule($this->db, new \Core\View($base), new Csrf($this->db, $auth), $renderer);
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $this->mentions = new CharacterMentions($this->db);
 

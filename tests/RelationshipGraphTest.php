@@ -35,7 +35,8 @@ final class RelationshipGraphTest extends TestCase
         $this->db = new Database($path);
         (new Migrator($this->db))->migrate('core', CoreMigrations::migrations());
         $auth = new Auth($this->db);
-        $module = new WritingModule($this->db, new \Core\View($base), new Csrf($this->db, $auth));
+        $renderer = new \Core\ContentRenderer($this->db, new \Core\ModuleRegistry());
+        $module = new WritingModule($this->db, new \Core\View($base), new Csrf($this->db, $auth), $renderer);
         (new Migrator($this->db))->migrate('writing', $module->migrations());
         $access = new ProjectAccess($this->db);
         $this->controller = new GraphController(

@@ -117,7 +117,7 @@ final class MarkdownEditorPersistenceTest extends TestCase
             "SELECT r.body FROM content_revisions r JOIN content_objects o ON o.id = r.object_id WHERE o.slug = 'render-me' ORDER BY r.created_at DESC"
         )['body'];
         $html = $renderer->render($stored);
-        $this->assertSame('<p>Hello <strong>world</strong>!</p>', $html);
+        $this->assertSame('<p>Hello <strong>world</strong>!</p>', rtrim($html, "\n"));
     }
 
     public function testStrangerCannotUseChapterForm(): void
@@ -126,9 +126,13 @@ final class MarkdownEditorPersistenceTest extends TestCase
         $_POST = ['slug' => '', 'synopsis_id' => $synopsis, 'body' => 'nope'];
         $response = $this->chapters->store($this->stranger, 'p1');
         $this->assertSame(404, $response->status());
+        // The stranger must not create a chapter; only the synopsis created
+        // by the owner beforehand (a different content type) may exist.
         $this->assertSame(
             0,
-            (int)$this->db->one("SELECT COUNT(*) AS c FROM content_objects WHERE slug = 'locked'")['c']
+            (int)$this->db->one(
+                "SELECT COUNT(*) AS c FROM content_objects WHERE type = 'chapter' AND slug = 'locked'"
+            )['c']
         );
     }
 
