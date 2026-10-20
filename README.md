@@ -285,13 +285,16 @@ SVG (no JavaScript):
   to the character pages.
 - **Edges**: reciprocal pairs (A->B and B->A) merge into ONE
   outward-bowed Bezier curve with two labels - the A->B kind near B's
-  end, the B->A kind near A's end (colors per direction). One-directional
-  relations get an arrowhead pointing at the target. Unknown kinds fall
-  back to a neutral stroke color; the conflict text appears as a native
-  SVG `<title>` tooltip; self-references are skipped defensively.
-- **Page**: SVG plus a translated kind->color legend, a short
-  explanation of the level system and a link back to the relationship
-  section. Friendly empty states for 0 and 1 characters.
+  end, the B->A kind near A's end. One-directional relations get an
+  arrowhead pointing at the target. Edge stroke colors are group-level
+  (see RelationKinds below): each edge carries its group's CSS class,
+  and the label shows the fine kind, translated. Unknown kinds resolve
+  to the neutral `other` group class. The conflict text appears as a
+  native SVG `<title>` tooltip; self-references are skipped defensively.
+- **Page**: SVG plus a translated group->color legend (iterating
+  `RelationKinds::groups()`, with colored swatches), a short explanation
+  of the level system and a link back to the relationship section.
+  Friendly empty states for 0 and 1 characters.
 - **Determinism**: the same characters and relations always produce an
   identical SVG (fixed sort orders, no time or randomness).
 
@@ -315,8 +318,10 @@ legend all read from it - nowhere else is a kind or group list hardcoded.
 
 **Recipe - add a group:**
 1. One `GROUPS` entry (a kind assigned to the new group).
-2. One CSS class with a stroke color in `templates/layout.php`
-   (`.rel-<group>`).
+2. One CSS class in `templates/layout.php` (`.rel-<group>`) covering
+   all three color contexts: `stroke` for graph edges, `fill` for
+   edge labels (`.graph-edge-label.rel-<group>`), and `background`
+   for the legend swatches (`.graph-legend-swatch.rel-<group>`).
 3. `kindgroup_<group>` lang lines in both languages. The legend picks
    the group up automatically.
 
@@ -346,8 +351,8 @@ stroke color is group-level.
 1. Core + auth + module registry (done)
 2. Content pipeline with `[[type:slug]]` (done in the core)
 3. pages reference module (done)
-4. Writing app module: projects -> characters (n), relationships (n:m with attributes), chapters -> text via content_revisions, backgrounds (4 categories) (open)
-5. Editor refinements, diffs, graph UI, board, revisions per content object (open)
+4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, data-driven kind taxonomy), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export (mostly done; see the Writing module sections above)
+5. Editor refinements, diffs, graph UI (done: weighted circular relationship graph), board, revisions per content object (open)
 6. UI languages via array files, English default + German, per-account language setting (done)
 
 Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).
