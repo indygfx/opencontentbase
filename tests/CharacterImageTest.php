@@ -138,7 +138,7 @@ final class CharacterImageTest extends TestCase
         $this->assertSame(302, $response->status());
         $this->assertSame('c1.png', $this->imagePath());
         $this->assertFileExists($this->basePath . '/data/characters/c1.png');
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testMemberCanUpload(): void
@@ -147,7 +147,7 @@ final class CharacterImageTest extends TestCase
         $response = $this->controller->uploadImage($this->member, 'p1', 'hero');
         $this->assertSame(302, $response->status());
         $this->assertSame('c1.png', $this->imagePath());
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testWrongMimeTypeRejected(): void
@@ -165,7 +165,7 @@ final class CharacterImageTest extends TestCase
         $this->assertSame(200, $response->status());
         $this->assertStringContainsString('Only JPG, PNG, WebP and GIF', $response->body());
         $this->assertNull($this->imagePath());
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testOversizedUploadRejected(): void
@@ -175,7 +175,7 @@ final class CharacterImageTest extends TestCase
         $this->assertSame(200, $response->status());
         $this->assertStringContainsString('must not be larger than 5 MB', $response->body());
         $this->assertNull($this->imagePath());
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testStrangerCannotUpload(): void
@@ -184,7 +184,7 @@ final class CharacterImageTest extends TestCase
         $response = $this->controller->uploadImage($this->stranger, 'p1', 'hero');
         $this->assertSame(404, $response->status());
         $this->assertNull($this->imagePath());
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testReplacementDeletesOldFile(): void
@@ -201,14 +201,14 @@ final class CharacterImageTest extends TestCase
         $this->assertFileDoesNotExist($old);
         $this->assertSame('c1.gif', $this->imagePath());
         $this->assertFileExists($this->basePath . '/data/characters/c1.gif');
-        unlink($tmp);
+        @unlink($tmp);
     }
 
     public function testRemoveImageClearsFileAndColumn(): void
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $response = $this->controller->removeImage($this->owner, 'p1', 'hero');
         $this->assertSame(302, $response->status());
         $this->assertNull($this->imagePath());
@@ -219,7 +219,7 @@ final class CharacterImageTest extends TestCase
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $file = $this->basePath . '/data/characters/c1.png';
         $this->assertFileExists($file);
         $response = $this->controller->destroy($this->owner, 'p1', 'hero');
@@ -231,7 +231,7 @@ final class CharacterImageTest extends TestCase
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $file = $this->basePath . '/data/characters/c1.png';
         $this->assertFileExists($file);
         $this->deleter->delete('character', 'c1');
@@ -243,7 +243,7 @@ final class CharacterImageTest extends TestCase
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $response = $this->controller->image($this->member, 'p1', 'hero');
         $this->assertSame(200, $response->status());
         $this->assertSame('image/png', $response->header('Content-Type'));
@@ -266,7 +266,7 @@ final class CharacterImageTest extends TestCase
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $this->controller->removeImage($this->owner, 'p1', 'hero');
         $response = $this->controller->image($this->owner, 'p1', 'hero');
         $this->assertSame(404, $response->status());
@@ -276,7 +276,7 @@ final class CharacterImageTest extends TestCase
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $response = $this->controller->show($this->owner, 'p1', 'hero');
         $this->assertSame(200, $response->status());
         $this->assertStringContainsString('characters/hero/image', $response->body());
@@ -287,7 +287,7 @@ final class CharacterImageTest extends TestCase
     {
         $tmp = $this->fakeUpload();
         $this->controller->uploadImage($this->owner, 'p1', 'hero');
-        unlink($tmp);
+        @unlink($tmp);
         $response = $this->controller->show($this->owner, 'p1', 'hero');
         $this->assertStringContainsString('image/delete', $response->body());
         $this->assertStringContainsString('Remove image', $response->body());
