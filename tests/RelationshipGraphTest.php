@@ -164,8 +164,9 @@ final class RelationshipGraphTest extends TestCase
                 ['from_id' => 'b', 'to_id' => 'a', 'kind' => 'lover', 'description' => 'secret'],
             ]
         );
-        // One merged edge (Q curve) instead of two separate paths.
-        $this->assertSame(1, substr_count($svg, '<path'));
+        // One merged edge (Q curve) instead of two separate paths
+        // (the arrow marker's own <path> in <defs> does not count).
+        $this->assertSame(1, substr_count($svg, '<path class="graph-edge'));
         $this->assertStringContainsString(' Q ', $svg);
         // Both direction labels near their ends.
         $this->assertStringContainsString('>friend</text>', $svg);
@@ -186,7 +187,7 @@ final class RelationshipGraphTest extends TestCase
         );
         $this->assertStringContainsString('marker-end="url(#graph-arrow)"', $svg);
         $this->assertStringContainsString('>mentor</text>', $svg);
-        $this->assertSame(1, substr_count($svg, '<path'));
+        $this->assertSame(1, substr_count($svg, '<path class="graph-edge'));
     }
 
     public function testUnknownKindFallsBackToNeutralColor(): void
@@ -228,7 +229,7 @@ final class RelationshipGraphTest extends TestCase
                 ['from_id' => 'a', 'to_id' => 'a', 'kind' => 'friend', 'description' => ''],
             ]
         );
-        $this->assertStringNotContainsString('<path', $svg);
+        $this->assertStringNotContainsString('<path class="graph-edge', $svg);
     }
 
     public function testImageNodeRendersClippedImagePlainNodeCircle(): void
@@ -268,7 +269,8 @@ final class RelationshipGraphTest extends TestCase
     {
         $response = $this->controller->show($this->owner, 'p1');
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('no characters yet', $response->body());
+        // Without an initialized Translator, t() returns the raw key.
+        $this->assertStringContainsString(t('writing', 'graph_empty'), $response->body());
         $this->assertStringNotContainsString('<svg', $response->body());
     }
 
@@ -277,7 +279,7 @@ final class RelationshipGraphTest extends TestCase
         $this->addCharacter('a', 'jakob', 'Jakob');
         $response = $this->controller->show($this->owner, 'p1');
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('Only one character so far', $response->body());
+        $this->assertStringContainsString(t('writing', 'graph_single'), $response->body());
         $this->assertStringContainsString('<svg', $response->body());
     }
 

@@ -164,11 +164,13 @@ final class CharacterMentionsTest extends TestCase
     public function testLevelsForStory(): void
     {
         // 45 mentions of Jakob -> level 10; none of Lena -> level 0.
+        $this->db->run('DELETE FROM content_revisions WHERE object_id = ?', ['ch1']);
         $this->addRevision(
             'ch1',
             str_repeat('Jakob ', 45),
             '2030-01-01 00:00:02'
         );
+        $this->db->run('DELETE FROM chapters WHERE id = ?', ['ch2']);
         $levels = $this->mentions->levels('p1');
         $this->assertSame(10, $levels['k1']);
         $this->assertSame(0, $levels['k2']);

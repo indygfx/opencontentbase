@@ -59,7 +59,11 @@ final class ImageStore
         }
         $target = $dir . '/' . basename($name);
         $tmp = (string)($file['tmp_name'] ?? '');
-        if ($tmp === '' || (!@move_uploaded_file($tmp, $target) && !@rename($tmp, $target))) {
+        // Real HTTP uploads go through move_uploaded_file (which validates
+        // the upload origin); in CLI/test context the tmp file is not a
+        // registered upload, so we rename it instead.
+        if ($tmp === ''
+            || (is_uploaded_file($tmp) ? !move_uploaded_file($tmp, $target) : !rename($tmp, $target))) {
             throw new \RuntimeException('Could not store the uploaded file.');
         }
     }
