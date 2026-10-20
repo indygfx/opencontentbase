@@ -49,6 +49,12 @@
         .graph-edge-label.rel-mentorship { fill: #2563eb; }
         .graph-edge-label.rel-other { fill: #6b7280; }
         .graph-legend-swatch { border: 1px solid var(--line); }
+        .graph-legend-swatch.rel-family { background: #7c3aed; }
+        .graph-legend-swatch.rel-alliance { background: #16a34a; }
+        .graph-legend-swatch.rel-romance { background: #db2777; }
+        .graph-legend-swatch.rel-conflict { background: #b91c1c; }
+        .graph-legend-swatch.rel-mentorship { background: #2563eb; }
+        .graph-legend-swatch.rel-other { background: #9ca3af; }
         .graph-legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
         .graph-legend li { display: flex; align-items: center; gap: 0.35rem; }
         .graph-legend-swatch { width: 1rem; height: 1rem; border-radius: 3px; display: inline-block; }
