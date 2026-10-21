@@ -290,6 +290,6 @@ final class CharacterImageTest extends TestCase
         @unlink($tmp);
         $response = $this->controller->show($this->owner, 'p1', 'hero');
         $this->assertStringContainsString('image/delete', $response->body());
-        $this->assertStringContainsString('Remove image', $response->body());
+        $this->assertStringContainsString(t('writing', 'remove_image'), $response->body());
     }
 }

@@ -126,7 +126,7 @@ final class OutlineFieldsTest extends TestCase
     {
         $response = $this->projects->setup($this->owner, 'p1');
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('Novel Setup', $response->body());
+        $this->assertStringContainsString(t('writing', 'novel_setup'), $response->body());
     }
 
     public function testProjectShowRendersOutlineFields(): void

@@ -146,7 +146,7 @@ final class RelationshipAccessTest extends TestCase
         $relationId = (string)$this->db->one("SELECT id FROM character_relations")['id'];
         $response = $this->controller->edit($this->owner, 'p1', $relationId);
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('Edit relationship', $response->body());
+        $this->assertStringContainsString(t('writing', 'edit_relationship'), $response->body());
         $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'enemy', 'description' => 'hate'];
         $response = $this->controller->update($this->owner, 'p1', $relationId);
         $this->assertSame(302, $response->status());

@@ -152,7 +152,7 @@ final class ChapterAccessTest extends TestCase
         $response = $this->controller->store($this->owner, 'p1');
         $_POST = [];
         $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('Pick a chapter outline', $response->body());
+        $this->assertStringContainsString(t('writing', 'pick_outline'), $response->body());
         $this->assertStringContainsString('My important text', $response->body());
     }
 
@@ -228,7 +228,8 @@ final class ChapterAccessTest extends TestCase
         $response = $this->controller->edit($this->owner, 'p1', 'chapter-1');
         $this->assertSame(200, $response->status());
         $this->assertStringContainsString('The summary text.', $response->body());
-        $this->assertStringContainsString('Chapter outline (read only)', $response->body());
+        // Without an initialized Translator, t() returns the raw key.
+        $this->assertStringContainsString(t('writing', 'outline_readonly'), $response->body());
         $this->assertStringNotContainsString('/summary', $response->body());
     }
 
