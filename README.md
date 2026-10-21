@@ -343,6 +343,11 @@ stroke color is group-level.
 - User management (admin only): create users, change roles, reset passwords, delete users
 
 ## Known gaps (roadmap phase 5)
+- **Pages module purpose is undecided (open decision)**: what pages are
+  actually used for (public site content, static info pages, something
+  else) is not yet decided. Until then the pages list, creation and
+  editing are admin-only (`/pages`); the root URL `/` opens the writing
+  app for every logged-in user instead of listing pages.
 
 - No rate limiting on login
 - Admin boot only for first start, no CLI `user:create`

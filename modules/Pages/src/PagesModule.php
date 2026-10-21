@@ -31,7 +31,10 @@ final class PagesModule implements ModuleInterface
         $c = $this->controller;
 
         return [
-            ['method' => 'GET', 'pattern' => '/', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
+            // The root URL opens the writing app for every logged-in user; the pages
+// list stays admin-only at /pages. The intended public use of pages is
+// still an open decision (see README, "Known gaps").
+['method' => 'GET', 'pattern' => '/', 'handler' => fn ($params, $user) => \Core\Response::redirect('/writing'), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/pages', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['admin']],
             ['method' => 'GET', 'pattern' => '/pages/new', 'handler' => fn ($params, $user) => $c->create($user), 'roles' => ['admin']],
             ['method' => 'POST', 'pattern' => '/pages', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['admin']],

@@ -115,6 +115,9 @@ final class PagesController
             return $this->page($user, 'modules/Pages/templates/edit.php', [
                 'title' => t('pages', 'new_page'),
                 'page' => null,
+                'slug' => $slug,
+                'formTitle' => $title,
+                'formBody' => $body,
                 'error' => $error,
             ], 422);
         }
@@ -169,7 +172,7 @@ final class PagesController
             "SELECT 1 FROM content_objects WHERE type = 'page' AND slug = ?",
             [$slug]
         );
-        return $exists !== null ? 'Slug bereits vergeben.' : null;
+        return $exists !== null ? t('pages', 'slug_taken') : null;
     }
 
     private function insertRevision(string $objectId, string $title, string $body, User $user): void
