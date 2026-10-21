@@ -117,7 +117,9 @@ public/index.php   Front controller
 
 The UI is fully translated via flat PHP array files – no gettext, no tooling, no build step.
 
-- **Files**: `lang/<code>/<domain>.php` returns a `key => string` map. Domains: `core` (auth, profile, users, nav), `writing`, `pages`. English (`en/`) is the **default and source of truth**; `de/` is a complete German translation with an identical key set (enforced by `tests/TranslatorTest.php`, which fails if keys drift apart).
+- **Files**: `lang/<code>/<domain>.php` returns a `key => string` map. Domains: `core` (auth, profile, users, nav), `writing`, `pages`. English (`en/`) is the **default and source of truth**; `de/` (German), `es/` (Spanish) and `fr/` (French) are complete translations with identical key sets (enforced by `tests/TranslatorTest.php`, which fails if keys drift apart).
+- **Full UI coverage**: all views (core, pages and writing module templates) render their labels, buttons, confirm dialogs, placeholders, table headers, empty states and alt texts through `t()` - no hardcoded UI strings in templates.
+- **Adding a language**: copy `lang/en/`, translate the values, keep the keys, and add a `lang_<code>` entry to every `core.php`. The language then appears automatically in the profile dropdown and in `Translator::availableLanguages()`.
 - **Lookup**: `t('domain', 'key', ['name' => $value])` – helper is globally available. Fallback chain: **active language → `en` → raw key**, so a half-finished language file never breaks the UI. `{name}` placeholders are replaced after lookup.
 - **Language selection** (in order): per-account setting (`users.language`, set via the profile page) → `cb_lang` cookie → `Accept-Language` header → English default.
 - **Account settings**: the profile page (`/profile`) has a language dropdown listing all available languages with their native names; `POST /profile/language` persists the choice (CSRF-protected, unknown codes rejected).
