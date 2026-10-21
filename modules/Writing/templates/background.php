@@ -6,10 +6,10 @@
     </article>
     <?php if ($canEdit): ?>
         <p>
-            <a href="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/edit">Edit</a>
-            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/delete" data-confirm="Delete this background?">
+            <a href="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_background')) ?>">
                 <?= $csrf->field() ?>
-                <button type="submit">Delete</button>
+                <button type="submit"><?= e(t('core', 'users_delete')) ?></button>
             </form>
         </p>
     <?php endif; ?>

@@ -1,6 +1,6 @@
 <section class="card">
     <p class="muted"><a href="/writing/<?= e($projectId) ?>">&larr; <?= e($projectTitle) ?></a></p>
-    <h1>Chapter outline</h1>
+    <h1><?= e(t('writing', 'chapter_outline')) ?></h1>
     <h2><?= e($synopsis['title']) ?></h2>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
@@ -8,21 +8,21 @@
     <?php if ((string)$synopsis['summary_text'] !== ''): ?>
         <div class="content"><?= $summaryHtml ?></div>
     <?php else: ?>
-        <p class="muted">No summary written yet.</p>
+        <p class="muted"><?= e(t('writing', 'no_summary_yet')) ?></p>
     <?php endif; ?>
     <?php if ($chapter !== null): ?>
-        <p class="muted">Assigned to the written chapter
+        <p class="muted"><?= e(t('writing', 'assigned_to_chapter')) ?>
             <a href="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>"><?= e($chapter['title']) ?></a>.
         </p>
     <?php else: ?>
-        <p class="muted">Not assigned to a written chapter yet.</p>
+        <p class="muted"><?= e(t('writing', 'not_assigned_yet')) ?></p>
     <?php endif; ?>
     <?php if ($canEdit): ?>
         <p>
-            <a href="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/edit">Edit</a>
-            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/delete" data-confirm="Delete this chapter outline?">
+            <a href="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_outline')) ?>">
                 <?= $csrf->field() ?>
-                <button type="submit">Delete</button>
+                <button type="submit"><?= e(t('core', 'users_delete')) ?></button>
             </form>
         </p>
     <?php endif; ?>

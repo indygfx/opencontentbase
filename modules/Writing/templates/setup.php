@@ -1,58 +1,58 @@
 <section class="card">
-    <p class="muted"><a href="/writing/<?= e($project['id']) ?>">&larr; Back to the story</a></p>
-    <h1>Novel Setup</h1>
+    <p class="muted"><a href="/writing/<?= e($project['id']) ?>">&larr; <?= e(t('writing', 'back_to_story')) ?></a></p>
+    <h1><?= e(t('writing', 'novel_setup')) ?></h1>
     <p class="muted"><?= e($project['title']) ?></p>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
 
-    <h2>Title</h2>
+    <h2><?= e(t('pages', 'title_label')) ?></h2>
     <form method="post" action="/writing/<?= e($project['id']) ?>">
         <?= $csrf->field() ?>
-        <label for="title">Title</label>
+        <label for="title"><?= e(t('pages', 'title_label')) ?></label>
         <input id="title" name="title" required minlength="2" maxlength="200" value="<?= e($project['title']) ?>">
-        <button type="submit">Save title</button>
+        <button type="submit"><?= e(t('writing', 'save_title')) ?></button>
     </form>
 
-    <h2>Album cover</h2>
+    <h2><?= e(t('writing', 'album_cover')) ?></h2>
     <?php if ((string)$project['cover'] !== ''): ?>
-        <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="Album cover of <?= e($project['title']) ?>"></p>
-        <form method="post" action="/writing/<?= e($project['id']) ?>/cover/delete" data-confirm="Remove the album cover?">
+        <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="<?= e(t('writing', 'cover_alt', ['title' => (string)$project['title']])) ?>"></p>
+        <form method="post" action="/writing/<?= e($project['id']) ?>/cover/delete" data-confirm="<?= e(t('writing', 'confirm_remove_cover')) ?>">
             <?= $csrf->field() ?>
-            <button type="submit">Remove cover</button>
+            <button type="submit"><?= e(t('writing', 'remove_cover')) ?></button>
         </form>
     <?php endif; ?>
     <form method="post" action="/writing/<?= e($project['id']) ?>/cover" enctype="multipart/form-data">
         <?= $csrf->field() ?>
-        <label for="cover">Cover image <small class="muted">(JPG, PNG, WebP or GIF, max 5 MB)</small></label>
+        <label for="cover"><?= e(t('writing', 'cover_image')) ?> <small class="muted"><?= e(t('writing', 'image_rules')) ?></small></label>
         <input type="file" id="cover" name="cover" accept="image/jpeg,image/png,image/webp,image/gif" required>
-        <button type="submit"><?= (string)$project['cover'] !== '' ? 'Replace cover' : 'Upload cover' ?></button>
+        <button type="submit"><?= (string)$project['cover'] !== '' ? e(t('writing', 'replace_cover')) : e(t('writing', 'upload_cover')) ?></button>
     </form>
-    <h2>Progress Targets</h2>
-    <p class="muted">Measurable goals per section &mdash; the dashboard shows your progress against them.</p>
+    <h2><?= e(t('writing', 'progress_targets')) ?></h2>
+    <p class="muted"><?= e(t('writing', 'progress_targets_hint')) ?></p>
     <form method="post" action="/writing/<?= e($project['id']) ?>/targets">
         <?= $csrf->field() ?>
-        <label for="genre">Genre <small class="muted">(sets a typical total word count)</small></label>
+        <label for="genre"><?= e(t('writing', 'genre')) ?> <small class="muted"><?= e(t('writing', 'genre_hint')) ?></small></label>
         <select id="genre" name="genre">
             <?php foreach ($genres as $g): ?>
                 <option value="<?= e($g) ?>" <?= (string)($project['genre'] ?? 'General') === $g ? 'selected' : '' ?>><?= e($g) ?></option>
             <?php endforeach; ?>
         </select>
-        <label for="target_chapters">Planned chapters <small class="muted">(how many chapters the novel will have)</small></label>
+        <label for="target_chapters"><?= e(t('writing', 'planned_chapters')) ?> <small class="muted"><?= e(t('writing', 'planned_chapters_hint')) ?></small></label>
         <input type="number" id="target_chapters" name="target_chapters" min="1" max="1000" value="<?= (int)$targets['target_chapters'] ?>" required>
-        <label for="target_words_total">Total prose words <small class="muted">(adult novels: 80,000&ndash;100,000 words; below 70k feels thin, above 130k is hard to sell)</small></label>
+        <label for="target_words_total"><?= e(t('writing', 'total_words')) ?> <small class="muted"><?= e(t('writing', 'total_words_hint')) ?></small></label>
         <input type="number" id="target_words_total" name="target_words_total" min="1" max="10000000" value="<?= (int)$targets['target_words_total'] ?>" required>
-        <label for="target_words_blurb">Short description words <small class="muted">(the blurb counts as complete at this length)</small></label>
+        <label for="target_words_blurb"><?= e(t('writing', 'blurb_words')) ?> <small class="muted"><?= e(t('writing', 'blurb_words_hint')) ?></small></label>
         <input type="number" id="target_words_blurb" name="target_words_blurb" min="1" max="10000" value="<?= (int)$targets['target_words_blurb'] ?>" required>
-        <label for="target_words_synopsis">Extended synopsis words <small class="muted">(the full story line at this length)</small></label>
+        <label for="target_words_synopsis"><?= e(t('writing', 'synopsis_words')) ?> <small class="muted"><?= e(t('writing', 'synopsis_words_hint')) ?></small></label>
         <input type="number" id="target_words_synopsis" name="target_words_synopsis" min="1" max="100000" value="<?= (int)$targets['target_words_synopsis'] ?>" required>
-        <label for="target_min_characters">Main characters <small class="muted">(how many figures carry the story)</small></label>
+        <label for="target_min_characters"><?= e(t('writing', 'main_characters')) ?> <small class="muted"><?= e(t('writing', 'main_characters_hint')) ?></small></label>
         <input type="number" id="target_min_characters" name="target_min_characters" min="1" max="100" value="<?= (int)$targets['target_min_characters'] ?>" required>
-        <label for="target_min_relations">Relations per character <small class="muted">(each main figure should have this many connections)</small></label>
+        <label for="target_min_relations"><?= e(t('writing', 'relations_per_character')) ?> <small class="muted"><?= e(t('writing', 'relations_per_character_hint')) ?></small></label>
         <input type="number" id="target_min_relations" name="target_min_relations" min="1" max="100" value="<?= (int)$targets['target_min_relations'] ?>" required>
-        <label for="target_backgrounds">Backgrounds <small class="muted">(one per category at least: history, geography, religion, politics)</small></label>
+        <label for="target_backgrounds"><?= e(t('writing', 'backgrounds_header')) ?> <small class="muted"><?= e(t('writing', 'backgrounds_target_hint')) ?></small></label>
         <input type="number" id="target_backgrounds" name="target_backgrounds" min="1" max="100" value="<?= (int)$targets['target_backgrounds'] ?>" required>
-        <button type="submit">Save targets</button>
+        <button type="submit"><?= e(t('writing', 'save_targets')) ?></button>
     </form>
     <script>
     (function () {
@@ -75,27 +75,27 @@
         });
     })();
     </script>
-    <h2>Share story</h2>
+    <h2><?= e(t('writing', 'share_story')) ?></h2>
     <?php if ($shareTargets !== []): ?>
         <form method="post" action="/writing/<?= e($project['id']) ?>/share">
             <?= $csrf->field() ?>
-            <label for="username">Username</label>
+            <label for="username"><?= e(t('core', 'login_username')) ?></label>
             <select id="username" name="username" required>
-                <option value="" disabled selected>who to invite</option>
+                <option value="" disabled selected><?= e(t('writing', 'who_to_invite')) ?></option>
                 <?php foreach ($shareTargets as $t): ?>
                     <option value="<?= e($t['username']) ?>"><?= e($t['username']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <button type="submit">Share</button>
+            <button type="submit"><?= e(t('writing', 'share')) ?></button>
         </form>
     <?php else: ?>
-        <p class="muted">There is no other user left to share this story with.</p>
+        <p class="muted"><?= e(t('writing', 'no_share_targets')) ?></p>
     <?php endif; ?>
 
     <?php if ($members !== []): ?>
-        <h3>Shared with</h3>
+        <h3><?= e(t('writing', 'shared_with')) ?></h3>
         <table>
-            <tr><th>User</th><th>Role</th><th></th></tr>
+            <tr><th><?= e(t('core', 'profile_username')) ?></th><th><?= e(t('core', 'users_role')) ?></th><th></th></tr>
             <?php foreach ($members as $m): ?>
                 <tr>
                     <td><?= e($m['username']) ?></td>
@@ -104,7 +104,7 @@
                         <form class="inline" method="post" action="/writing/<?= e($project['id']) ?>/unshare">
                             <?= $csrf->field() ?>
                             <input type="hidden" name="user_id" value="<?= e($m['user_id']) ?>">
-                            <button type="submit">Revoke</button>
+                            <button type="submit"><?= e(t('writing', 'revoke')) ?></button>
                         </form>
                     </td>
                 </tr>
@@ -112,9 +112,9 @@
         </table>
     <?php endif; ?>
 
-    <h2>Danger zone</h2>
-    <form method="post" action="/writing/<?= e($project['id']) ?>/delete" data-confirm="Delete this story and all its content?">
+    <h2><?= e(t('writing', 'danger_zone')) ?></h2>
+    <form method="post" action="/writing/<?= e($project['id']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_story')) ?>">
         <?= $csrf->field() ?>
-        <button type="submit">Delete story</button>
+        <button type="submit"><?= e(t('writing', 'delete_story')) ?></button>
     </form>
 </section>

@@ -48,12 +48,38 @@ final class TranslatorTest extends TestCase
     }
 
     /**
+     * All shipped languages must define the same keys per domain as the
+     * English fallback (en -> de, es, fr).
+     */
+    public function testAllLanguagesHaveIdenticalKeySets(): void
+    {
+        foreach (['core', 'pages', 'writing'] as $domain) {
+            $base = $this->translator->domain('en', $domain);
+            self::assertNotNull($base);
+            foreach (['de', 'es', 'fr'] as $langCode) {
+                $map = $this->translator->domain($langCode, $domain);
+                self::assertNotNull($map, "{$langCode}/{$domain}.php missing");
+                self::assertSame(
+                    [],
+                    array_diff(array_keys($base), array_keys($map)),
+                    "{$langCode}/{$domain}.php is missing keys"
+                );
+                self::assertSame(
+                    [],
+                    array_diff(array_keys($map), array_keys($base)),
+                    "{$langCode}/{$domain}.php has extra keys"
+                );
+            }
+        }
+    }
+
+    /**
      * Every RelationKinds kind and color group must have translations in
-     * both languages (kind_<key> / kindgroup_<group>).
+     * every language (kind_<key> / kindgroup_<group>).
      */
     public function testRelationKindLangParity(): void
     {
-        foreach (['en', 'de'] as $langCode) {
+        foreach (['en', 'de', 'es', 'fr'] as $langCode) {
             $domain = $this->translator->domain($langCode, 'writing');
             self::assertNotNull($domain);
             foreach (\Writing\RelationKinds::allKinds() as $kind) {

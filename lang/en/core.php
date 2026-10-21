@@ -1,10 +1,6 @@
 <?php
-
-// English (default/fallback) – core UI. Keys are flat and domain-scoped;
-// new languages: copy this folder, translate the values, keep the keys.
-
+// English (default/fallback) - core UI. Keys are flat and domain-scoped; new languages: copy this folder, translate the values, keep the keys.
 return [
-    // layout / navigation
     'brand' => 'ContentBase',
     'nav_pages' => 'Pages',
     'nav_new_page' => 'New page',
@@ -12,15 +8,11 @@ return [
     'nav_writing' => 'Writing',
     'nav_sign_in' => 'Sign in',
     'nav_sign_out' => 'Sign out',
-
-    // login
     'login_title' => 'Sign in',
     'login_username' => 'Username',
     'login_password' => 'Password',
     'login_submit' => 'Sign in',
     'login_error' => 'Wrong username or password.',
-
-    // profile
     'profile_title' => 'Profile',
     'profile_username' => 'Username',
     'profile_role' => 'Role',
@@ -34,8 +26,6 @@ return [
     'profile_language_invalid' => 'The selected language is not available.',
     'profile_language_submit' => 'Save language',
     'profile_language_changed' => 'Language updated.',
-
-    // users admin
     'users_title' => 'User management',
     'users_create' => 'Create user',
     'users_existing' => 'Existing users',
@@ -62,11 +52,9 @@ return [
     'users_deleted' => 'User deleted.',
     'users_error_delete_self' => 'You cannot delete your own account.',
     'users_error_admin_fixed' => 'The initial admin account cannot be changed or deleted.',
-
-    // errors
     'error_back_to_overview' => 'Back to overview',
-
-    // language names (shown in the language dropdown)
     'lang_en' => 'English',
     'lang_de' => 'Deutsch',
+    'lang_es' => 'Español',
+    'lang_fr' => 'Français',
 ];

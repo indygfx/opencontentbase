@@ -1,10 +1,6 @@
 <?php
-
-// Deutsch – Kern-UI. Fehlende Schlüssel fallen automatisch auf Englisch
-// (lang/en/) zurück. Neue Sprache: diesen Ordner kopieren und übersetzen.
-
+// Deutsch - Kern-UI.
 return [
-    // Layout / Navigation
     'brand' => 'ContentBase',
     'nav_pages' => 'Seiten',
     'nav_new_page' => 'Neue Seite',
@@ -12,15 +8,11 @@ return [
     'nav_writing' => 'Schreiben',
     'nav_sign_in' => 'Anmelden',
     'nav_sign_out' => 'Abmelden',
-
-    // Login
     'login_title' => 'Anmelden',
     'login_username' => 'Benutzername',
     'login_password' => 'Passwort',
     'login_submit' => 'Anmelden',
     'login_error' => 'Falscher Benutzername oder falsches Passwort.',
-
-    // Profil
     'profile_title' => 'Profil',
     'profile_username' => 'Benutzername',
     'profile_role' => 'Rolle',
@@ -34,8 +26,6 @@ return [
     'profile_language_invalid' => 'Die gewählte Sprache ist nicht verfügbar.',
     'profile_language_submit' => 'Sprache speichern',
     'profile_language_changed' => 'Sprache aktualisiert.',
-
-    // Benutzerverwaltung
     'users_title' => 'Benutzerverwaltung',
     'users_create' => 'Benutzer anlegen',
     'users_existing' => 'Bestehende Benutzer',
@@ -62,11 +52,9 @@ return [
     'users_deleted' => 'Benutzer gelöscht.',
     'users_error_delete_self' => 'Du kannst dein eigenes Konto nicht löschen.',
     'users_error_admin_fixed' => 'Das ursprüngliche Admin-Konto kann nicht geändert oder gelöscht werden.',
-
-    // Fehler
     'error_back_to_overview' => 'Zurück zur Übersicht',
-
-    // Sprachnamen (für das Sprach-Dropdown)
     'lang_en' => 'English',
     'lang_de' => 'Deutsch',
+    'lang_es' => 'Spanisch',
+    'lang_fr' => 'Französisch',
 ];

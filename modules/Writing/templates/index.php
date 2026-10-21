@@ -32,8 +32,8 @@
     <h2><?= e(t('writing', 'new_story')) ?></h2>
     <form method="post" action="/writing">
         <?= $csrf->field() ?>
-        <label for="title">Title</label>
-        <input id="title" name="title" required minlength="2" maxlength="200" placeholder="My novel" autofocus>
+        <label for="title"><?= e(t('pages', 'title_label')) ?></label>
+        <input id="title" name="title" required minlength="2" maxlength="200" placeholder="<?= e(t('writing', 'my_novel_placeholder')) ?>" autofocus>
         <button type="submit"><?= e(t('writing', 'create_story')) ?></button>
     </form>
 

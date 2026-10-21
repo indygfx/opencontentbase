@@ -1,6 +1,6 @@
 <section class="card">
     <p class="muted"><a href="/writing/<?= e($projectId) ?>">&larr; <?= e($projectTitle) ?></a></p>
-    <h1><?= $relation !== null && ($relation['id'] ?? null) !== null ? 'Edit relationship' : 'New relationship' ?></h1>
+    <h1><?= $relation !== null && ($relation['id'] ?? null) !== null ? e(t('writing', 'edit_relationship')) : e(t('writing', 'new_relationship')) ?></h1>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>
@@ -11,27 +11,27 @@
             ? '/writing/' . e($projectId) . '/relations/' . e($relation['id'])
             : '/writing/' . e($projectId) . '/relations' ?>">
             <?= $csrf->field() ?>
-            <label for="from_character_id">From</label>
+            <label for="from_character_id"><?= e(t('writing', 'from')) ?></label>
             <select id="from_character_id" name="from_character_id" required>
                 <?php foreach ($characterOptions as $c): ?>
                     <option value="<?= e($c['id']) ?>" <?= ($relation['from_character_id'] ?? '') === $c['id'] ? 'selected' : '' ?>><?= e($c['title']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <label for="kind">Kind</label>
+            <label for="kind"><?= e(t('writing', 'kind')) ?></label>
             <select id="kind" name="kind">
                 <?php foreach ($kinds as $k): ?>
                     <option value="<?= e($k) ?>" <?= ($relation['kind'] ?? 'related') === $k ? 'selected' : '' ?>><?= e($k) ?></option>
                 <?php endforeach; ?>
             </select>
-            <label for="to_character_id">To</label>
+            <label for="to_character_id"><?= e(t('writing', 'to')) ?></label>
             <select id="to_character_id" name="to_character_id" required>
                 <?php foreach ($characterOptions as $c): ?>
                     <option value="<?= e($c['id']) ?>" <?= ($relation['to_character_id'] ?? '') === $c['id'] ? 'selected' : '' ?>><?= e($c['title']) ?></option>
                 <?php endforeach; ?>
             </select>
-            <label for="description">Conflict / description <small class="muted">(optional)</small></label>
-            <input id="description" name="description" maxlength="500" value="<?= e($relation['description'] ?? '') ?>" placeholder="what stands between them">
-            <button type="submit">Save</button>
+            <label for="description"><?= e(t('writing', 'conflict_description')) ?> <small class="muted"><?= e(t('writing', 'optional')) ?></small></label>
+            <input id="description" name="description" maxlength="500" value="<?= e($relation['description'] ?? '') ?>" placeholder="<?= e(t('writing', 'conflict_placeholder')) ?>">
+            <button type="submit"><?= e(t('pages', 'save')) ?></button>
         </form>
     <?php endif; ?>
 </section>
