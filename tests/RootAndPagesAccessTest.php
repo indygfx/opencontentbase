@@ -156,4 +156,27 @@ final class RootAndPagesAccessTest extends TestCase
         $this->assertStringContainsString('/pages/imprint/delete', $response->body());
         $this->assertStringContainsString('/pages">&larr;', $response->body());
     }
+
+    public function testPagesListShowsEditLinkAndNewPageButton(): void
+    {
+        $_POST = ['slug' => '', 'title' => 'Imprint', 'body' => 'Legal notes.'];
+        $store = $this->dispatch('POST', '/pages');
+        ($store['handler'])($store['params'], $this->admin);
+        $list = $this->dispatch('GET', '/pages');
+        $response = ($list['handler'])($list['params'], $this->admin);
+        $this->assertSame(200, $response->status());
+        $this->assertStringContainsString('/pages/imprint/edit', $response->body());
+        $this->assertStringContainsString('href="/pages/new"', $response->body());
+    }
+
+    public function testPageShowHasEditLinkForAdmin(): void
+    {
+        $_POST = ['slug' => '', 'title' => 'Imprint', 'body' => 'Legal notes.'];
+        $store = $this->dispatch('POST', '/pages');
+        ($store['handler'])($store['params'], $this->admin);
+        $show = $this->dispatch('GET', '/pages/imprint');
+        $response = ($show['handler'])($show['params'], $this->admin);
+        $this->assertSame(200, $response->status());
+        $this->assertStringContainsString('/pages/imprint/edit', $response->body());
+    }
 }

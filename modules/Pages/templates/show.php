@@ -3,10 +3,13 @@
     <div class="content"><?= $rendered ?>
     </div>
     <?php if ($user->isAdmin()): ?>
-    <form method="post" action="/pages/<?= e($page['slug']) ?>/delete">
-        <?= $csrf->field() ?>
-        <button type="submit"><?= e(t('pages', 'delete_page')) ?></button>
-    </form>
+    <p>
+        <a href="/pages/<?= e($page['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+        <form class="inline" method="post" action="/pages/<?= e($page['slug']) ?>/delete" data-confirm="<?= e(t('pages', 'delete_page')) ?>?">
+            <?= $csrf->field() ?>
+            <button type="submit"><?= e(t('pages', 'delete_page')) ?></button>
+        </form>
+    </p>
     <?php endif; ?>
 </article>
 
