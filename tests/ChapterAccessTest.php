@@ -214,7 +214,7 @@ final class ChapterAccessTest extends TestCase
         $second = $this->controller->store($this->owner, 'p1');
         $_POST = [];
         $this->assertSame(422, $second->status());
-        $this->assertStringContainsString('already assigned', $second->body());
+        $this->assertStringContainsString(t('writing', 'error_outline_assigned'), $second->body());
         $count = (int)$this->db->one(
             "SELECT COUNT(*) AS c FROM chapters WHERE chapter_synopsis_id = ?",
             [$synopsisId]
@@ -335,8 +335,7 @@ final class ChapterAccessTest extends TestCase
         $slug = $this->db->one("SELECT slug FROM chapter_synopses WHERE title = 'Assigned outline'")['slug'];
         $response = $this->synopses->destroy($this->owner, 'p1', (string)$slug);
         $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('Delete that chapter text first', $response->body());
-        $this->assertStringContainsString('reassign it', $response->body());
+        $this->assertStringContainsString(t('writing', 'error_outline_assigned_delete', ['title' => 'Assigned outline']), $response->body());
         $this->assertNotNull($this->db->one("SELECT id FROM chapter_synopses WHERE slug = ?", [(string)$slug]));
     }
 

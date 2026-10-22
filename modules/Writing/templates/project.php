@@ -202,6 +202,6 @@ function progressBar(string $section, array $entry, string $label): string
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/chapters/new"><?= e(t('writing', 'new_chapter')) ?></a></p>
 
     <?php if (!$isOwner): ?>
-        <p class="muted">Shared with you by <?= e($project['owner_name'] ?? '') ?>. You can read and edit texts, but not manage the story.</p>
+        <p class="muted"><?= e(t('writing', 'shared_note', ['owner' => (string)($project['owner_name'] ?? '')])) ?></p>
     <?php endif; ?>
 </section>

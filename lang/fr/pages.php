@@ -21,4 +21,5 @@ return [
     'error_slug_derive' => 'Impossible de dériver un slug du titre (a-z, 0-9, tiret).',
     'error_not_found' => 'Page introuvable.',
     'slug_taken' => 'Ce slug est déjà pris.',
+    'slug_preview' => 'sera : {slug}',
 ];

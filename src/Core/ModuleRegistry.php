@@ -12,7 +12,7 @@ final class ModuleRegistry
     public function register(ModuleInterface $module): void
     {
         if (isset($this->modules[$module->id()])) {
-            throw new \InvalidArgumentException("Modul {$module->id()} bereits registriert");
+            throw new \InvalidArgumentException("Module {$module->id()} is already registered");
         }
         $this->modules[$module->id()] = $module;
     }
@@ -31,13 +31,13 @@ final class ModuleRegistry
     public function get(string $id): ModuleInterface
     {
         if (!isset($this->modules[$id])) {
-            throw new \InvalidArgumentException("Unbekanntes Modul: {$id}");
+            throw new \InvalidArgumentException("Unknown module: {$id}");
         }
         return $this->modules[$id];
     }
 
     /**
-     * Dispatcht [[type:slug]] an das registrierte Modul, das den ContentType bedient.
+     * Dispatches [[type:slug]] to the registered module that serves the content type.
      *
      * @return array{url: string}|null
      */
@@ -53,7 +53,7 @@ final class ModuleRegistry
 
     /**
      * Batch dispatch: collects slugs per content type and resolves them with one
-     * Modul-Aufruf (IN-Query) auf, statt pro Link ein resolveLink (N+1).
+     * module call (IN query) instead of one resolveLink per link (N+1).
      *
      * @param array<string, list<string>> $references Map type => slugs
      * @return array<string, array<string, array{url: string}|null>> Map type => (slug => resolution)
@@ -72,7 +72,7 @@ final class ModuleRegistry
     }
 
     /**
-     * Triggert den onDelete-Hook aller Module, deren ContentTypes der Type bedient,
+     * Triggers the onDelete hook of all modules that serve the type's content
      * so module detail tables are cleaned up before the core deletion.
      */
     public function notifyDelete(Database $db, string $type, string $uuid): void

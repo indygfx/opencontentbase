@@ -46,7 +46,7 @@ final class Router
                 return ['handler' => $route['handler'], 'params' => $params, 'roles' => $route['roles']];
             }
         }
-        throw new RouteNotFoundException("Keine Route fuer {$method} {$path}");
+        throw new RouteNotFoundException("No route for {$method} {$path}");
     }
 
     /** @return array<string, string>|null */

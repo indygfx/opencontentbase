@@ -107,7 +107,7 @@ final class CharacterController
         if ($newSlug !== $slug) {
             $error = $this->validate($projectId, $title, $newSlug);
         } else {
-            $error = $title === '' ? 'The title must not be empty.' : null;
+            $error = $title === '' ? t('writing', 'error_title_empty') : null;
         }
         if ($error !== null) {
             return $this->editError($user, $projectId, $slug, $title, $newSlug, $body, $error);
@@ -155,11 +155,11 @@ final class CharacterController
         $ext = $file !== null && is_array($file) ? $this->images->validateUpload($file) : null;
         $error = match (true) {
             $file === null || !is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
-                => 'No file was uploaded.',
+                => t('writing', 'error_no_file'),
             ($file['size'] ?? 0) > ImageStore::MAX_BYTES
-                => 'The character image must not be larger than 5 MB.',
+                => t('writing', 'character_image_too_big'),
             $ext === null
-                => 'Only JPG, PNG, WebP and GIF images are allowed.',
+                => t('writing', 'error_cover_type'),
             default => null,
         };
         if ($error !== null) {
@@ -212,10 +212,10 @@ final class CharacterController
     private function validate(string $projectId, string $title, string $slug): ?string
     {
         if ($title === '') {
-            return 'The title must not be empty.';
+            return t('writing', 'error_title_empty');
         }
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
-            return 'Could not derive a slug from the title (a-z, 0-9, hyphen).';
+            return t('writing', 'error_slug_derive');
         }
         return null;
     }
@@ -329,7 +329,7 @@ final class CharacterController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Character not found.',
+            'message' => t('writing', 'character_not_found'),
         ], 404);
     }
 
@@ -338,7 +338,7 @@ final class CharacterController
         return $this->page($user, 'templates/error.php', [
             'title' => '403',
             'code' => 403,
-            'message' => 'You may only delete characters you created yourself.',
+            'message' => t('writing', 'error_delete_characters_own'),
         ], 403);
     }
 }

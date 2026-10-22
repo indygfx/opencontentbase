@@ -23,7 +23,7 @@ final class User
         private readonly ?string $language = null
     ) {
         if (!isset(self::HIERARCHY[$role])) {
-            throw new \InvalidArgumentException("Unbekannte Rolle: {$role}");
+            throw new \InvalidArgumentException("Unknown role: {$role}");
         }
     }
 

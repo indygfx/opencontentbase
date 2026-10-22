@@ -32,12 +32,13 @@
     if (slugInput !== null && titleInput !== null) {
         var syncSlug = function () {
             if (slugInput.value === '') {
-                slugInput.placeholder = 'wird: ' + titleInput.value
+                var preview = titleInput.value
                     .toLowerCase()
                     .replace(/[äöü]/g, function (c) { return {'ä': 'ae', 'ö': 'oe', 'ü': 'ue'}[c]; })
                     .replace(/ß/g, 'ss')
                     .replace(/[^a-z0-9]+/g, '-')
                     .replace(/^-+|-+$/g, '');
+                slugInput.placeholder = <?= json_encode(t('pages', 'slug_preview', ['slug' => ''])) ?> + preview;
             }
         };
         titleInput.addEventListener('input', syncSlug);

@@ -297,6 +297,31 @@ final class WritingModule implements ModuleInterface
             function (Database $db): void {
                 $db->run('ALTER TABLE characters ADD COLUMN image_path TEXT');
             },
+            // v14: one relation per character pair per direction, regardless of kind
+            function (Database $db): void {
+                $db->run(
+                    "CREATE TABLE character_relations_new (
+                        id TEXT PRIMARY KEY,
+                        project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        from_character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+                        to_character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+                        kind TEXT NOT NULL DEFAULT 'related',
+                        description TEXT NOT NULL DEFAULT '',
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        CHECK (from_character_id <> to_character_id),
+                        UNIQUE (from_character_id, to_character_id)
+                    )"
+                );
+                $db->run(
+                    'INSERT INTO character_relations_new (id, project_id, from_character_id, to_character_id, kind, description, created_at)
+                     SELECT id, project_id, from_character_id, to_character_id, kind, description, created_at FROM character_relations'
+                );
+                $db->run('DROP TABLE character_relations');
+                $db->run('ALTER TABLE character_relations_new RENAME TO character_relations');
+                $db->run('CREATE INDEX idx_relations_project ON character_relations(project_id)');
+                $db->run('CREATE INDEX idx_relations_from ON character_relations(from_character_id)');
+                $db->run('CREATE INDEX idx_relations_to ON character_relations(to_character_id)');
+            },
             // v13: mention-based character weighting (on-demand cache)
             function (Database $db): void {
                 $db->run(

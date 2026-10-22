@@ -23,4 +23,5 @@ return [
     'error_slug_derive' => 'Could not derive a slug from the title (a-z, 0-9, hyphen).',
     'error_not_found' => 'Page not found.',
     'slug_taken' => 'That slug is already taken.',
+    'slug_preview' => 'will be: {slug}',
 ];

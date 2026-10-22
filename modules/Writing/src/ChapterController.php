@@ -51,12 +51,12 @@ final class ChapterController
         $synopsis = $synopsisId === '' ? null : $this->synopses->findSynopsisRow($projectId, $synopsisId);
         if ($synopsis === null) {
             return $this->editError($user, $projectId, null, $slugInput, $body,
-                'Pick a chapter outline for this chapter.');
+                t('writing', 'error_pick_outline'));
         }
         $assigned = $this->assignedChapter($projectId, $synopsis['id']);
         if ($assigned !== null) {
             return $this->editError($user, $projectId, null, $slugInput, $body,
-                'That chapter outline is already assigned to a written chapter.');
+                t('writing', 'error_outline_assigned'));
         }
         $slug = slugify($slugInput ?: $synopsis['title']);
         $error = $this->validate($slug);
@@ -126,12 +126,12 @@ final class ChapterController
             $synopsis = $synopsisId === '' ? null : $this->synopses->findSynopsisRow($projectId, $synopsisId);
             if ($synopsis === null) {
                 return $this->editError($user, $projectId, $slug, $newSlug, $body,
-                    'Pick a chapter outline for this chapter.', null, true);
+                    t('writing', 'error_pick_outline'), null, true);
             }
             $assigned = $this->assignedChapter($projectId, $synopsis['id']);
             if ($assigned !== null) {
                 return $this->editError($user, $projectId, $slug, $newSlug, $body,
-                    'That chapter outline is already assigned to a written chapter.', $synopsis, true);
+                    t('writing', 'error_outline_assigned'), $synopsis, true);
             }
             $newSynopsisId = $synopsis['id'];
             $newTitle = $synopsis['title'];
@@ -193,7 +193,7 @@ final class ChapterController
     private function validate(string $slug): ?string
     {
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
-            return 'Could not derive a slug from the title (a-z, 0-9, hyphen).';
+            return t('writing', 'error_slug_derive');
         }
         return null;
     }
@@ -340,7 +340,7 @@ final class ChapterController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Chapter not found.',
+            'message' => t('writing', 'chapter_not_found'),
         ], 404);
     }
 
@@ -349,7 +349,7 @@ final class ChapterController
         return $this->page($user, 'templates/error.php', [
             'title' => '403',
             'code' => 403,
-            'message' => 'You may only delete chapters you created yourself.',
+            'message' => t('writing', 'error_delete_chapters_own'),
         ], 403);
     }
 }

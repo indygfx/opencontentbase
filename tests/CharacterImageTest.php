@@ -163,7 +163,7 @@ final class CharacterImageTest extends TestCase
         ];
         $response = $this->controller->uploadImage($this->owner, 'p1', 'hero');
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('Only JPG, PNG, WebP and GIF', $response->body());
+        $this->assertStringContainsString(t('writing', 'error_cover_type'), $response->body());
         $this->assertNull($this->imagePath());
         @unlink($tmp);
     }
@@ -173,7 +173,7 @@ final class CharacterImageTest extends TestCase
         $tmp = $this->fakeUpload('image/png', 5242881);
         $response = $this->controller->uploadImage($this->owner, 'p1', 'hero');
         $this->assertSame(200, $response->status());
-        $this->assertStringContainsString('must not be larger than 5 MB', $response->body());
+        $this->assertStringContainsString(t('writing', 'character_image_too_big'), $response->body());
         $this->assertNull($this->imagePath());
         @unlink($tmp);
     }

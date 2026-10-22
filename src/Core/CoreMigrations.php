@@ -35,7 +35,7 @@ final class CoreMigrations
                 );
                 $db->run('CREATE INDEX idx_sessions_user ON sessions(user_id)');
             },
-            // v2: generische content_objects + content_revisions
+            // v2: generic content_objects + content_revisions
             function (Database $db): void {
                 $db->run(
                     'CREATE TABLE content_objects (
@@ -59,7 +59,7 @@ final class CoreMigrations
                 );
                 $db->run('CREATE INDEX idx_revisions_object ON content_revisions(object_id, created_at)');
             },
-            // v3: CSRF-Token pro Session
+            // v3: CSRF token per session
             function (Database $db): void {
                 $db->run('ALTER TABLE sessions ADD COLUMN csrf_token TEXT');
             },

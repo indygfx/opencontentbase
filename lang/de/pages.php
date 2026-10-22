@@ -23,4 +23,5 @@ return [
     'error_slug_derive' => 'Konnte keinen Slug aus dem Titel ableiten (a-z, 0-9, Bindestrich).',
     'error_not_found' => 'Seite nicht gefunden.',
     'slug_taken' => 'Dieser Slug ist bereits vergeben.',
+    'slug_preview' => 'wird: {slug}',
 ];

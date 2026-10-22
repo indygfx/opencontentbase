@@ -102,7 +102,7 @@ final class BackgroundController
         if ($newSlug !== $slug) {
             $error = $this->validate($projectId, $title, $newSlug);
         } else {
-            $error = $title === '' ? 'The title must not be empty.' : null;
+            $error = $title === '' ? t('writing', 'error_title_empty') : null;
         }
         if ($error !== null) {
             return $this->editError($user, $projectId, $slug, $title, $newSlug, $body, $error);
@@ -142,10 +142,10 @@ final class BackgroundController
     private function validate(string $projectId, string $title, string $slug): ?string
     {
         if ($title === '') {
-            return 'The title must not be empty.';
+            return t('writing', 'error_title_empty');
         }
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
-            return 'Could not derive a slug from the title (a-z, 0-9, hyphen).';
+            return t('writing', 'error_slug_derive');
         }
         return null;
     }
@@ -259,7 +259,7 @@ final class BackgroundController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Background not found.',
+            'message' => t('writing', 'background_not_found'),
         ], 404);
     }
 
@@ -268,7 +268,7 @@ final class BackgroundController
         return $this->page($user, 'templates/error.php', [
             'title' => '403',
             'code' => 403,
-            'message' => 'You may only delete backgrounds you created yourself.',
+            'message' => t('writing', 'error_delete_backgrounds_own'),
         ], 403);
     }
 }

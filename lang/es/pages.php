@@ -21,4 +21,5 @@ return [
     'error_slug_derive' => 'No se pudo derivar un slug del título (a-z, 0-9, guión).',
     'error_not_found' => 'Página no encontrada.',
     'slug_taken' => 'Ese slug ya está en uso.',
+    'slug_preview' => 'será: {slug}',
 ];

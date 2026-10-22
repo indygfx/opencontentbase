@@ -40,7 +40,7 @@ final class WritingController
     {
         $slider = new StorySlider($this->db);
         return $this->page($user, 'modules/Writing/templates/index.php', [
-            t('writing', 'stories_title'),
+            'title' => t('writing', 'stories_title'),
             'projects' => $this->access->visibleProjects($user),
             'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
             'error' => null,
@@ -104,7 +104,7 @@ final class WritingController
             return $this->forbidden($user);
         }
         return $this->page($user, 'modules/Writing/templates/setup.php', [
-            'title' => 'Novel Setup: ' . (string)$project['title'],
+            'title' => t('writing', 'setup_title', ['title' => (string)$project['title']]),
             'project' => $project,
             'members' => $this->access->members($id),
             'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
@@ -126,13 +126,13 @@ final class WritingController
         $title = trim((string)($_POST['title'] ?? ''));
         if ($title === '' || mb_strlen($title) < 2) {
             return $this->page($user, 'modules/Writing/templates/setup.php', [
-                'title' => 'Novel Setup: ' . (string)$project['title'],
+                'title' => t('writing', 'setup_title', ['title' => (string)$project['title']]),
                 'project' => $project,
                 'members' => $this->access->members($id),
                 'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
                 'targets' => $this->progress->targets($id),
                 'genres' => ProjectProgress::GENRES,
-                'error' => 'The title must be at least 2 characters long.',
+                'error' => t('writing', 'error_title_length'),
             ], 422);
         }
         $this->db->run('UPDATE projects SET title = ? WHERE id = ?', [$title, $id]);
@@ -166,14 +166,14 @@ final class WritingController
         foreach ($fields as $name => $min) {
             $value = filter_var($_POST[$name] ?? null, FILTER_VALIDATE_INT);
             if ($value === false || $value < $min || $value > 10000000) {
-                $error = 'All targets must be positive whole numbers.';
+                $error = t('writing', 'error_targets_positive');
                 break;
             }
             $values[$name] = $value;
         }
         if ($error !== null) {
             return $this->page($user, 'modules/Writing/templates/setup.php', [
-                'title' => 'Novel Setup: ' . (string)$project['title'],
+                'title' => t('writing', 'setup_title', ['title' => (string)$project['title']]),
                 'project' => $project,
                 'members' => $this->access->members($id),
                 'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),
@@ -257,17 +257,17 @@ final class WritingController
         $username = trim((string)($_POST['username'] ?? ''));
         $target = $this->db->one('SELECT id, username FROM users WHERE username = ?', [$username]);
         if ($target === null) {
-            return $this->projectError($user, $project, "User \"{$username}\" does not exist.", 422);
+            return $this->projectError($user, $project, t('writing', 'error_share_user_missing', ['username' => $username]), 422);
         }
         if ((string)$target['id'] === $user->id()) {
-            return $this->projectError($user, $project, 'You cannot share a story with yourself.', 422);
+            return $this->projectError($user, $project, t('writing', 'error_share_self'), 422);
         }
         $existing = $this->db->one(
             'SELECT user_id FROM project_members WHERE project_id = ? AND user_id = ?',
             [$id, (string)$target['id']]
         );
         if ($existing !== null) {
-            return $this->projectError($user, $project, 'This story is already shared with that user.', 422);
+            return $this->projectError($user, $project, t('writing', 'error_share_duplicate'), 422);
         }
         $this->db->run(
             'INSERT INTO project_members (project_id, user_id, role) VALUES (?, ?, ?)',
@@ -404,7 +404,7 @@ final class WritingController
     {
         $slider = new StorySlider($this->db);
         return $this->page($user, 'modules/Writing/templates/index.php', [
-            t('writing', 'stories_title'),
+            'title' => t('writing', 'stories_title'),
             'projects' => $this->access->visibleProjects($user),
             'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
             'error' => $error,
@@ -425,16 +425,16 @@ final class WritingController
         $ext = $file !== null && is_array($file) ? $this->images->validateUpload($file) : null;
         $error = match (true) {
             $file === null || !is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
-                => 'No file was uploaded.',
+                => t('writing', 'error_no_file'),
             ($file['size'] ?? 0) > ImageStore::MAX_BYTES
-                => 'The cover image must not be larger than 5 MB.',
+                => t('writing', 'error_cover_too_big'),
             $ext === null
-                => 'Only JPG, PNG, WebP and GIF images are allowed.',
+                => t('writing', 'error_cover_type'),
             default => null,
         };
         if ($error !== null) {
             return $this->page($user, 'modules/Writing/templates/setup.php', [
-                'title' => 'Novel Setup: ' . (string)$project['title'],
+                'title' => t('writing', 'setup_title', ['title' => (string)$project['title']]),
                 'project' => $project,
                 'members' => $this->access->members($id),
                 'shareTargets' => $this->shareTargets($id, (string)$project['owner_id']),

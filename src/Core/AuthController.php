@@ -23,7 +23,7 @@ final class AuthController
     public function showLogin(): Response
     {
         return Response::html($this->view->render('templates/layout.php', [
-            t('core', 'login_title'),
+            'title' => t('core', 'login_title'),
             'user' => null,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/login.php', ['csrf' => $this->csrf]),
@@ -37,7 +37,7 @@ final class AuthController
         $user = $this->auth->login($username, $password);
         if ($user === null) {
             return Response::html($this->view->render('templates/layout.php', [
-                t('core', 'login_title'),
+                'title' => t('core', 'login_title'),
                 'user' => null,
                 'csrf' => $this->csrf,
                 'content' => $this->view->render('templates/login.php', [
@@ -61,7 +61,7 @@ final class AuthController
             return Response::redirect('/login');
         }
         return Response::html($this->view->render('templates/layout.php', [
-            t('core', 'profile_title'),
+            'title' => t('core', 'profile_title'),
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/profile.php', [
@@ -91,7 +91,7 @@ final class AuthController
             'success' => $error === null ? t('core', 'profile_password_changed') : null,
         ]);
         return Response::html($this->view->render('templates/layout.php', [
-            t('core', 'profile_title'),
+            'title' => t('core', 'profile_title'),
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $content,

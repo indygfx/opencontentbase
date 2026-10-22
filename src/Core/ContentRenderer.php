@@ -40,9 +40,9 @@ final class ContentRenderer
     }
 
     /**
-     * Zwei-Phasen-Pipeline: Phase 1 sammelt alle [[type:slug]]-Referenzen im
+     * Two-phase pipeline: phase 1 collects all [[type:slug]] references in the
      * HTML; phase 2 resolves them in one batch via the registry (batch instead of
-     * N+1), erst danach wird ersetzt.
+     * N+1), only then are they replaced.
      */
     private function rewriteInternalLinks(string $html): string
     {

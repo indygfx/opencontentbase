@@ -112,7 +112,7 @@ final class ChapterSynopsisController
         $summary = trim((string)($_POST['summary'] ?? ''));
         if ($title === '') {
             return $this->formError($user, $projectId, $slug, (string)$synopsis['slug'], $title, $summary,
-                'The title must not be empty.');
+                t('writing', 'error_title_empty'));
         }
         $this->db->run(
             'UPDATE chapter_synopses SET title = ?, summary_text = ? WHERE id = ?',
@@ -141,10 +141,7 @@ final class ChapterSynopsisController
                 'summaryHtml' => (string)$synopsis['summary_text'] !== '' ? $this->renderer->render((string)$synopsis['summary_text']) : '',
                 'chapter' => $chapter,
                 'canEdit' => $this->access->canEdit($user, $projectId),
-                'error' => 'This outline is assigned to the written chapter "'
-                    . (string)$chapter['title']
-                    . '". Delete that chapter text first (or reassign it to another or a new outline) '
-                    . 'before the outline can be deleted.',
+                'error' => t('writing', 'error_outline_assigned_delete', ['title' => (string)$chapter['title']]),
             ], 422);
         }
         $this->db->transaction(function (Database $db) use ($synopsis): void {
@@ -191,10 +188,10 @@ final class ChapterSynopsisController
     private function validate(string $title, string $slug): ?string
     {
         if ($title === '') {
-            return 'The title must not be empty.';
+            return t('writing', 'error_title_empty');
         }
         if ($slug === '' || preg_match('/^[a-z0-9-]+$/', $slug) !== 1) {
-            return 'Could not derive a slug from the title (a-z, 0-9, hyphen).';
+            return t('writing', 'error_slug_derive');
         }
         return null;
     }
@@ -292,7 +289,7 @@ final class ChapterSynopsisController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Chapter outline not found.',
+            'message' => t('writing', 'outline_not_found'),
         ], 404);
     }
 
@@ -301,7 +298,7 @@ final class ChapterSynopsisController
         return $this->page($user, 'templates/error.php', [
             'title' => '403',
             'code' => 403,
-            'message' => 'You may only delete chapter outlines you created yourself.',
+            'message' => t('writing', 'error_outline_delete_written'),
         ], 403);
     }
 }

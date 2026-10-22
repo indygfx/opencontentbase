@@ -27,7 +27,7 @@ The built bundle is committed, so a plain PHP deployment needs no Node toolchain
 
 
 
-Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline and the pages reference module are done; next up are a writing app module (projects, characters, relationships, chapters) and editor refinements such as diffs, a graph UI and per-object revisions.
+Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done; the remaining roadmap items are diffs, a board and per-object revisions.
 
 ## Architecture
 
@@ -36,7 +36,7 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 - **Versioned migrations per module**: `schema_versions (module, version)`, executed by `Core\Migrator` in individual transactions.
 - **Generalized internal links**: `[[type:slug]]` in content, resolved via the module registry (`ModuleRegistry::resolveLink`); unresolvable links render as broken-link markers.
 - **CommonMark + GFM** via `league/commonmark` – raw HTML is escaped, unsafe links neutralized (`allow_unsafe_links: false`, `DisallowedRawHtml`).
-- **Array-based i18n**: `lang/<code>/<domain>.php` files (English default + German); lookup falls back to English, then to the raw key – missing translations never break the UI.
+- **Array-based i18n**: `lang/<code>/<domain>.php` files (English default plus German, Spanish and French); lookup falls back to English, then to the raw key – missing translations never break the UI.
 
 ## Stack
 
@@ -106,7 +106,7 @@ On first start the user **admin / admin** is created automatically (change it im
 
 ```
 src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry, Translator
-lang/              Language files: en/ (default) and de/, one file per domain (core, writing, pages)
+lang/              Language files: en/ (default), de/, es/, fr/, one file per domain (core, writing, pages)
 modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
 templates/         Layout, Login, Profile, Users, Error
@@ -126,9 +126,9 @@ The UI is fully translated via flat PHP array files – no gettext, no tooling, 
 
 **Add your own language** (this is the open-source workflow):
 
-1. `cp -r lang/en lang/fr` (copy the English default)
+1. Copy the English default: `cp -r lang/en lang/<code>` (e.g. `lang/pt`)
 2. Translate the values, keep the keys unchanged – a missing key simply falls back to English
-3. Done – the language automatically appears in the profile dropdown (`Translator::availableLanguages()` scans `lang/`); add a `'lang_fr' => 'Français'` entry in `core.php` for the native name
+3. Done – the language automatically appears in the profile dropdown (`Translator::availableLanguages()` scans `lang/`); add a `'lang_<code>'` entry (e.g. `'lang_pt' => 'Português'`) in every `lang/<code>/core.php` for the native name
 
 For translators there is nothing to install: plain text editor, PHP array syntax, and the parity test reports untranslated keys on the next `phpunit` run.
 
@@ -142,7 +142,7 @@ Each story has a dashboard (`/writing/{id}`) that follows the snowflake method t
 - **Extended Synopsis**: the whole story line in one detailed draft.
 - **Chapter Outlines** (chapter synopses): the plan for each chapter – title and a short summary of what happens; each outline shows whether the prose is already written.
 - **Characters**: appearance, biography, motivation and wounds.
-- **Relationship Web**: who knows whom, how they are connected – and where the conflict lies.
+- **Relationship Web**: who knows whom, how they are connected – and where the conflict lies. Uniqueness rule: one relation per character pair per direction, regardless of kind – enforced by both the application validation and the database UNIQUE index on `character_relations (from_character_id, to_character_id)` (migration v14).
 - **Backgrounds**: the world your story stands on – its historical, geographical, religious and political context.
 
 ## Writing module: story excerpt slider
@@ -314,8 +314,8 @@ legend all read from it - nowhere else is a kind or group list hardcoded.
 
 **Recipe - add a kind:**
 1. One line in `RelationKinds::GROUPS` (`'<kind>' => '<group>'`).
-2. One lang line per language: `kind_<key>` in `lang/en/writing.php`
-   and `lang/de/writing.php`. The parity test
+2. One lang line per language: `kind_<key>` in `lang/<code>/writing.php`
+   for every shipped language (`en`, `de`, `es`, `fr`). The parity test
    (`TranslatorTest::testRelationKindLangParity`) enforces completeness.
 
 **Recipe - add a group:**
@@ -324,7 +324,8 @@ legend all read from it - nowhere else is a kind or group list hardcoded.
    all three color contexts: `stroke` for graph edges, `fill` for
    edge labels (`.graph-edge-label.rel-<group>`), and `background`
    for the legend swatches (`.graph-legend-swatch.rel-<group>`).
-3. `kindgroup_<group>` lang lines in both languages. The legend picks
+3. `kindgroup_<group>` lang lines in every language
+   (`lang/<code>/writing.php` for `en`, `de`, `es`, `fr`). The legend picks
    the group up automatically.
 
 **Guideline:** keep at most ~9 groups total for legend readability;
@@ -340,7 +341,7 @@ stroke color is group-level.
 - Login with session rotation (old session is discarded on re-login)
 - CSRF protection for all POST routes (session-bound token, cookie fallback for guests, `hash_equals` comparison)
 - Role guard per route (`admin > editor > user`), unauthenticated -> redirect to `/login`, 403 template
-- User management (admin only): create users, change roles, reset passwords, delete users
+- User management (admin only): create users, change roles, reset passwords, delete users; the overview shows the number of active (non-expired) sessions per user – expired sessions no longer count
 
 ## Known gaps (roadmap phase 5)
 - **Pages module purpose is undecided (open decision)**: what pages are
@@ -360,6 +361,6 @@ stroke color is group-level.
 3. pages reference module (done)
 4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, data-driven kind taxonomy), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export (mostly done; see the Writing module sections above)
 5. Editor refinements, diffs, graph UI (done: weighted circular relationship graph), board, revisions per content object (open)
-6. UI languages via array files, English default + German, per-account language setting (done)
+6. UI languages via array files (en, de, es, fr), per-account language setting (done)
 
 Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).

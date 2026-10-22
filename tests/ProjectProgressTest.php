@@ -213,7 +213,7 @@ final class ProjectProgressTest extends TestCase
         ];
         $response = $this->controller->updateTargets($this->owner, 'p1');
         $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('positive whole numbers', $response->body());
+        $this->assertStringContainsString(t('writing', 'error_targets_positive'), $response->body());
     }
 
     public function testUpdateTargetsRejectsStranger(): void

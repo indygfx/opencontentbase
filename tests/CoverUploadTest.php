@@ -94,7 +94,7 @@ final class CoverUploadTest extends TestCase
         $this->fakeUpload($tmp, 'text/plain');
         $response = $this->controller->uploadCover($this->owner, 'p1');
         $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('Only JPG, PNG, WebP and GIF', $response->body());
+        $this->assertStringContainsString(t('writing', 'error_cover_type'), $response->body());
         @unlink($tmp);
     }
 
@@ -103,7 +103,7 @@ final class CoverUploadTest extends TestCase
         $_FILES = [];
         $response = $this->controller->uploadCover($this->owner, 'p1');
         $this->assertSame(422, $response->status());
-        $this->assertStringContainsString('No file was uploaded', $response->body());
+        $this->assertStringContainsString(t('writing', 'error_no_file'), $response->body());
     }
 
     public function testUploadRejectsStranger(): void

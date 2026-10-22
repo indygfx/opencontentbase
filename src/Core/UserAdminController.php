@@ -50,10 +50,10 @@ final class UserAdminController
             return $this->page($user, ['error' => t('core', 'users_error_role')], 422);
         }
         if ($target['username'] === 'admin' && $role !== User::ROLE_ADMIN) {
-            return $this->page($user, ['error' => 'The admin role cannot be removed from the main admin.'], 422);
+            return $this->page($user, ['error' => t('core', 'users_error_admin_role_fixed')], 422);
         }
         if ($target['id'] === $user->id() && $role !== $user->role()) {
-            return $this->page($user, ['error' => 'You cannot change your own role.'], 422);
+            return $this->page($user, ['error' => t('core', 'users_error_own_role')], 422);
         }
         $this->db->run('UPDATE users SET role = ? WHERE id = ?', [$role, $id]);
         return $this->page($user, ['success' => t('core', 'users_role_updated')]);
@@ -87,7 +87,7 @@ final class UserAdminController
             return $this->page($user, ['error' => t('core', 'users_error_delete_self')], 422);
         }
         if ($target['username'] === 'admin') {
-            return $this->page($user, ['error' => 'The main admin cannot be deleted.'], 422);
+            return $this->page($user, ['error' => t('core', 'users_error_admin_delete')], 422);
         }
         $this->db->run('DELETE FROM project_members WHERE user_id = ?', [$id]);
         $this->db->run('DELETE FROM sessions WHERE user_id = ?', [$id]);
@@ -135,7 +135,8 @@ final class UserAdminController
             'SELECT u.id, u.username, u.role, u.created_at,
                     (SELECT COUNT(*) FROM sessions s WHERE s.user_id = u.id AND s.expires_at > ?) AS active_sessions
              FROM users u
-             ORDER BY u.username'
+             ORDER BY u.username',
+            [gmdate('Y-m-d H:i:s')]
         );
         $content = $this->view->render('templates/users.php', [
             'users' => $users,

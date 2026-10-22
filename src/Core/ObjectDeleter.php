@@ -16,7 +16,7 @@ final class ObjectDeleter
      * Deletes a content_objects entry transactionally: first the onDelete hook
      * of the owning module (cleaning up the detail table), then the
      * core record. If the module throws, the transaction is rolled back and the
-     * Objekt bleibt erhalten.
+     * object is kept.
      */
     public function delete(string $type, string $uuid): void
     {

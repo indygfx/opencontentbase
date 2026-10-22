@@ -34,7 +34,7 @@ final class RelationshipController
                 'characterOptions' => [],
                 'kinds' => RelationKinds::allKinds(),
                 'error' => null,
-                'notice' => 'Create at least two characters to define relationships.',
+                'notice' => t('writing', 'notice_relation_characters_missing'),
             ]);
         }
         return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
@@ -123,6 +123,9 @@ final class RelationshipController
             return $this->notFound($user);
         }
         $relationId = (string)($_POST['relation_id'] ?? '');
+        if ($this->findRelation($projectId, $relationId) === null) {
+            return $this->notFound($user);
+        }
         $this->db->run(
             'DELETE FROM character_relations WHERE id = ? AND project_id = ?',
             [$relationId, $projectId]
@@ -159,20 +162,20 @@ final class RelationshipController
     private function validate(string $projectId, string $fromId, string $toId, string $kind, ?string $ignoreId): ?string
     {
         if ($fromId === '' || $toId === '') {
-            return 'Both characters must be selected.';
+            return t('writing', 'error_relation_characters_selected');
         }
         if ($fromId === $toId) {
-            return 'A character cannot have a relationship with itself.';
+            return t('writing', 'error_relation_self');
         }
         if (!in_array($kind, RelationKinds::allKinds(), true)) {
-            return 'Invalid relationship kind.';
+            return t('writing', 'error_relation_kind');
         }
         foreach ([$fromId, $toId] as $characterId) {
             if ($this->db->one(
                 'SELECT id FROM characters WHERE id = ? AND project_id = ?',
                 [$characterId, $projectId]
             ) === null) {
-                return 'Both characters must belong to this story.';
+                return t('writing', 'error_relation_project');
             }
         }
         $sql = 'SELECT id FROM character_relations
@@ -184,7 +187,7 @@ final class RelationshipController
         }
         $exists = $this->db->one($sql, $params);
         return $exists !== null
-            ? 'This relationship already exists. The same pair can only be linked once per direction.'
+            ? t('writing', 'error_relation_duplicate')
             : null;
     }
 
@@ -273,7 +276,7 @@ final class RelationshipController
         return $this->page($user, 'templates/error.php', [
             'title' => '404',
             'code' => 404,
-            'message' => 'Relationship not found.',
+            'message' => t('writing', 'relation_not_found'),
         ], 404);
     }
 }
