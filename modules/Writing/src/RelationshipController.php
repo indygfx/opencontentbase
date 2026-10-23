@@ -27,23 +27,25 @@ final class RelationshipController
         }
         if (count($this->characterOptions($projectId)) < 2) {
             return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
-                'title' => 'New relationship',
+                'title' => t('writing', 'new_relationship'),
                 'projectId' => $projectId,
                 'projectTitle' => $this->projectTitle($projectId),
                 'relation' => null,
                 'characterOptions' => [],
                 'kinds' => RelationKinds::allKinds(),
+                'stances' => Stances::allStances(),
                 'error' => null,
                 'notice' => t('writing', 'notice_relation_characters_missing'),
             ]);
         }
         return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
-            'title' => 'New relationship',
+            'title' => t('writing', 'new_relationship'),
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'relation' => null,
             'characterOptions' => $this->characterOptions($projectId),
             'kinds' => RelationKinds::allKinds(),
+            'stances' => Stances::allStances(),
             'error' => null,
             'notice' => null,
         ]);
@@ -57,15 +59,16 @@ final class RelationshipController
         $fromId = (string)($_POST['from_character_id'] ?? '');
         $toId = (string)($_POST['to_character_id'] ?? '');
         $kind = (string)($_POST['kind'] ?? 'related');
+        $stance = trim((string)($_POST['stance'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
-        $error = $this->validate($projectId, $fromId, $toId, $kind, null);
+        $error = $this->validate($projectId, $fromId, $toId, $kind, $stance, null);
         if ($error !== null) {
-            return $this->formError($user, $projectId, null, $fromId, $toId, $kind, $description, $error);
+            return $this->formError($user, $projectId, null, $fromId, $toId, $kind, $stance, $description, $error);
         }
         $this->db->run(
-            'INSERT INTO character_relations (id, project_id, from_character_id, to_character_id, kind, description)
-             VALUES (?, ?, ?, ?, ?, ?)',
-            [\Core\Auth::uuid4(), $projectId, $fromId, $toId, $kind, $description]
+            'INSERT INTO character_relations (id, project_id, from_character_id, to_character_id, kind, stance, description)
+             VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [\Core\Auth::uuid4(), $projectId, $fromId, $toId, $kind, $stance === '' ? null : $stance, $description]
         );
         return Response::redirect('/writing/' . $projectId . '#relationships');
     }
@@ -80,12 +83,13 @@ final class RelationshipController
             return $this->notFound($user);
         }
         return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
-            'title' => 'Edit relationship',
+            'title' => t('writing', 'edit_relationship'),
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'relation' => $relation,
             'characterOptions' => $this->characterOptions($projectId),
             'kinds' => RelationKinds::allKinds(),
+            'stances' => Stances::allStances(),
             'error' => null,
             'notice' => null,
         ]);
@@ -103,16 +107,17 @@ final class RelationshipController
         $fromId = (string)($_POST['from_character_id'] ?? '');
         $toId = (string)($_POST['to_character_id'] ?? '');
         $kind = (string)($_POST['kind'] ?? 'related');
+        $stance = trim((string)($_POST['stance'] ?? ''));
         $description = trim((string)($_POST['description'] ?? ''));
-        $error = $this->validate($projectId, $fromId, $toId, $kind, $relationId);
+        $error = $this->validate($projectId, $fromId, $toId, $kind, $stance, $relationId);
         if ($error !== null) {
-            return $this->formError($user, $projectId, $relation, $fromId, $toId, $kind, $description, $error);
+            return $this->formError($user, $projectId, $relation, $fromId, $toId, $kind, $stance, $description, $error);
         }
         $this->db->run(
             'UPDATE character_relations
-             SET from_character_id = ?, to_character_id = ?, kind = ?, description = ?
+             SET from_character_id = ?, to_character_id = ?, kind = ?, stance = ?, description = ?
              WHERE id = ? AND project_id = ?',
-            [$fromId, $toId, $kind, $description, $relationId, $projectId]
+            [$fromId, $toId, $kind, $stance === '' ? null : $stance, $description, $relationId, $projectId]
         );
         return Response::redirect('/writing/' . $projectId . '#relationships');
     }
@@ -137,7 +142,7 @@ final class RelationshipController
     public function list(string $projectId): array
     {
         return $this->db->all(
-            "SELECT r.id, r.kind, r.description,
+            "SELECT r.id, r.kind, r.stance, r.description,
                    f.id AS from_id, o1.slug AS from_slug, COALESCE(rf.title, o1.slug) AS from_title,
                    t.id AS to_id, o2.slug AS to_slug, COALESCE(rt.title, o2.slug) AS to_title
              FROM character_relations r
@@ -157,9 +162,11 @@ final class RelationshipController
 
     /**
      * Direction-aware duplicate check: A loves B and B loves A are distinct,
-     * but the exact same pair in the same direction (regardless of kind) is rejected.
+     * but the exact same pair in the same direction (regardless of kind or
+     * stance) is rejected. The stance is optional; an empty stance renders
+     * as the neutral group.
      */
-    private function validate(string $projectId, string $fromId, string $toId, string $kind, ?string $ignoreId): ?string
+    private function validate(string $projectId, string $fromId, string $toId, string $kind, string $stance, ?string $ignoreId): ?string
     {
         if ($fromId === '' || $toId === '') {
             return t('writing', 'error_relation_characters_selected');
@@ -169,6 +176,9 @@ final class RelationshipController
         }
         if (!in_array($kind, RelationKinds::allKinds(), true)) {
             return t('writing', 'error_relation_kind');
+        }
+        if ($stance !== '' && !in_array($stance, Stances::allStances(), true)) {
+            return t('writing', 'error_relation_stance');
         }
         foreach ([$fromId, $toId] as $characterId) {
             if ($this->db->one(
@@ -210,7 +220,7 @@ final class RelationshipController
     private function findRelation(string $projectId, string $relationId): ?array
     {
         return $this->db->one(
-            'SELECT id, from_character_id, to_character_id, kind, description
+            'SELECT id, from_character_id, to_character_id, kind, stance, description
              FROM character_relations WHERE id = ? AND project_id = ?',
             [$relationId, $projectId]
         );
@@ -224,11 +234,12 @@ final class RelationshipController
         string $fromId,
         string $toId,
         string $kind,
+        string $stance,
         string $description,
         string $error
     ): Response {
         return $this->page($user, 'modules/Writing/templates/relationship_form.php', [
-            'title' => $relation === null ? 'New relationship' : 'Edit relationship',
+            'title' => $relation === null ? t('writing', 'new_relationship') : t('writing', 'edit_relationship'),
             'projectId' => $projectId,
             'projectTitle' => $this->projectTitle($projectId),
             'relation' => [
@@ -236,10 +247,12 @@ final class RelationshipController
                 'from_character_id' => $fromId,
                 'to_character_id' => $toId,
                 'kind' => $kind,
+                'stance' => $stance,
                 'description' => $description,
             ],
             'characterOptions' => $this->characterOptions($projectId),
             'kinds' => RelationKinds::allKinds(),
+            'stances' => Stances::allStances(),
             'error' => $error,
             'notice' => null,
         ], 422);

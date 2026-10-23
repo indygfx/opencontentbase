@@ -19,8 +19,10 @@ namespace Writing;
  * - Reciprocal pairs (A->B and B->A) merge into ONE outward-bowed Bezier
  *   curve; the A->B kind labels near B's end, the B->A kind near A's end.
  * - One-directional relations get an arrowhead pointing at the target.
- * - Unknown kinds fall back to a neutral stroke class; self-references
- *   are skipped defensively.
+ * - Edge colors come from the emotional stance (Stances::classFor); rows
+ *   without a stance use the neutral class. Labels keep showing the
+ *   structural role kind. Unknown stances fall back to a neutral stroke
+ *   class; self-references are skipped defensively.
  */
 final class RelationshipGraph
 {
@@ -36,7 +38,7 @@ final class RelationshipGraph
 
     /**
      * @param list<array{id: string, slug: string, title: string, level: int, has_image: bool}> $characters
-     * @param list<array{from_id: string, to_id: string, kind: string, description: string}> $relations
+     * @param list<array{from_id: string, to_id: string, kind: string, stance: ?string, description: string}> $relations
      */
     public function render(string $projectId, array $characters, array $relations): string
     {
@@ -130,9 +132,9 @@ final class RelationshipGraph
      * Splits relations into one-directional edges and reciprocal pairs.
      * Self-references are skipped defensively.
      *
-     * @param list<array{from_id: string, to_id: string, kind: string, description: string}> $relations
-     * @return array{0: list<array{from_id: string, to_id: string, kind: string, description: string}>,
-     *     1: list<array{a: string, b: string, ab: array{kind: string, description: string}, ba: array{kind: string, description: string}}>}
+     * @param list<array{from_id: string, to_id: string, kind: string, stance: ?string, description: string}> $relations
+     * @return array{0: list<array{from_id: string, to_id: string, kind: string, stance: ?string, description: string}>,
+     *     1: list<array{a: string, b: string, ab: array{kind: string, stance: ?string, description: string}, ba: array{kind: string, stance: ?string, description: string}}>}
      */
     private function prepareEdges(array $relations): array
     {
@@ -154,20 +156,40 @@ final class RelationshipGraph
             $pairs[] = [
                 'a' => (string)$first['from_id'],
                 'b' => (string)$first['to_id'],
-                'ab' => ['kind' => (string)$first['kind'], 'description' => (string)$first['description']],
-                'ba' => ['kind' => (string)$relation['kind'], 'description' => (string)$relation['description']],
+                'ab' => $this->edgeData($first),
+                'ba' => $this->edgeData($relation),
             ];
             unset($seen[$key]);
         }
         foreach ($seen as $relation) {
-            $singles[] = $relation;
+            $singles[] = $this->edgeData($relation);
         }
         return [$singles, $pairs];
     }
 
     /**
+     * Normalizes a relation row into edge data; the stance is optional and
+     * NULL renders as the neutral color group.
+     *
+     * @param array<string, mixed> $relation
+     * @return array{from_id: string, to_id: string, kind: string, stance: ?string, description: string}
+     */
+    private function edgeData(array $relation): array
+    {
+        return [
+            'from_id' => (string)$relation['from_id'],
+            'to_id' => (string)$relation['to_id'],
+            'kind' => (string)$relation['kind'],
+            'stance' => isset($relation['stance']) && $relation['stance'] !== null && $relation['stance'] !== ''
+                ? (string)$relation['stance']
+                : null,
+            'description' => (string)$relation['description'],
+        ];
+    }
+
+    /**
      * @param array<string, array{id: string, slug: string, title: string, level: int, has_image: bool, x: float, y: float, r: float}> $nodes
-     * @param array{a: string, b: string, ab: array{kind: string, description: string}, ba: array{kind: string, description: string}} $pair
+     * @param array{a: string, b: string, ab: array{kind: string, stance: ?string, description: string}, ba: array{kind: string, stance: ?string, description: string}} $pair
      */
     private function mergedEdge(array $nodes, array $pair): string
     {
@@ -188,8 +210,8 @@ final class RelationshipGraph
         [$x1, $y1] = $this->boundaryPoint($a, $cx, $cy);
         [$x2, $y2] = $this->boundaryPoint($b, $cx, $cy);
 
-        $title = trim($pair['ab']['description'] . ' / ' . $pair['ba']['description']);
-        $svg = '<path class="graph-edge ' . e($this->classFor($pair['ab']['kind'])) . '" d="M ' . $this->num($x1) . ' '
+        $title = trim($this->tooltip($pair['ab']) . ' / ' . $this->tooltip($pair['ba']));
+        $svg = '<path class="graph-edge ' . e($this->classFor($pair['ab']['stance'])) . '" d="M ' . $this->num($x1) . ' '
             . $this->num($y1) . ' Q ' . $this->num($cx) . ' ' . $this->num($cy) . ' ' . $this->num($x2) . ' '
             . $this->num($y2) . '" fill="none">';
         if ($title !== '') {
@@ -198,14 +220,14 @@ final class RelationshipGraph
         $svg .= "</path>\n";
 
         [$tNearB, $tNearA] = $this->curvePoints($x1, $y1, $cx, $cy, $x2, $y2);
-        $svg .= $this->edgeLabel($tNearB, $pair['ab']['kind'], $pair['ab']['description']);
-        $svg .= $this->edgeLabel($tNearA, $pair['ba']['kind'], $pair['ba']['description']);
+        $svg .= $this->edgeLabel($tNearB, $pair['ab']['kind'], $pair['ab']['stance'], $pair['ab']['description']);
+        $svg .= $this->edgeLabel($tNearA, $pair['ba']['kind'], $pair['ba']['stance'], $pair['ba']['description']);
         return $svg;
     }
 
     /**
      * @param array<string, array{id: string, slug: string, title: string, level: int, has_image: bool, x: float, y: float, r: float}> $nodes
-     * @param array{from_id: string, to_id: string, kind: string, description: string} $edge
+     * @param array{from_id: string, to_id: string, kind: string, stance: ?string, description: string} $edge
      */
     private function singleEdge(array $nodes, array $edge): string
     {
@@ -216,15 +238,16 @@ final class RelationshipGraph
         }
         [$x1, $y1] = $this->boundaryPoint($from, $to['x'], $to['y']);
         [$x2, $y2] = $this->boundaryPoint($to, $from['x'], $from['y']);
-        $svg = '<path class="graph-edge ' . e($this->classFor($edge['kind'])) . '" d="M ' . $this->num($x1) . ' '
+        $svg = '<path class="graph-edge ' . e($this->classFor($edge['stance'])) . '" d="M ' . $this->num($x1) . ' '
             . $this->num($y1) . ' L ' . $this->num($x2) . ' ' . $this->num($y2)
             . '" fill="none" marker-end="url(#graph-arrow)">';
-        if (trim($edge['description']) !== '') {
-            $svg .= '<title>' . e($edge['description']) . '</title>';
+        $title = $this->tooltip($edge);
+        if ($title !== '') {
+            $svg .= '<title>' . e($title) . '</title>';
         }
         $svg .= "</path>\n";
         [$midX, $midY] = [($x1 + $x2) / 2, ($y1 + $y2) / 2];
-        $svg .= $this->edgeLabel([$midX, $midY], $edge['kind'], $edge['description']);
+        $svg .= $this->edgeLabel([$midX, $midY], $edge['kind'], $edge['stance'], $edge['description']);
         return $svg;
     }
 
@@ -261,10 +284,13 @@ final class RelationshipGraph
         return [$point(0.78), $point(0.22)];
     }
 
-    /** @param array{0: float, 1: float} $position */
-    private function edgeLabel(array $position, string $kind, string $description): string
+    /**
+     * @param array{0: float, 1: float} $position
+     * @param array{kind: string, stance: ?string, description: string} $edge
+     */
+    private function edgeLabel(array $position, string $kind, ?string $stance, string $description): string
     {
-        $svg = '<text class="graph-edge-label ' . e($this->classFor($kind)) . '" x="' . $this->num($position[0])
+        $svg = '<text class="graph-edge-label ' . e($this->classFor($stance)) . '" x="' . $this->num($position[0])
             . '" y="' . $this->num($position[1]) . '" text-anchor="middle"';
         $label = e(t('writing', 'kind_' . $kind));
         if (trim($description) !== '') {
@@ -304,9 +330,27 @@ final class RelationshipGraph
         return $svg;
     }
 
-    private function classFor(string $kind): string
+    /**
+     * Tooltip text for an edge: the description plus the translated stance
+     * when present (raw lang key without an initialized Translator).
+     *
+     * @param array{kind: string, stance: ?string, description: string} $edge
+     */
+    private function tooltip(array $edge): string
     {
-        return RelationKinds::classFor($kind);
+        $parts = [];
+        if (trim($edge['description']) !== '') {
+            $parts[] = trim($edge['description']);
+        }
+        if ($edge['stance'] !== null) {
+            $parts[] = t('writing', 'stance_' . $edge['stance']);
+        }
+        return implode(' - ', $parts);
+    }
+
+    private function classFor(?string $stance): string
+    {
+        return Stances::classFor((string)$stance);
     }
 
     private function num(float $value): string

@@ -340,6 +340,10 @@ final class WritingModule implements ModuleInterface
                     )'
                 );
             },
+            // v15: two-layer relations - nullable emotional stance next to the structural kind
+            function (Database $db): void {
+                $db->run('ALTER TABLE character_relations ADD COLUMN stance TEXT');
+            },
         ];
     }
 

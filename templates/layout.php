@@ -35,26 +35,29 @@
         .graph-node-label-bg { fill: #fff; opacity: 0.85; }
         .graph-node-label { font-size: 12px; fill: var(--ink); }
         .graph-edge { stroke-width: 2; }
-        .rel-family { stroke: #7c3aed; }
-        .rel-alliance { stroke: #16a34a; }
-        .rel-romance { stroke: #db2777; }
-        .rel-conflict { stroke: #b91c1c; }
-        .rel-mentorship { stroke: #2563eb; }
-        .rel-other { stroke: #9ca3af; }
+        .rel-love { stroke: #db2777; }
+        .rel-bond { stroke: #16a34a; }
+        .rel-esteem { stroke: #2563eb; }
+        .rel-hostility { stroke: #b91c1c; }
+        .rel-rivalry { stroke: #f59e0b; }
+        .rel-fear { stroke: #7c3aed; }
+        .rel-neutral { stroke: #9ca3af; }
         .graph-edge-label { font-size: 11px; }
-        .graph-edge-label.rel-family { fill: #7c3aed; }
-        .graph-edge-label.rel-alliance { fill: #16a34a; }
-        .graph-edge-label.rel-romance { fill: #db2777; }
-        .graph-edge-label.rel-conflict { fill: #b91c1c; }
-        .graph-edge-label.rel-mentorship { fill: #2563eb; }
-        .graph-edge-label.rel-other { fill: #6b7280; }
+        .graph-edge-label.rel-love { fill: #db2777; }
+        .graph-edge-label.rel-bond { fill: #16a34a; }
+        .graph-edge-label.rel-esteem { fill: #2563eb; }
+        .graph-edge-label.rel-hostility { fill: #b91c1c; }
+        .graph-edge-label.rel-rivalry { fill: #f59e0b; }
+        .graph-edge-label.rel-fear { fill: #7c3aed; }
+        .graph-edge-label.rel-neutral { fill: #6b7280; }
         .graph-legend-swatch { border: 1px solid var(--line); }
-        .graph-legend-swatch.rel-family { background: #7c3aed; }
-        .graph-legend-swatch.rel-alliance { background: #16a34a; }
-        .graph-legend-swatch.rel-romance { background: #db2777; }
-        .graph-legend-swatch.rel-conflict { background: #b91c1c; }
-        .graph-legend-swatch.rel-mentorship { background: #2563eb; }
-        .graph-legend-swatch.rel-other { background: #9ca3af; }
+        .graph-legend-swatch.rel-love { background: #db2777; }
+        .graph-legend-swatch.rel-bond { background: #16a34a; }
+        .graph-legend-swatch.rel-esteem { background: #2563eb; }
+        .graph-legend-swatch.rel-hostility { background: #b91c1c; }
+        .graph-legend-swatch.rel-rivalry { background: #f59e0b; }
+        .graph-legend-swatch.rel-fear { background: #7c3aed; }
+        .graph-legend-swatch.rel-neutral { background: #9ca3af; }
         .graph-legend { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 0.75rem; }
         .graph-legend li { display: flex; align-items: center; gap: 0.35rem; }
         .graph-legend-swatch { width: 1rem; height: 1rem; border-radius: 3px; display: inline-block; }

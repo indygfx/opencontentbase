@@ -16,8 +16,8 @@
     <?php if ($characterCount > 1): ?>
         <h2><?= e(t('writing', 'graph_legend')) ?></h2>
         <ul class="graph-legend">
-            <?php foreach ($kindGroups as $group): ?>
-                <li><span class="graph-legend-swatch <?= e(\Writing\RelationKinds::classForGroup($group)) ?>"></span><?= e(t('writing', 'kindgroup_' . $group)) ?></li>
+            <?php foreach ($stanceGroups as $group): ?>
+                <li><span class="graph-legend-swatch <?= e(\Writing\Stances::classForGroup($group)) ?>"></span><?= e(t('writing', 'stancegroup_' . $group)) ?></li>
             <?php endforeach; ?>
         </ul>
         <p class="muted"><?= e(t('writing', 'graph_level_explanation')) ?></p>

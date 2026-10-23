@@ -87,12 +87,12 @@ final class RelationshipGraphTest extends TestCase
         );
     }
 
-    private function addRelation(string $from, string $to, string $kind, string $description = ''): void
+    private function addRelation(string $from, string $to, string $kind, string $description = '', ?string $stance = null): void
     {
         $this->db->run(
-            'INSERT INTO character_relations (id, project_id, from_character_id, to_character_id, kind, description)
-             VALUES (?, ?, ?, ?, ?, ?)',
-            [Auth::uuid4(), 'p1', $from, $to, $kind, $description]
+            'INSERT INTO character_relations (id, project_id, from_character_id, to_character_id, kind, stance, description)
+             VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [Auth::uuid4(), 'p1', $from, $to, $kind, $stance, $description]
         );
     }
 
@@ -143,9 +143,9 @@ final class RelationshipGraphTest extends TestCase
             ['id' => 'c', 'slug' => 'tom', 'title' => 'Tom', 'level' => 8, 'has_image' => false],
         ];
         $relations = [
-            ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'friend', 'description' => 'childhood'],
-            ['from_id' => 'b', 'to_id' => 'a', 'kind' => 'lover', 'description' => 'secret'],
-            ['from_id' => 'c', 'to_id' => 'a', 'kind' => 'rival', 'description' => 'duel'],
+            ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'friend', 'stance' => 'affection', 'description' => 'childhood'],
+            ['from_id' => 'b', 'to_id' => 'a', 'kind' => 'spouse', 'stance' => 'love', 'description' => 'secret'],
+            ['from_id' => 'c', 'to_id' => 'a', 'kind' => 'colleague', 'stance' => 'competition', 'description' => 'duel'],
         ];
         $first = $this->renderGraph($characters, $relations);
         $second = $this->renderGraph($characters, $relations);
@@ -160,8 +160,8 @@ final class RelationshipGraphTest extends TestCase
                 ['id' => 'b', 'slug' => 'lena', 'title' => 'Lena', 'level' => 5, 'has_image' => false],
             ],
             [
-                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'friend', 'description' => 'childhood'],
-                ['from_id' => 'b', 'to_id' => 'a', 'kind' => 'lover', 'description' => 'secret'],
+                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'friend', 'stance' => 'affection', 'description' => 'childhood'],
+                ['from_id' => 'b', 'to_id' => 'a', 'kind' => 'spouse', 'stance' => 'love', 'description' => 'secret'],
             ]
         );
         // One merged edge (Q curve) instead of two separate paths
@@ -171,7 +171,7 @@ final class RelationshipGraphTest extends TestCase
         // Both direction labels near their ends (raw lang keys without
         // an initialized Translator).
         $this->assertStringContainsString('>kind_friend</text>', $svg);
-        $this->assertStringContainsString('>kind_lover</text>', $svg);
+        $this->assertStringContainsString('>kind_spouse</text>', $svg);
         $this->assertStringNotContainsString('marker-end', $svg);
     }
 
@@ -183,7 +183,7 @@ final class RelationshipGraphTest extends TestCase
                 ['id' => 'b', 'slug' => 'lena', 'title' => 'Lena', 'level' => 5, 'has_image' => false],
             ],
             [
-                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'mentor', 'description' => 'wise words'],
+                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'mentor', 'stance' => 'admiration', 'description' => 'wise words'],
             ]
         );
         $this->assertStringContainsString('marker-end="url(#graph-arrow)"', $svg);
@@ -199,12 +199,12 @@ final class RelationshipGraphTest extends TestCase
                 ['id' => 'b', 'slug' => 'lena', 'title' => 'Lena', 'level' => 5, 'has_image' => false],
             ],
             [
-                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'bonded', 'description' => ''],
+                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'bonded', 'stance' => null, 'description' => ''],
             ]
         );
-        // Unknown kinds resolve to the neutral 'other' group class; the
-        // actual color lives in the stylesheet, never inline in the SVG.
-        $this->assertStringContainsString('rel-other', $svg);
+        // Missing stance resolves to the neutral class; the actual color
+        // lives in the stylesheet, never inline in the SVG.
+        $this->assertStringContainsString('rel-neutral', $svg);
         $this->assertStringNotContainsString('stroke="#', $svg);
     }
 
@@ -216,10 +216,10 @@ final class RelationshipGraphTest extends TestCase
                 ['id' => 'b', 'slug' => 'lena', 'title' => 'Lena', 'level' => 5, 'has_image' => false],
             ],
             [
-                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'enemy', 'description' => 'old feud'],
+                ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'kin', 'stance' => 'hatred', 'description' => 'old feud'],
             ]
         );
-        $this->assertStringContainsString('<title>old feud</title>', $svg);
+        $this->assertStringContainsString('old feud - stance_hatred', $svg);
     }
 
     public function testSelfReferenceSkippedDefensively(): void
@@ -229,7 +229,7 @@ final class RelationshipGraphTest extends TestCase
                 ['id' => 'a', 'slug' => 'jakob', 'title' => 'Jakob', 'level' => 5, 'has_image' => false],
             ],
             [
-                ['from_id' => 'a', 'to_id' => 'a', 'kind' => 'friend', 'description' => ''],
+                ['from_id' => 'a', 'to_id' => 'a', 'kind' => 'friend', 'stance' => null, 'description' => ''],
             ]
         );
         $this->assertStringNotContainsString('<path class="graph-edge', $svg);
@@ -290,7 +290,7 @@ final class RelationshipGraphTest extends TestCase
     {
         $this->addCharacter('a', 'jakob', 'Jakob', 'a.png');
         $this->addCharacter('b', 'lena', 'Lena');
-        $this->addRelation('a', 'b', 'friend', 'childhood');
+        $this->addRelation('a', 'b', 'friend', 'childhood', 'affection');
         $response = $this->controller->show($this->owner, 'p1');
         $this->assertSame(200, $response->status());
         $this->assertStringContainsString('<svg', $response->body());

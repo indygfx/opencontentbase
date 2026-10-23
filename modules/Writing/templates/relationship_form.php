@@ -29,6 +29,13 @@
                     <option value="<?= e($c['id']) ?>" <?= ($relation['to_character_id'] ?? '') === $c['id'] ? 'selected' : '' ?>><?= e($c['title']) ?></option>
                 <?php endforeach; ?>
             </select>
+            <label for="stance"><?= e(t('writing', 'stance')) ?></label>
+            <select id="stance" name="stance">
+                <option value=""><?= e(t('writing', 'stance_none')) ?></option>
+                <?php foreach ($stances as $st): ?>
+                    <option value="<?= e($st) ?>" <?= (string)($relation['stance'] ?? '') === $st ? 'selected' : '' ?>><?= e(t('writing', 'stance_' . $st)) ?></option>
+                <?php endforeach; ?>
+            </select>
             <label for="description"><?= e(t('writing', 'conflict_description')) ?> <small class="muted"><?= e(t('writing', 'optional')) ?></small></label>
             <input id="description" name="description" maxlength="500" value="<?= e($relation['description'] ?? '') ?>" placeholder="<?= e(t('writing', 'conflict_placeholder')) ?>">
             <button type="submit"><?= e(t('pages', 'save')) ?></button>

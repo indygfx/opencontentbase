@@ -71,11 +71,12 @@ final class RelationshipAccessTest extends TestCase
 
     public function testMemberCanCreateRelation(): void
     {
-        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'rival', 'description' => 'old feud'];
+        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'sibling', 'stance' => 'rivalry', 'description' => 'old feud'];
         $response = $this->controller->store($this->member, 'p1');
         $this->assertSame(302, $response->status());
         $row = $this->db->one("SELECT * FROM character_relations WHERE project_id = 'p1'");
-        $this->assertSame('rival', (string)$row['kind']);
+        $this->assertSame('sibling', (string)$row['kind']);
+        $this->assertSame('rivalry', (string)$row['stance']);
         $this->assertSame('old feud', (string)$row['description']);
     }
 
@@ -121,7 +122,7 @@ final class RelationshipAccessTest extends TestCase
     {
         $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'friend'];
         $this->controller->store($this->owner, 'p1');
-        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'rival'];
+        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'colleague', 'stance' => 'rivalry'];
         $response = $this->controller->store($this->owner, 'p1');
         $this->assertSame(422, $response->status());
         $count = (int)$this->db->one("SELECT COUNT(*) AS c FROM character_relations")['c'];
@@ -130,9 +131,9 @@ final class RelationshipAccessTest extends TestCase
 
     public function testReversedDirectionIsAllowed(): void
     {
-        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'lover'];
+        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'spouse', 'stance' => 'love'];
         $this->controller->store($this->owner, 'p1');
-        $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'enemy'];
+        $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'kin', 'stance' => 'hatred'];
         $response = $this->controller->store($this->owner, 'p1');
         $this->assertSame(302, $response->status());
         $count = (int)$this->db->one("SELECT COUNT(*) AS c FROM character_relations")['c'];
@@ -147,12 +148,12 @@ final class RelationshipAccessTest extends TestCase
         $response = $this->controller->edit($this->owner, 'p1', $relationId);
         $this->assertSame(200, $response->status());
         $this->assertStringContainsString(t('writing', 'edit_relationship'), $response->body());
-        $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'enemy', 'description' => 'hate'];
+        $_POST = ['from_character_id' => 'c2', 'to_character_id' => 'c1', 'kind' => 'kin', 'stance' => 'hatred', 'description' => 'hate'];
         $response = $this->controller->update($this->owner, 'p1', $relationId);
         $this->assertSame(302, $response->status());
         $row = $this->db->one("SELECT * FROM character_relations WHERE id = ?", [$relationId]);
         $this->assertSame('c2', (string)$row['from_character_id']);
-        $this->assertSame('enemy', (string)$row['kind']);
+        $this->assertSame('kin', (string)$row['kind']);
     }
 
     public function testMemberCanDeleteRelation(): void
@@ -178,7 +179,7 @@ final class RelationshipAccessTest extends TestCase
 
     public function testListShowsTitles(): void
     {
-        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'lover', 'description' => 'secret'];
+        $_POST = ['from_character_id' => 'c1', 'to_character_id' => 'c2', 'kind' => 'spouse', 'stance' => 'love', 'description' => 'secret'];
         $this->controller->store($this->owner, 'p1');
         $list = $this->controller->list('p1');
         $this->assertCount(1, $list);

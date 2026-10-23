@@ -101,6 +101,41 @@ final class TranslatorTest extends TestCase
         }
     }
 
+    /**
+     * Every stance and stance group must have translations in every
+     * language (stance_<key> / stancegroup_<group>), plus the form labels.
+     */
+    public function testStanceLangParity(): void
+    {
+        foreach (['en', 'de', 'es', 'fr'] as $langCode) {
+            $domain = $this->translator->domain($langCode, 'writing');
+            self::assertNotNull($domain);
+            foreach (\Writing\Stances::allStances() as $stance) {
+                $key = 'stance_' . $stance;
+                self::assertArrayHasKey(
+                    $key,
+                    $domain,
+                    "{$langCode}/writing.php is missing '{$key}'"
+                );
+            }
+            foreach (\Writing\Stances::groups() as $group) {
+                $key = 'stancegroup_' . $group;
+                self::assertArrayHasKey(
+                    $key,
+                    $domain,
+                    "{$langCode}/writing.php is missing '{$key}'"
+                );
+            }
+            foreach (['stance', 'stance_none', 'error_relation_stance'] as $key) {
+                self::assertArrayHasKey(
+                    $key,
+                    $domain,
+                    "{$langCode}/writing.php is missing '{$key}'"
+                );
+            }
+        }
+    }
+
     public function testRawKeyWhenUnknownEverywhere(): void
     {
         $this->translator->setLang('de');

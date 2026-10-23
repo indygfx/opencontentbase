@@ -98,9 +98,14 @@ final class RelationKindsTest extends TestCase
 
     public function testKindsForGroup(): void
     {
-        $this->assertSame(['friend', 'ally'], RelationKinds::kindsForGroup('alliance'));
-        $this->assertSame(['family'], RelationKinds::kindsForGroup('family'));
-        $this->assertSame(['related'], RelationKinds::kindsForGroup('other'));
+        $this->assertSame(['friend', 'ally', 'companion', 'teammate', 'neighbor'], RelationKinds::kindsForGroup('alliance'));
+        $this->assertSame(
+            ['kin', 'parent', 'child', 'grandparent', 'grandchild', 'sibling', 'cousin', 'spouse', 'engaged', 'heir', 'guardian', 'in_law'],
+            RelationKinds::kindsForGroup('family')
+        );
+        $this->assertSame(['employer', 'employee', 'colleague', 'business_partner'], RelationKinds::kindsForGroup('work'));
+        $this->assertSame(['mentor', 'apprentice'], RelationKinds::kindsForGroup('mentorship'));
+        $this->assertSame(['related', 'acquaintance', 'doctor'], RelationKinds::kindsForGroup('other'));
         $this->assertSame([], RelationKinds::kindsForGroup('nonexistent'));
     }
 
@@ -117,7 +122,7 @@ final class RelationKindsTest extends TestCase
     {
         $this->assertSame('rel-family', RelationKinds::classForGroup('family'));
         $this->assertSame('rel-other', RelationKinds::classForGroup('unknown-group'));
-        $this->assertSame('rel-conflict', RelationKinds::classFor('enemy'));
+        $this->assertSame('rel-mentorship', RelationKinds::classFor('mentor'));
         $this->assertSame('rel-other', RelationKinds::classFor('legacy_kind'));
     }
 
@@ -173,9 +178,9 @@ final class RelationKindsTest extends TestCase
             ['id' => 'a', 'slug' => 'hero', 'title' => 'Hero', 'level' => 3, 'has_image' => false],
             ['id' => 'b', 'slug' => 'villain', 'title' => 'Villain', 'level' => 3, 'has_image' => false],
         ], [
-            ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'enemy', 'description' => 'feud'],
+            ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'kin', 'stance' => 'hatred', 'description' => 'feud'],
         ]);
-        $this->assertStringContainsString('rel-conflict', $svg);
+        $this->assertStringContainsString('rel-hostility', $svg);
         $this->assertStringNotContainsString('stroke="#', $svg); // no inline colors
     }
 
@@ -185,9 +190,9 @@ final class RelationKindsTest extends TestCase
             ['id' => 'a', 'slug' => 'hero', 'title' => 'Hero', 'level' => 3, 'has_image' => false],
             ['id' => 'b', 'slug' => 'villain', 'title' => 'Villain', 'level' => 3, 'has_image' => false],
         ], [
-            ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'legacy_bond', 'description' => ''],
+            ['from_id' => 'a', 'to_id' => 'b', 'kind' => 'legacy_bond', 'stance' => 'legacy_feeling', 'description' => ''],
         ]);
-        $this->assertStringContainsString('rel-other', $svg);
+        $this->assertStringContainsString('rel-neutral', $svg);
         // Edge label keeps the fine kind (raw key without a Translator).
         $this->assertStringContainsString('>kind_legacy_bond</text>', $svg);
     }

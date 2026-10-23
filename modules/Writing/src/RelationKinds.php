@@ -4,41 +4,58 @@ declare(strict_types=1);
 namespace Writing;
 
 /**
- * Single source of truth for the relationship kind taxonomy and its
- * color groups. Every consumer (form dropdown, validation, graph edges,
- * legend) reads from this class - no duplicated kind or group lists.
+ * Single source of truth for the structural role taxonomy of a relation.
+ * Roles describe the structural relation (aunt, boss, mentor); the feeling
+ * lives in the separate stance dimension (see Stances). Every consumer
+ * (form dropdown, validation, graph edge labels) reads from this class.
+ *
+ * Roles are labels, not colors: the graph derives its edge colors from the
+ * stance (Stances::classFor). The color helpers below remain for backward
+ * compatibility but must not drive graph rendering anymore.
  *
  * Extension recipe (see README):
- * - Add a kind: one line in GROUPS + one lang line per language
+ * - Add a role: one line in GROUPS + one lang line per language
  *   (kind_<key>); the parity test enforces completeness.
- * - Add a group: one GROUPS entry + one CSS class with a stroke color
- *   (layout.php) + kindgroup_<group> lang lines; the legend picks it up
- *   automatically.
- * - Guideline: max ~9 groups total for legend readability; prefer fitting
- *   a new kind into an existing group over creating new ones.
- * - Unknown/legacy kind values never break rendering: groupFor() maps
+ * - Unknown/legacy role values never break rendering: groupFor() maps
  *   them to the neutral 'other' group.
  */
 final class RelationKinds
 {
-    /** Fine-grained relation kinds mapped to their color group. */
+    /** Structural role kinds mapped to their role group. */
     public const GROUPS = [
-        'family' => 'family',
+        'kin' => 'family',
+        'parent' => 'family',
+        'child' => 'family',
+        'grandparent' => 'family',
+        'grandchild' => 'family',
+        'sibling' => 'family',
+        'cousin' => 'family',
+        'spouse' => 'family',
+        'engaged' => 'family',
+        'heir' => 'family',
+        'guardian' => 'family',
+        'in_law' => 'family',
         'friend' => 'alliance',
         'ally' => 'alliance',
-        'lover' => 'romance',
-        'rival' => 'conflict',
-        'enemy' => 'conflict',
+        'companion' => 'alliance',
+        'teammate' => 'alliance',
+        'neighbor' => 'alliance',
+        'employer' => 'work',
+        'employee' => 'work',
+        'colleague' => 'work',
+        'business_partner' => 'work',
         'mentor' => 'mentorship',
+        'apprentice' => 'mentorship',
         'related' => 'other',
+        'acquaintance' => 'other',
+        'doctor' => 'other',
     ];
 
-    /** Color group => CSS class name (the actual colors live in the stylesheet). */
+    /** Role group => CSS class name (legacy; kept for backward compatibility). */
     public const CLASSES = [
         'family' => 'rel-family',
         'alliance' => 'rel-alliance',
-        'romance' => 'rel-romance',
-        'conflict' => 'rel-conflict',
+        'work' => 'rel-alliance',
         'mentorship' => 'rel-mentorship',
         'other' => 'rel-other',
     ];

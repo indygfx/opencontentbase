@@ -142,7 +142,7 @@ Each story has a dashboard (`/writing/{id}`) that follows the snowflake method t
 - **Extended Synopsis**: the whole story line in one detailed draft.
 - **Chapter Outlines** (chapter synopses): the plan for each chapter – title and a short summary of what happens; each outline shows whether the prose is already written.
 - **Characters**: appearance, biography, motivation and wounds.
-- **Relationship Web**: who knows whom, how they are connected – and where the conflict lies. Uniqueness rule: one relation per character pair per direction, regardless of kind – enforced by both the application validation and the database UNIQUE index on `character_relations (from_character_id, to_character_id)` (migration v14).
+- **Relationship Web**: who knows whom, how they are connected – and where the conflict lies. Relations are two-layer: the **kind** describes the structural relation (role) and the **stance** describes the feeling – both directional, so A->B may be `spouse` + `love` while B->A is `spouse` + `hatred`. Uniqueness rule: one relation per character pair per direction, regardless of kind or stance – enforced by both the application validation and the database UNIQUE index on `character_relations (from_character_id, to_character_id)` (migration v14); the stance column was added in migration v15 (nullable, old rows render as neutral).
 - **Backgrounds**: the world your story stands on – its historical, geographical, religious and political context.
 
 ## Writing module: story excerpt slider
@@ -288,50 +288,87 @@ SVG (no JavaScript):
 - **Edges**: reciprocal pairs (A->B and B->A) merge into ONE
   outward-bowed Bezier curve with two labels - the A->B kind near B's
   end, the B->A kind near A's end. One-directional relations get an
-  arrowhead pointing at the target. Edge stroke colors are group-level
-  (see RelationKinds below): each edge carries its group's CSS class,
-  and the label shows the fine kind, translated. Unknown kinds resolve
-  to the neutral `other` group class. The conflict text appears as a
-  native SVG `<title>` tooltip; self-references are skipped defensively.
-- **Page**: SVG plus a translated group->color legend (iterating
-  `RelationKinds::groups()`, with colored swatches), a short explanation
+  arrowhead pointing at the target. **Edge color = stance, edge label =
+  role**: each edge carries its stance group's CSS class
+  (`Stances::classFor`, see below) and the label shows the fine role
+  kind, translated. Relations without a stance (pre-v15 rows) render
+  with the neutral class. Unknown stances resolve to the neutral group
+  class. The tooltip (native SVG `<title>`) shows the conflict text plus
+  the translated stance when present; self-references are skipped
+  defensively.
+- **Page**: SVG plus a translated stance group->color legend (iterating
+  `Stances::groups()`, with colored swatches), a short explanation
   of the level system and a link back to the relationship section.
   Friendly empty states for 0 and 1 characters.
 - **Determinism**: the same characters and relations always produce an
   identical SVG (fixed sort orders, no time or randomness).
 
-### Extending the relation kind taxonomy (data-driven)
+### Two-layer relation taxonomy (data-driven)
 
-The kind taxonomy and its color coding live in ONE place:
-`modules/Writing/src/RelationKinds.php`. Dropdown, validation, graph and
-legend all read from it - nowhere else is a kind or group list hardcoded.
+Relations have two independent dimensions, each with its own single
+source of truth:
 
-- `GROUPS` maps each fine kind to a color group; `groupFor()` resolves
-  unknown/legacy kinds to the neutral `other` group, so old data never
-  breaks rendering.
-- `CLASSES` maps each group to a CSS class; the actual stroke colors are
-  defined in the stylesheet (`templates/layout.php`), never inline in PHP.
+- **Role kinds** (`modules/Writing/src/RelationKinds.php`) describe the
+  structural relation: `kin`, `parent`, `child`, `grandparent`,
+  `grandchild`, `sibling`, `cousin`, `spouse`, `engaged`, `heir`,
+  `guardian`, `in_law` (family); `friend`, `ally`, `companion`,
+  `teammate`, `neighbor` (alliance); `employer`, `employee`, `colleague`,
+  `business_partner` (work); `mentor`, `apprentice` (mentorship);
+  `related` (generic fallback), `acquaintance`, `doctor` (other).
+  The kind dropdown, validation and the graph edge labels read from
+  `RelationKinds::allKinds()` - nowhere else is a kind list hardcoded.
+  Roles are labels, not colors; the legacy `CLASSES`/`classFor()`
+  helpers remain for backward compatibility but no longer drive the
+  graph.
+- **Stances** (`modules/Writing/src/Stances.php`) describe the feeling:
+  `love`, `passion`, `devotion` (love); `affection`, `friendship`,
+  `loyalty`, `protectiveness` (bond); `respect`, `gratitude`, `admiration`
+  (esteem); `hatred`, `resentment`, `jealousy`, `contempt` (hostility);
+  `rivalry`, `competition` (rivalry); `fear`, `awe` (fear);
+  `indifference`, `complicated` (neutral). The stance dropdown,
+  validation, the graph edge colors and the legend read from
+  `Stances::allStances()` / `Stances::groups()`. The stance is optional
+  (empty renders as neutral) and directional: A->B may be `love` while
+  B->A is `hatred` - reciprocal pairs naturally express asymmetric
+  feelings.
 
-**Recipe - add a kind:**
+Both classes resolve unknown/legacy values to their neutral group, so old
+data never breaks rendering. The actual colors live in the stylesheet
+(`templates/layout.php`), never inline in PHP.
+
+**Color decision:** the edge color tells the emotion (stance), the edge
+label tells the role (kind). Colors reuse the previous palette where
+groups coincide (`love` -> pink, `hostility` -> red, `esteem` -> blue,
+`bond` -> green, `neutral` -> gray) plus two new harmonious colors for
+`rivalry` (amber) and `fear` (violet).
+
+**Recipe - add a role kind:**
 1. One line in `RelationKinds::GROUPS` (`'<kind>' => '<group>'`).
 2. One lang line per language: `kind_<key>` in `lang/<code>/writing.php`
    for every shipped language (`en`, `de`, `es`, `fr`). The parity test
    (`TranslatorTest::testRelationKindLangParity`) enforces completeness.
 
-**Recipe - add a group:**
-1. One `GROUPS` entry (a kind assigned to the new group).
+**Recipe - add a stance:**
+1. One line in `Stances::STANCE_GROUPS` (`'<stance>' => '<group>'`).
+2. One lang line per language: `stance_<key>` in `lang/<code>/writing.php`
+   for every shipped language (`en`, `de`, `es`, `fr`). The parity test
+   (`TranslatorTest::testStanceLangParity`) enforces completeness.
+
+**Recipe - add a stance group:**
+1. One `STANCE_GROUPS` entry (a stance assigned to the new group).
 2. One CSS class in `templates/layout.php` (`.rel-<group>`) covering
    all three color contexts: `stroke` for graph edges, `fill` for
    edge labels (`.graph-edge-label.rel-<group>`), and `background`
    for the legend swatches (`.graph-legend-swatch.rel-<group>`).
-3. `kindgroup_<group>` lang lines in every language
-   (`lang/<code>/writing.php` for `en`, `de`, `es`, `fr`). The legend picks
-   the group up automatically.
+3. `stancegroup_<group>` lang lines in every language
+   (`lang/<code>/writing.php` for `en`, `de`, `es`, `fr`). The legend
+   picks the group up automatically.
 
-**Guideline:** keep at most ~9 groups total for legend readability;
-prefer fitting a new kind into an existing group over creating a new one.
-Edge labels and tooltips always show the fine kind (translated); only the
-stroke color is group-level.
+**Guideline:** keep the stance groups at exactly 7 for legend
+readability; prefer fitting a new stance into an existing group over
+creating a new one. Edge labels always show the fine role kind and the
+tooltip shows the conflict text plus the translated stance; only the
+stroke color is stance-group-level.
 
 ## Security (current state)
 
@@ -359,7 +396,7 @@ stroke color is group-level.
 1. Core + auth + module registry (done)
 2. Content pipeline with `[[type:slug]]` (done in the core)
 3. pages reference module (done)
-4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, data-driven kind taxonomy), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export (mostly done; see the Writing module sections above)
+4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, two-layer taxonomy of structural role kinds and emotional stances), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export (mostly done; see the Writing module sections above)
 5. Editor refinements, diffs, graph UI (done: weighted circular relationship graph), board, revisions per content object (open)
 6. UI languages via array files (en, de, es, fr), per-account language setting (done)
 
