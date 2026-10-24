@@ -297,6 +297,24 @@ final class WritingModule implements ModuleInterface
             function (Database $db): void {
                 $db->run('ALTER TABLE characters ADD COLUMN image_path TEXT');
             },
+            // v13: mention-based character weighting (on-demand cache)
+            function (Database $db): void {
+                $db->run(
+                    'CREATE TABLE character_mention_counts (
+                        story_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+                        total_mentions INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (story_id, character_id)
+                    )'
+                );
+                $db->run(
+                    'CREATE TABLE character_mention_meta (
+                        story_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+                        fingerprint TEXT NOT NULL,
+                        counted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )'
+                );
+            },
             // v14: one relation per character pair per direction, regardless of kind
             function (Database $db): void {
                 $db->run(
@@ -321,24 +339,6 @@ final class WritingModule implements ModuleInterface
                 $db->run('CREATE INDEX idx_relations_project ON character_relations(project_id)');
                 $db->run('CREATE INDEX idx_relations_from ON character_relations(from_character_id)');
                 $db->run('CREATE INDEX idx_relations_to ON character_relations(to_character_id)');
-            },
-            // v13: mention-based character weighting (on-demand cache)
-            function (Database $db): void {
-                $db->run(
-                    'CREATE TABLE character_mention_counts (
-                        story_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-                        character_id TEXT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-                        total_mentions INTEGER NOT NULL DEFAULT 0,
-                        PRIMARY KEY (story_id, character_id)
-                    )'
-                );
-                $db->run(
-                    'CREATE TABLE character_mention_meta (
-                        story_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
-                        fingerprint TEXT NOT NULL,
-                        counted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-                    )'
-                );
             },
             // v15: two-layer relations - nullable emotional stance next to the structural kind
             function (Database $db): void {
