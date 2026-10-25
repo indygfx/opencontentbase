@@ -5,6 +5,7 @@
     <?php if ($user->isAdmin()): ?>
     <p>
         <a href="/pages/<?= e($page['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+        <a href="/pages/<?= e($page['slug']) ?>/revisions"><?= e(t('pages', 'history')) ?></a>
         <form class="inline" method="post" action="/pages/<?= e($page['slug']) ?>/delete" data-confirm="<?= e(t('pages', 'delete_page')) ?>?">
             <?= $csrf->field() ?>
             <button type="submit"><?= e(t('pages', 'delete_page')) ?></button>

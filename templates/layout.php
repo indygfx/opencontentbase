@@ -68,6 +68,22 @@
         .progress-bar.is-partial { background: #f59e0b; }
         .progress-label { flex: 0 0 auto; font-size: 0.75rem; color: var(--muted); text-align: right; }
         .progress--overall { margin-bottom: 1.25rem; }
+        /* Revision history and diffs */
+        .badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 0.05rem 0.4rem;
+                 border-radius: 999px; background: #e0f2fe; color: #0369a1; margin-left: 0.35rem; }
+        .notice { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 6px; padding: 0.5rem 0.75rem; }
+        .diff { border: 1px solid var(--line); border-radius: 6px; overflow-x: auto; }
+        .diff-body { margin: 0; padding: 0.5rem 0; background: var(--card, #fff); font-size: 0.85rem; line-height: 1.45; }
+        .diff-line { display: block; white-space: pre-wrap; word-break: break-word; padding: 0 0.75rem; }
+        .diff-line.diff-same { color: var(--muted); }
+        .diff-line.diff-added { background: #dcfce7; }
+        .diff-line.diff-removed { background: #fee2e2; }
+        .diff-collapse { border-top: 1px dashed var(--line); }
+        .diff-collapse summary { cursor: pointer; padding: 0.25rem 0.75rem; color: var(--muted); font-size: 0.8rem; }
+        .diff-title-change { background: #fef9c3; border: 1px solid #fde68a; border-radius: 6px; padding: 0.4rem 0.75rem; }
+        .diffstat-added { color: #16a34a; font-weight: 600; margin-right: 0.5rem; }
+        .diffstat-removed { color: #b91c1c; font-weight: 600; }
+        .compare-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
         .success { color: #15803d; } .story-slider { background: linear-gradient(135deg, #1f2430, #334155); border-radius: 6px; padding: 2.25rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; } .story-slides { position: relative; min-height: 9rem; } .story-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; } .story-slide.is-active { opacity: 1; pointer-events: auto; } .story-slide blockquote { margin: 0 0 0.75rem 0; color: #f1f5f9; font-size: 1.15rem; line-height: 1.6; font-style: italic; } .story-slide figcaption { color: #94a3b8; font-size: 0.85rem; } .story-slide figcaption a { color: #cbd5e1; } .story-slide-book { font-weight: 600; } .story-slide-sep { margin: 0 0.35rem; } .story-slider[data-count="1"] .story-slide { position: static; } .story-slider-nav { position: absolute; bottom: 0.75rem; right: 1rem; display: flex; gap: 0.4rem; } .story-slider-nav button { background: transparent; border: 1px solid #475569; color: #94a3b8; width: 1.6rem; height: 1.6rem; padding: 0; border-radius: 50%; font-size: 0.9rem; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; } .story-slider-nav button.is-active { background: #94a3b8; color: #1f2430; border-color: #94a3b8; }
     </style>
     <link rel="stylesheet" href="/assets/css/editor.css">

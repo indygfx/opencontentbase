@@ -27,7 +27,7 @@ The built bundle is committed, so a plain PHP deployment needs no Node toolchain
 
 
 
-Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done; the remaining roadmap items are diffs, a board and per-object revisions.
+Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done, as are version history with diffs and restore (see "Version history and diffs"); the remaining roadmap item is a board.
 
 ## Architecture
 
@@ -105,7 +105,7 @@ On first start the user **admin / admin** is created automatically (change it im
 ## Structure
 
 ```
-src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry, Translator
+src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry, Translator, Diff
 lang/              Language files: en/ (default), de/, es/, fr/, one file per domain (core, writing, pages)
 modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
@@ -380,6 +380,47 @@ stroke color is stance-group-level.
 - Role guard per route (`admin > editor > user`), unauthenticated -> redirect to `/login`, 403 template
 - User management (admin only): create users, change roles, reset passwords, delete users; the overview shows the number of active (non-expired) sessions per user – expired sessions no longer count
 
+## Version history and diffs
+
+Every save already writes a row into `content_revisions`; the history
+views make that data usable - list, diff, restore - for chapters,
+characters and backgrounds (Writing module) and for pages.
+
+**Routes (Writing):** `GET /writing/{id}/{type}s/{slug}/revisions`
+(`{type}` = chapter|character|background; synopses have no history),
+`GET .../revisions/{revisionId}` (diff vs. the predecessor; the oldest
+revision diffs against empty text) and `GET
+.../revisions/compare?from=A&to=B` (any two revisions of the same
+object - foreign ids yield 404). Object pages carry a "History" link.
+
+**Routes (Pages):** `GET /pages/{slug}/revisions`,
+`GET .../revisions/{revisionId}` and `POST
+.../revisions/{revisionId}/restore` - admin-only, same rendering, no
+compare form.
+
+**List:** newest-first table with revision link, author, timestamp,
+`+added/−removed` line counts vs. the predecessor (computed by the diff
+engine, not stored) and a "current" badge on the latest revision.
+
+**Diff engine:** `src/Core/Diff.php` (pure PHP, static, no
+dependencies) - `compare()` computes a line-based LCS and returns
+ordered segments `['type' => 'same'|'added'|'removed', 'text' => ...]`;
+`stats()` derives the +/- line counts. Inputs above 5000 lines skip the
+LCS table and degrade to a "whole block replaced" result, so huge
+documents still diff instantly. The diff view renders removed lines
+with a red background and a `−` marker, added lines with green and `+`,
+unchanged lines dimmed; at most 3 context lines around each change, the
+collapsed gap opens via a "show all" `<details>` element. A title
+change is shown above the diff.
+
+**Restore:** `POST .../revisions/{revisionId}/restore` (CSRF, owner and
+members; admin for pages) **creates a NEW revision** with the old
+content, authored by the restorer - history is never rewritten, so the
+restore action itself stays visible and revertible. Restoring the
+latest revision is a no-op redirect with an info message. Unknown or
+foreign revision ids yield 404; strangers get 404 on every history
+route (access checks mirror the object pages).
+
 ## Known gaps (roadmap phase 5)
 - **Pages module purpose is undecided (open decision)**: what pages are
   actually used for (public site content, static info pages, something
@@ -397,7 +438,7 @@ stroke color is stance-group-level.
 2. Content pipeline with `[[type:slug]]` (done in the core)
 3. pages reference module (done)
 4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, two-layer taxonomy of structural role kinds and emotional stances), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export (mostly done; see the Writing module sections above)
-5. Editor refinements, diffs, graph UI (done: weighted circular relationship graph), board, revisions per content object (open)
+5. Editor refinements, diffs, graph UI, revisions per content object (done: weighted circular relationship graph, version history with diffs and restore for chapters, characters, backgrounds and pages), board (open)
 6. UI languages via array files (en, de, es, fr), per-account language setting (done)
 
 Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).

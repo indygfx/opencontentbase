@@ -7,6 +7,7 @@
     <?php if ($canEdit): ?>
         <p>
             <a href="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <a href="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/revisions"><?= e(t('writing', 'history')) ?></a>
             <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/backgrounds/<?= e($background['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_background')) ?>">
                 <?= $csrf->field() ?>
                 <button type="submit"><?= e(t('core', 'users_delete')) ?></button>

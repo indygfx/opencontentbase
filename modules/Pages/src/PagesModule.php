@@ -42,6 +42,12 @@ final class PagesModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/pages/{slug}/edit', 'handler' => fn ($params, $user) => $c->edit($params['slug'], $user), 'roles' => ['admin']],
             ['method' => 'POST', 'pattern' => '/pages/{slug}', 'handler' => fn ($params, $user) => $c->update($params['slug'], $user), 'roles' => ['admin']],
             ['method' => 'POST', 'pattern' => '/pages/{slug}/delete', 'handler' => fn ($params, $user) => $c->destroy($params['slug'], $user), 'roles' => ['admin']],
+            // Revision history for pages (admin-only, no compare form).
+            // The "revisions" list route must be registered before the
+            // {revisionId} route; "revisions" never matches a placeholder.
+            ['method' => 'GET', 'pattern' => '/pages/{slug}/revisions', 'handler' => fn ($params, $user) => $c->revisions($params['slug'], $user), 'roles' => ['admin']],
+            ['method' => 'GET', 'pattern' => '/pages/{slug}/revisions/{revisionId}', 'handler' => fn ($params, $user) => $c->revisionDiff($params['slug'], $params['revisionId'], $user), 'roles' => ['admin']],
+            ['method' => 'POST', 'pattern' => '/pages/{slug}/revisions/{revisionId}/restore', 'handler' => fn ($params, $user) => $c->restoreRevision($params['slug'], $params['revisionId'], $user), 'roles' => ['admin']],
         ];
     }
 

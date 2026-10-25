@@ -27,6 +27,7 @@
         </form>
         <p>
             <a href="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <a href="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/revisions"><?= e(t('writing', 'history')) ?></a>
             <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_character')) ?>">
                 <?= $csrf->field() ?>
                 <button type="submit"><?= e(t('core', 'users_delete')) ?></button>

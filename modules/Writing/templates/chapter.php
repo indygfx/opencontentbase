@@ -10,6 +10,7 @@
     <?php if ($canEdit): ?>
         <p>
             <a href="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <a href="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/revisions"><?= e(t('writing', 'history')) ?></a>
             <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_chapter')) ?>">
                 <?= $csrf->field() ?>
                 <button type="submit"><?= e(t('core', 'users_delete')) ?></button>

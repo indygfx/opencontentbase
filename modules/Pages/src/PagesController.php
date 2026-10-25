@@ -6,6 +6,7 @@ namespace Pages;
 
 use Core\Auth;
 use Core\ContentRenderer;
+use Core\Diff;
 use Core\Database;
 use Core\Csrf;
 use Core\ObjectDeleter;
@@ -173,6 +174,140 @@ final class PagesController
             [$slug]
         );
         return $exists !== null ? t('pages', 'slug_taken') : null;
+    }
+
+    /**
+     * GET /pages/{slug}/revisions - admin-only revision list,
+     * newest-first, with a "current" badge on the latest revision.
+     */
+    public function revisions(string $slug, User $user): Response
+    {
+        $page = $this->findPage($slug);
+        if ($page === null) {
+            return $this->notFound($user);
+        }
+        $revisions = $this->db->all(
+            'SELECT r.id, r.title, r.body, r.created_at, r.rowid, u.username AS author
+             FROM content_revisions r
+             LEFT JOIN users u ON u.id = r.author_id
+             WHERE r.object_id = ?
+             ORDER BY r.created_at DESC, r.rowid DESC',
+            [$page['object_id']]
+        );
+        $rows = [];
+        $count = count($revisions);
+        foreach ($revisions as $i => $revision) {
+            $isLatest = $i === 0;
+            $added = 0;
+            $removed = 0;
+            if (!$isLatest) {
+                $stats = Diff::stats((string)$revisions[$i - 1]['body'], (string)$revision['body']);
+                $added = $stats['added'];
+                $removed = $stats['removed'];
+            }
+            $rows[] = [
+                'id' => (string)$revision['id'],
+                'author' => (string)($revision['author'] ?? ''),
+                'created_at' => (string)$revision['created_at'],
+                'added' => $added,
+                'removed' => $removed,
+                'isLatest' => $isLatest,
+                'isOldest' => $i === $count - 1,
+            ];
+        }
+        $notice = trim((string)($_GET['notice'] ?? ''));
+        return $this->page($user, 'modules/Pages/templates/revisions.php', [
+            'title' => t('pages', 'history_title', ['title' => (string)$page['title']]),
+            'page' => $page,
+            'rows' => $rows,
+            'notice' => $notice === '' ? null : $notice,
+        ]);
+    }
+
+    /**
+     * GET /pages/{slug}/revisions/{revisionId} - inline diff vs. the
+     * predecessor (the oldest revision diffs against empty text).
+     */
+    public function revisionDiff(string $slug, string $revisionId, User $user): Response
+    {
+        $page = $this->findPage($slug);
+        if ($page === null) {
+            return $this->notFound($user);
+        }
+        $revision = $this->findRevision((string)$page['object_id'], $revisionId);
+        if ($revision === null) {
+            return $this->notFound($user);
+        }
+        $predecessor = $this->db->one(
+            'SELECT r.id, r.title, r.body, r.created_at, u.username AS author
+             FROM content_revisions r
+             LEFT JOIN users u ON u.id = r.author_id
+             WHERE r.object_id = ?
+               AND (r.created_at < ? OR (r.created_at = ? AND r.rowid < ?))
+             ORDER BY r.created_at DESC, r.rowid DESC
+             LIMIT 1',
+            [$page['object_id'], $revision['created_at'], $revision['created_at'], $revision['rowid']]
+        );
+        $from = $predecessor ?? ['id' => '', 'title' => '', 'body' => '', 'created_at' => '', 'author' => null];
+        $segments = Diff::compare((string)$from['body'], (string)$revision['body']);
+        return $this->page($user, 'modules/Pages/templates/revision_diff.php', [
+            'title' => t('pages', 'history_diff_title', ['title' => (string)$page['title']]),
+            'page' => $page,
+            'from' => [
+                'author' => (string)($from['author'] ?? ''),
+                'created_at' => (string)$from['created_at'],
+                'title' => (string)$from['title'],
+            ],
+            'to' => [
+                'author' => (string)($revision['author'] ?? ''),
+                'created_at' => (string)$revision['created_at'],
+                'title' => (string)$revision['title'],
+            ],
+            'segments' => $segments,
+            'titleChanged' => (string)$from['title'] !== (string)$revision['title'],
+        ]);
+    }
+
+    /**
+     * POST /pages/{slug}/revisions/{revisionId}/restore - creates a NEW
+     * revision with the old content, authored by the restorer. Restoring
+     * the latest revision is a no-op redirect with an info message.
+     * CSRF is enforced globally by App for every POST route.
+     */
+    public function restoreRevision(string $slug, string $revisionId, User $user): Response
+    {
+        $page = $this->findPage($slug);
+        if ($page === null) {
+            return $this->notFound($user);
+        }
+        $revision = $this->findRevision((string)$page['object_id'], $revisionId);
+        if ($revision === null) {
+            return $this->notFound($user);
+        }
+        $latest = $this->db->one(
+            'SELECT id FROM content_revisions WHERE object_id = ?
+             ORDER BY created_at DESC, rowid DESC LIMIT 1',
+            [$page['object_id']]
+        );
+        if ($latest !== null && (string)$latest['id'] === (string)$revision['id']) {
+            return Response::redirect('/pages/' . rawurlencode($slug) . '/revisions?notice='
+                . urlencode(t('pages', 'history_restore_noop')));
+        }
+        $this->insertRevision((string)$page['object_id'], (string)$revision['title'], (string)$revision['body'], $user);
+        return Response::redirect('/pages/' . rawurlencode($slug) . '/revisions?notice='
+            . urlencode(t('pages', 'history_restore_done')));
+    }
+
+    /** @return array<string, mixed>|null */
+    private function findRevision(string $objectId, string $revisionId): ?array
+    {
+        return $this->db->one(
+            'SELECT r.id, r.title, r.body, r.created_at, r.rowid, u.username AS author
+             FROM content_revisions r
+             LEFT JOIN users u ON u.id = r.author_id
+             WHERE r.object_id = ? AND r.id = ?',
+            [$objectId, $revisionId]
+        );
     }
 
     private function insertRevision(string $objectId, string $title, string $body, User $user): void

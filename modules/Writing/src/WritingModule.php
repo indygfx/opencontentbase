@@ -20,6 +20,7 @@ final class WritingModule implements ModuleInterface
     private RelationshipController $relationships;
     private StoryExportController $export;
     private GraphController $graph;
+    private RevisionController $revisions;
 
     public function __construct(
         Database $db,
@@ -38,6 +39,7 @@ final class WritingModule implements ModuleInterface
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
         $this->export = new StoryExportController($db, $this->access);
         $this->graph = new GraphController($db, $view, $csrf, $this->access, new CharacterMentions($db), $this->relationships);
+        $this->revisions = new RevisionController($db, $view, $csrf, $this->access);
     }
 
     public function id(): string
@@ -53,7 +55,7 @@ final class WritingModule implements ModuleInterface
         $ca = $this->characters;
         $bg = $this->backgrounds;
         $rel = $this->relationships;
-        return [
+        $routes = [
             ['method' => 'GET', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->index($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing', 'handler' => fn ($params, $user) => $c->store($user), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}', 'handler' => fn ($params, $user) => $c->show($user, $params['id']), 'roles' => ['user']],
@@ -107,6 +109,19 @@ final class WritingModule implements ModuleInterface
             ['method' => 'POST', 'pattern' => '/writing/{id}/relations/{rid}', 'handler' => fn ($params, $user) => $rel->update($user, $params['id'], $params['rid']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/graph', 'handler' => fn ($params, $user) => $this->graph->show($user, $params['id']), 'roles' => ['user']],
         ];
+
+        // Revision history for chapters, characters and backgrounds
+        // (synopses have no history route). The router only supports
+        // whole-segment placeholders, so the plural type prefix is
+        // concrete per route set; the compare route must be registered
+        // before the {revisionId} route so "compare" never matches an id.
+        foreach (['chapter', 'character', 'background'] as $type) {
+            $routes[] = ['method' => 'GET', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions', 'handler' => fn ($params, $user) => $this->revisions->index($user, $params['id'], $type, $params['slug']), 'roles' => ['user']];
+            $routes[] = ['method' => 'GET', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions/compare', 'handler' => fn ($params, $user) => $this->revisions->compare($user, $params['id'], $type, $params['slug']), 'roles' => ['user']];
+            $routes[] = ['method' => 'GET', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions/{revisionId}', 'handler' => fn ($params, $user) => $this->revisions->show($user, $params['id'], $type, $params['slug'], $params['revisionId']), 'roles' => ['user']];
+            $routes[] = ['method' => 'POST', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions/{revisionId}/restore', 'handler' => fn ($params, $user) => $this->revisions->restore($user, $params['id'], $type, $params['slug'], $params['revisionId']), 'roles' => ['user']];
+        }
+        return $routes;
     }
 
     public function migrations(): array
