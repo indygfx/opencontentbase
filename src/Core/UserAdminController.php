@@ -3,6 +3,14 @@ declare(strict_types=1);
 
 namespace Core;
 
+/**
+ * Admin-only user management. There are no hardcoded usernames: any
+ * admin may manage any other account. The self-protection rules make
+ * an empty-admin state unreachable: a user can never change their own
+ * role or delete themselves - so the last remaining admin can neither
+ * demote nor delete themselves (and every other admin-targeting
+ * action keeps at least one admin, the acting user).
+ */
 final class UserAdminController
 {
     public function __construct(
@@ -28,14 +36,12 @@ final class UserAdminController
         $confirm = (string)($_POST['password_confirm'] ?? '');
         $role = (string)($_POST['role'] ?? User::ROLE_USER);
 
-        $error = $this->validate($username, $password, $confirm, $role);
-        if ($error !== null) {
+        $creator = new UserCreator($this->db);
+        $error = null;
+        $id = $creator->create($username, $password, $confirm, $role, $error);
+        if ($id === null) {
             return $this->page($user, ['error' => $error], 422);
         }
-        $this->db->run(
-            'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
-            [Auth::uuid4(), $username, password_hash($password, PASSWORD_BCRYPT), $role]
-        );
         return $this->page($user, ['success' => t('core', 'users_created')]);
     }
 
@@ -48,9 +54,6 @@ final class UserAdminController
         }
         if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_EDITOR, User::ROLE_USER], true)) {
             return $this->page($user, ['error' => t('core', 'users_error_role')], 422);
-        }
-        if ($target['username'] === 'admin' && $role !== User::ROLE_ADMIN) {
-            return $this->page($user, ['error' => t('core', 'users_error_admin_role_fixed')], 422);
         }
         if ($target['id'] === $user->id() && $role !== $user->role()) {
             return $this->page($user, ['error' => t('core', 'users_error_own_role')], 422);
@@ -86,37 +89,10 @@ final class UserAdminController
         if ($target['id'] === $user->id()) {
             return $this->page($user, ['error' => t('core', 'users_error_delete_self')], 422);
         }
-        if ($target['username'] === 'admin') {
-            return $this->page($user, ['error' => t('core', 'users_error_admin_delete')], 422);
-        }
         $this->db->run('DELETE FROM project_members WHERE user_id = ?', [$id]);
         $this->db->run('DELETE FROM sessions WHERE user_id = ?', [$id]);
         $this->db->run('DELETE FROM users WHERE id = ?', [$id]);
         return $this->page($user, ['success' => t('core', 'users_deleted')]);
-    }
-
-    private function validate(string $username, string $password, string $confirm, string $role): ?string
-    {
-        if ($username === '' || mb_strlen($username) < 3) {
-            return t('core', 'users_error_username_short');
-        }
-        if (!preg_match('/^[\p{L}\p{Nd}_.-]+$/u', $username)) {
-            return t('core', 'users_error_username_chars');
-        }
-        if ($password !== $confirm) {
-            return t('core', 'users_error_confirm');
-        }
-        if (strlen($password) < 8) {
-            return t('core', 'users_error_password');
-        }
-        if (!in_array($role, [User::ROLE_ADMIN, User::ROLE_EDITOR, User::ROLE_USER], true)) {
-            return t('core', 'users_error_role');
-        }
-        $existing = $this->db->one('SELECT id FROM users WHERE username = ?', [$username]);
-        if ($existing !== null) {
-            return t('core', 'users_error_duplicate');
-        }
-        return null;
     }
 
     /** @return array<string, mixed>|null */

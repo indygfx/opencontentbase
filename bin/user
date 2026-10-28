@@ -1,0 +1,103 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * CLI user management for scripted/automated setups.
+ *
+ * Usage:
+ *   php bin/user create <username> [--role=<admin|editor|user>]
+ *
+ * The password is prompted interactively (hidden), twice for
+ * confirmation. Errors go to STDERR; non-zero exit on failure.
+ * On an empty users table the browser setup wizard (/setup) is the
+ * intended first-start path; the CLI exists for scripted setups and
+ * later user creation.
+ */
+
+if (PHP_SAPI !== 'cli') {
+    fwrite(STDERR, "This tool must be run on the command line.\n");
+    exit(1);
+}
+
+$basePath = dirname(__DIR__);
+require $basePath . '/vendor/autoload.php';
+
+use Core\CoreMigrations;
+use Core\Database;
+use Core\Migrator;
+use Core\Translator;
+use Core\User;
+use Core\UserCreator;
+
+$args = array_slice($argv, 1);
+$command = $args[0] ?? '';
+
+if ($command === 'help' || $command === '--help' || $command === '' || $command === '-h') {
+    fwrite(STDOUT, "Usage: php bin/user create <username> [--role=<admin|editor|user>]\n");
+    exit($command === '' ? 1 : 0);
+}
+
+if ($command !== 'create') {
+    fwrite(STDERR, "Unknown command: {$command}\nUsage: php bin/user create <username> [--role=<admin|editor|user>]\n");
+    exit(1);
+}
+
+$username = $args[1] ?? '';
+$role = User::ROLE_USER;
+foreach (array_slice($args, 2) as $arg) {
+    if (preg_match('/^--role=(.+)$/', $arg, $m) === 1) {
+        $role = $m[1];
+    } else {
+        fwrite(STDERR, "Unknown option: {$arg}\n");
+        exit(1);
+    }
+}
+
+if ($username === '') {
+    fwrite(STDERR, "Usage: php bin/user create <username> [--role=<admin|editor|user>]\n");
+    exit(1);
+}
+
+// Hidden password prompt, confirmed twice.
+$password = promptHidden('Password: ');
+$confirm = promptHidden('Confirm password: ');
+
+$db = new Database($basePath . '/data/contentbase.sqlite');
+(new Migrator($db))->migrate('core', CoreMigrations::migrations());
+Translator::init($basePath . '/lang');
+
+$creator = new UserCreator($db);
+$error = null;
+$id = $creator->create($username, $password, $confirm, $role, $error);
+if ($id === null) {
+    fwrite(STDERR, $error . "\n");
+    exit(1);
+}
+fwrite(STDOUT, "User '{$username}' created (role: {$role}).\n");
+exit(0);
+
+function promptHidden(string $label): string
+{
+    fwrite(STDOUT, $label);
+    if (stripos(PHP_OS, 'WIN') === 0) {
+        // No hidden input shim on Windows; plain fgets (documented).
+        $line = trim((string)fgets(STDIN));
+        fwrite(STDOUT, "\n");
+        return $line;
+    }
+    // shell_exec with stty requires an available stty; fall back to
+    // plain reading when it is unavailable.
+    $stty = shell_exec('stty 2>/dev/null');
+    if ($stty !== null && trim((string)$stty) !== '') {
+        shell_exec('stty -echo');
+        $line = trim((string)fgets(STDIN));
+        shell_exec('stty echo');
+        fwrite(STDOUT, "\n");
+        return $line;
+    }
+    $line = trim((string)fgets(STDIN));
+    fwrite(STDOUT, "\n");
+    return $line;
+}

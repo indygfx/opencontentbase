@@ -92,16 +92,19 @@ final class App
         }
     }
 
-    public function ensureInitialAdmin(): void
-    {
-        $this->auth->ensureInitialAdmin();
-    }
-
     public function run(): void
     {
         Translator::instance()?->setLang($this->detectLanguage());
         $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+        // First-start setup gate: while the users table is empty, every
+        // request redirects to the setup wizard. The users table is the
+        // single source of truth - no cookies or flags involved.
+        if ($this->usersTableIsEmpty() && $path !== '/setup') {
+            Response::redirect('/setup')->send();
+            return;
+        }
 
         try {
             $route = $this->router->dispatch($method, $path);
@@ -142,7 +145,11 @@ final class App
 
     private function registerCoreRoutes(): void
     {
-        $controller = new AuthController($this->auth, $this->view, $this->csrf, Translator::instance());
+        $throttler = new LoginThrottler($this->db);
+        $controller = new AuthController($this->auth, $this->view, $this->csrf, Translator::instance(), $throttler);
+        $setup = new SetupController($this->db, $this->view, $this->csrf);
+        $this->router->get('/setup', fn ($params, $user) => $setup->show());
+        $this->router->post('/setup', fn ($params, $user) => $setup->create());
         $this->router->get('/login', fn ($params, $user) => $controller->showLogin());
         $this->router->post('/login', fn ($params, $user) => $controller->login());
         $this->router->post('/logout', fn ($params, $user) => $controller->logout());
@@ -156,6 +163,13 @@ final class App
         $this->router->post('/users/{id}/role', fn ($params, $user) => $admin->updateRole($user, $params['id']), ['admin']);
         $this->router->post('/users/{id}/password', fn ($params, $user) => $admin->resetPassword($user, $params['id']), ['admin']);
         $this->router->post('/users/{id}/delete', fn ($params, $user) => $admin->destroy($user, $params['id']), ['admin']);
+    }
+
+    /** True while no user exists at all - the first-start setup state. */
+    private function usersTableIsEmpty(): bool
+    {
+        $row = $this->db->one('SELECT COUNT(*) AS c FROM users');
+        return (int)($row['c'] ?? 0) === 0;
     }
 
     private function fail(int $code, string $message): void

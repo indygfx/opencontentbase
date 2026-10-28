@@ -127,14 +127,22 @@ final class ReviewFixesTest extends TestCase
 
     public function testUserAdminProtectionMessagesAreTranslated(): void
     {
+        // No username is protected anymore; the self-protection rules
+        // (own role, self delete) are the remaining invariants.
         $admin = $this->insertUser('root1', 'root', 'admin');
-        $this->insertUser('a1', 'admin', 'admin');
+        $this->insertUser('a1', 'someadmin', 'admin');
         $controller = new \Core\UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
+        // An admin may demote another admin (no hardcoded username).
         $_POST = ['role' => 'user'];
-        $this->assertStringContainsString(t('core', 'users_error_admin_role_fixed'), $controller->updateRole($admin, 'a1')->body());
+        $this->assertSame(200, $controller->updateRole($admin, 'a1')->status());
+        $this->assertSame('user', (string)$this->db->one("SELECT role FROM users WHERE id = 'a1'")['role']);
+        // Self-protection: own role cannot change.
         $_POST = ['role' => 'user'];
         $this->assertStringContainsString(t('core', 'users_error_own_role'), $controller->updateRole($admin, 'root1')->body());
-        $this->assertStringContainsString(t('core', 'users_error_admin_delete'), $controller->destroy($admin, 'a1')->body());
+        // Self-protection: cannot delete self.
+        $this->assertStringContainsString(t('core', 'users_error_delete_self'), $controller->destroy($admin, 'root1')->body());
+        // Deleting another user is allowed (no hardcoded username).
+        $this->assertSame(200, $controller->destroy($admin, 'a1')->status());
     }
 
     public function testRelationPairUniqueRegardlessOfKind(): void

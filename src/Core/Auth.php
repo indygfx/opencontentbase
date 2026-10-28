@@ -142,23 +142,6 @@ final class Auth
         return null;
     }
 
-    public function ensureInitialAdmin(): void
-    {
-        $row = $this->db->one('SELECT COUNT(*) AS c FROM users');
-        if ((int)($row['c'] ?? 0) > 0) {
-            return;
-        }
-        $this->db->run(
-            'INSERT INTO users (id, username, password, role) VALUES (?, ?, ?, ?)',
-            [
-                self::uuid4(),
-                'admin',
-                password_hash('admin', PASSWORD_BCRYPT),
-                User::ROLE_ADMIN,
-            ]
-        );
-    }
-
     private function setCookie(string $token, int $expires): void
     {
         setcookie(self::COOKIE, $token, [

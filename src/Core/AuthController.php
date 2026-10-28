@@ -10,7 +10,8 @@ final class AuthController
         private Auth $auth,
         private View $view,
         private Csrf $csrf,
-        private ?Translator $translator = null
+        private ?Translator $translator = null,
+        private ?LoginThrottler $throttler = null
     ) {
     }
 
@@ -22,11 +23,19 @@ final class AuthController
 
     public function showLogin(): Response
     {
+        $success = null;
+        if (trim((string)($_GET['setup'] ?? '')) === 'done') {
+            $success = t('core', 'setup_success');
+        }
         return Response::html($this->view->render('templates/layout.php', [
             'title' => t('core', 'login_title'),
             'user' => null,
             'csrf' => $this->csrf,
-            'content' => $this->view->render('templates/login.php', ['csrf' => $this->csrf]),
+            'content' => $this->view->render('templates/login.php', [
+                'csrf' => $this->csrf,
+                'error' => null,
+                'success' => $success,
+            ]),
         ]));
     }
 
@@ -34,19 +43,44 @@ final class AuthController
     {
         $username = trim($_POST['username'] ?? '');
         $password = (string)($_POST['password'] ?? '');
+        $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+
+        // Brute-force protection: while the username is blocked, the
+        // credentials are not even verified - the block hits correct
+        // logins too, so an attacker cannot probe by timing.
+        if ($this->throttler !== null) {
+            $blockedFor = $this->throttler->isBlocked($username, $ip);
+            if ($blockedFor !== null) {
+                return $this->loginPage($this->throttleMessage($blockedFor), 429);
+            }
+        }
+
         $user = $this->auth->login($username, $password);
         if ($user === null) {
-            return Response::html($this->view->render('templates/layout.php', [
-                'title' => t('core', 'login_title'),
-                'user' => null,
-                'csrf' => $this->csrf,
-                'content' => $this->view->render('templates/login.php', [
-                    t('core', 'login_error'),
-                    'csrf' => $this->csrf,
-                ]),
-            ]), 401);
+            $this->throttler?->recordFailure($username, $ip);
+            return $this->loginPage(t('core', 'login_error'), 401);
         }
+        $this->throttler?->recordSuccess($username);
         return Response::redirect('/writing');
+    }
+
+    private function throttleMessage(int $seconds): string
+    {
+        return t('core', 'login_throttled', ['seconds' => (string)$seconds]);
+    }
+
+    private function loginPage(string $error, int $status): Response
+    {
+        return Response::html($this->view->render('templates/layout.php', [
+            'title' => t('core', 'login_title'),
+            'user' => null,
+            'csrf' => $this->csrf,
+            'content' => $this->view->render('templates/login.php', [
+                'csrf' => $this->csrf,
+                'error' => $error,
+                'success' => null,
+            ]),
+        ]), $status);
     }
 
     public function logout(): Response

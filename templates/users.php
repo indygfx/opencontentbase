@@ -35,7 +35,7 @@
             <tr>
                 <td><?= e($u['username']) ?></td>
                 <td>
-                    <?php if ($u['username'] === 'admin' || $u['id'] === $currentUserId): ?>
+                    <?php if ($u['id'] === $currentUserId): ?>
                         <?= e($u['role']) ?> <span class="muted"><?= e(t('core', 'users_fixed')) ?></span>
                     <?php else: ?>
                         <form class="inline" method="post" action="/users/<?= e($u['id']) ?>/role">
@@ -61,12 +61,10 @@
                                 <button type="submit"><?= e(t('core', 'users_reset')) ?></button>
                             </form>
                         </details>
-                        <?php if ($u['username'] !== 'admin'): ?>
-                            <form class="inline" method="post" action="/users/<?= e($u['id']) ?>/delete">
-                                <?= $csrf->field() ?>
-                                <button type="submit"><?= e(t('core', 'users_delete')) ?></button>
-                            </form>
-                        <?php endif; ?>
+                        <form class="inline" method="post" action="/users/<?= e($u['id']) ?>/delete">
+                            <?= $csrf->field() ?>
+                            <button type="submit"><?= e(t('core', 'users_delete')) ?></button>
+                        </form>
                     <?php endif; ?>
                 </td>
             </tr>

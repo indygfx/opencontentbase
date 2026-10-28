@@ -1,5 +1,8 @@
 <section class="card narrow">
     <h1><?= e(t('core', 'login_title')) ?></h1>
+    <?php if (!empty($success)): ?>
+        <p class="success"><?= e($success) ?></p>
+    <?php endif; ?>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>

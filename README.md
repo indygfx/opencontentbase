@@ -27,7 +27,7 @@ The built bundle is committed, so a plain PHP deployment needs no Node toolchain
 
 
 
-Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. On first start the user admin/admin is created automatically (change it immediately!), and composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done, as are version history with diffs and restore (see "Version history and diffs"); the remaining roadmap item is a board.
+Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. There are **no hardcoded credentials**: on a fresh install every route redirects to the first-start setup page (`/setup`) where you create the first admin account (username + password); once any user exists, `/setup` is gone for good. For scripted setups the CLI offers `php bin/user create <username> [--role=<admin|editor|user>]` with an interactive password prompt. composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done, as are version history with diffs and restore (see "Version history and diffs"); the remaining roadmap item is a board.
 
 ## Architecture
 
@@ -105,7 +105,8 @@ On first start the user **admin / admin** is created automatically (change it im
 ## Structure
 
 ```
-src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry, Translator, Diff
+src/Core/          Kernel, Router, Database, Migrator, Auth, Renderer, Registry, Translator, Diff, LoginThrottler
+bin/               CLI tools (user management: bin/user)
 lang/              Language files: en/ (default), de/, es/, fr/, one file per domain (core, writing, pages)
 modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
@@ -378,8 +379,11 @@ stroke color is stance-group-level.
 - Password change in the profile (`/profile`) with session revocation of all other sessions
 - Login with session rotation (old session is discarded on re-login)
 - CSRF protection for all POST routes (session-bound token, cookie fallback for guests, `hash_equals` comparison)
+- Login rate-limiting (`src/Core/LoginThrottler.php`): 5 failed attempts for a username within 15 minutes block that username for 1 minute, doubling per further 5 failures, capped at 15 minutes (1 -> 2 -> 4 -> 8 -> 15). The block applies per USERNAME (typical small/private hosting behind a shared NAT makes IP blocks counterproductive; the IP is still recorded for forensics). While blocked, credentials are not verified at all - correct logins are rejected too. Failures older than 24 h do not count; a successful login clears the username's rows.
+- First-start setup (`/setup`): no hardcoded admin/admin anywhere; the users table being empty is the single source of truth for the setup state, and once any user exists the route 404s forever
+- CLI `bin/user create <username> [--role=...]`: shared validation with the setup wizard and user admin (`Core\UserCreator`), interactive hidden password prompt, STDERR + non-zero exit on failure
 - Role guard per route (`admin > editor > user`), unauthenticated -> redirect to `/login`, 403 template
-- User management (admin only): create users, change roles, reset passwords, delete users; the overview shows the number of active (non-expired) sessions per user – expired sessions no longer count
+- User management (admin only): create users, change roles, reset passwords, delete users; no username is protected - the self-protection rules (own role immutable, no self-deletion) make an empty-admin state unreachable, so the last remaining admin can neither demote nor delete themselves. The overview shows the number of active (non-expired) sessions per user – expired sessions no longer count
 
 ## Version history and diffs
 
@@ -429,8 +433,6 @@ route (access checks mirror the object pages).
   editing are admin-only (`/pages`); the root URL `/` opens the writing
   app for every logged-in user instead of listing pages.
 
-- No rate limiting on login
-- Admin boot only for first start, no CLI `user:create`
 - Router without HTTP method spoofing, without optional segments
 
 ## Roadmap

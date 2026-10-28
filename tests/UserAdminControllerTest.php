@@ -44,7 +44,7 @@ final class UserAdminControllerTest extends TestCase
             new Csrf($this->db, $auth)
         );
         $this->db->run(
-            "INSERT INTO users (id, username, password, role) VALUES ('a1', 'admin', ?, 'admin')",
+            "INSERT INTO users (id, username, password, role) VALUES ('a1', 'rootuser', ?, 'admin')",
             [password_hash('adminpw123', PASSWORD_BCRYPT)]
         );
         $this->db->run(
@@ -96,11 +96,18 @@ final class UserAdminControllerTest extends TestCase
         $this->assertSame('editor', (string)$this->db->one("SELECT role FROM users WHERE id = 'u1'")['role']);
     }
 
-    public function testUpdateRoleProtectsMainAdmin(): void
+    public function testAdminMayDemoteAnotherAdmin(): void
     {
+        // No username is protected anymore: an admin may demote any
+        // other admin - the self-protection rule is what keeps at
+        // least one admin (the acting user).
+        $this->db->run(
+            "INSERT INTO users (id, username, password, role) VALUES ('a2', 'otheradmin', ?, 'admin')",
+            [password_hash('otherpw123', PASSWORD_BCRYPT)]
+        );
         $_POST = ['role' => 'user'];
-        $this->controller->updateRole($this->admin, 'a1');
-        $this->assertSame('admin', (string)$this->db->one("SELECT role FROM users WHERE id = 'a1'")['role']);
+        $this->controller->updateRole($this->admin, 'a2');
+        $this->assertSame('user', (string)$this->db->one("SELECT role FROM users WHERE id = 'a2'")['role']);
     }
 
     public function testUpdateRoleProtectsSelf(): void
@@ -158,10 +165,16 @@ final class UserAdminControllerTest extends TestCase
         $this->assertNotNull($this->db->one("SELECT id FROM users WHERE id = 'a1'"));
     }
 
-    public function testDestroyProtectsMainAdmin(): void
+    public function testAdminMayDeleteAnotherAdmin(): void
     {
-        $this->controller->destroy($this->admin, 'a1');
-        $this->assertNotNull($this->db->one("SELECT id FROM users WHERE id = 'a1'"));
+        // No username is protected anymore: an admin may delete any
+        // other admin (self-protection keeps the acting admin alive).
+        $this->db->run(
+            "INSERT INTO users (id, username, password, role) VALUES ('a2', 'otheradmin', ?, 'admin')",
+            [password_hash('otherpw123', PASSWORD_BCRYPT)]
+        );
+        $this->controller->destroy($this->admin, 'a2');
+        $this->assertNull($this->db->one("SELECT id FROM users WHERE id = 'a2'"));
     }
 
     protected function tearDown(): void

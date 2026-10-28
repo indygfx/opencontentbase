@@ -9,6 +9,9 @@ final class CoreMigrations
     /**
      * @return list<callable(Database): void>
      */
+    /**
+     * @return list<callable(Database): void>
+     */
     public static function migrations(): array
     {
         return [
@@ -91,6 +94,19 @@ final class CoreMigrations
             function (Database $db): void {
                 $db->run('ALTER TABLE users ADD COLUMN language TEXT');
             },
-        ];
+                    // v7: login rate-limiting (brute-force protection)
+            function (Database $db): void {
+                $db->run(
+                    'CREATE TABLE login_attempts (
+                        id TEXT PRIMARY KEY,
+                        username TEXT NOT NULL,
+                        ip TEXT NOT NULL,
+                        created_at TEXT NOT NULL
+                    )'
+                );
+                $db->run('CREATE INDEX idx_login_attempts_username ON login_attempts(username, created_at)');
+                $db->run('CREATE INDEX idx_login_attempts_ip ON login_attempts(ip, created_at)');
+            },
+];
     }
 }
