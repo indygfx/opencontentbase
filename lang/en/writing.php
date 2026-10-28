@@ -254,9 +254,7 @@ return [
     'history_compare' => 'Compare',
     'history_compare_from' => 'From',
     'history_compare_to' => 'To',
-    'history_restore' => 'Restore',
-    'history_restore_confirm' => 'Restore this revision? A new revision with this content will be created.',
-    'history_restore_done' => 'Revision restored - a new revision was created.',
-    'history_restore_noop' => 'This revision is already the current one - nothing to restore.',
     'history_not_found' => 'Revision history not found.',
+    'history_recent' => 'Recent revisions',
+    'history_recent_current' => 'The current revision is the page itself - listed revisions link to their diff view.',
 ];

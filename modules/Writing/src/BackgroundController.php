@@ -17,8 +17,15 @@ final class BackgroundController
         private View $view,
         private Csrf $csrf,
         private ProjectAccess $access,
-        private ContentRenderer $rendererService
+        private ContentRenderer $rendererService,
+        private ?RevisionController $revisions = null
     ) {
+    }
+
+    /** Lazily built revision-history reader for the embedded recent list. */
+    private function revisions(): RevisionController
+    {
+        return $this->revisions ??= new RevisionController($this->db, $this->view, $this->csrf, $this->access);
     }
 
     public function create(User $user, string $projectId): Response
@@ -71,6 +78,8 @@ final class BackgroundController
             'background' => $background,
             'rendered' => $this->rendererService->render((string)$background['body']),
             'canEdit' => $this->access->canEdit($user, $projectId),
+            'recentRevisions' => $this->revisions()->recent((string)$background['object_id']),
+            'recentBase' => '/writing/' . rawurlencode($projectId) . '/backgrounds/' . rawurlencode($slug),
             'error' => null,
         ]);
     }

@@ -254,9 +254,7 @@ return [
     'history_compare' => 'Comparar',
     'history_compare_from' => 'Desde',
     'history_compare_to' => 'Hasta',
-    'history_restore' => 'Restaurar',
-    'history_restore_confirm' => '¿Restaurar esta revisión? Se creará una revisión nueva con este contenido.',
-    'history_restore_done' => 'Revisión restaurada - se creó una revisión nueva.',
-    'history_restore_noop' => 'Esta revisión ya es la actual - no hay nada que restaurar.',
     'history_not_found' => 'Historial de revisiones no encontrado.',
+    'history_recent' => 'Revisiones recientes',
+    'history_recent_current' => 'La revisión actual es la página misma - las revisiones listadas llevan a su vista de diferencias.',
 ];

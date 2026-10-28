@@ -39,8 +39,6 @@ return [
     'history_title_changed' => 'Titre modifié : {from} &rarr; {to}',
     'history_no_changes' => 'Aucune modification.',
     'history_show_all' => 'Tout afficher',
-    'history_restore' => 'Restaurer',
-    'history_restore_confirm' => 'Restaurer cette révision ? Une nouvelle révision sera créée avec ce contenu.',
-    'history_restore_done' => 'Révision restaurée - une nouvelle révision a été créée.',
-    'history_restore_noop' => 'Cette révision est déjà l\'actuelle - rien à restaurer.',
+    'history_recent' => 'Révisions récentes',
+    'history_recent_current' => 'La révision actuelle est la page elle-même - les révisions listées mènent à leur vue de diff.',
 ];

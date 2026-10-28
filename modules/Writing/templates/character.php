@@ -34,4 +34,8 @@
             </form>
         </p>
     <?php endif; ?>
+    <?php /* compact recent-revisions list; renders nothing when there are
+           no revisions besides the current one */ ?>
+    <?php $recentBase = $recentBase ?? ''; $recentRevisions = $recentRevisions ?? []; ?>
+    <?php include __DIR__ . '/_recent_revisions.php'; ?>
 </section>

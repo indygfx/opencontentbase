@@ -15,9 +15,9 @@ use Pages\PagesModule;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Revision history for pages (admin-only): newest-first list, inline
- * diff against the predecessor, and restore that creates a NEW revision
- * instead of rewriting history. No compare form for pages.
+ * Revision history for pages (admin-only): newest-first list (capped
+ * at 10) and inline diff against the predecessor. No compare form and
+ * no restore for pages - history is a pure reference tool.
  */
 final class PagesRevisionHistoryTest extends TestCase
 {
@@ -161,56 +161,50 @@ final class PagesRevisionHistoryTest extends TestCase
         $this->assertSame(404, $this->controller->revisionDiff('about', $foreignId, $this->admin)->status());
     }
 
-    public function testRestoreCreatesNewRevisionAuthoredByRestorer(): void
+    public function testListCapsAtTenRows(): void
     {
-        $revisionIds = $this->pageWithRevisions(["original text", "changed text"]);
-        $objectId = (string)$this->db->one(
-            "SELECT p.object_id FROM pages p JOIN content_objects o ON o.id = p.object_id WHERE o.slug = 'about'"
-        )['object_id'];
-        $countBefore = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
+        $bodies = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $bodies[] = "page body {$i}";
+        }
+        $revisionIds = $this->pageWithRevisions($bodies);
+        $response = $this->controller->revisions('about', $this->admin);
+        $this->assertSame(200, $response->status());
+        $body = $response->body();
+        $linked = 0;
+        foreach ($revisionIds as $i => $id) {
+            if ($i >= 2) {
+                $this->assertStringContainsString($id, $body, "revision {$i} must be listed");
+                $linked++;
+            } else {
+                $this->assertStringNotContainsString($id, $body, "revision {$i} must be capped away");
+            }
+        }
+        $this->assertSame(10, $linked);
+    }
 
-        $response = $this->controller->restoreRevision('about', $revisionIds[0], $this->admin);
-        $this->assertSame(302, $response->status());
-
-        $countAfter = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
-        $this->assertSame($countBefore + 1, $countAfter, 'restore must create a new revision');
-        // Old rows intact, new revision has restored content + restorer.
-        $this->assertSame('original text', (string)$this->db->one(
-            'SELECT body FROM content_revisions WHERE id = ?', [$revisionIds[0]]
-        )['body']);
-        $latest = $this->db->one(
-            'SELECT body, author_id FROM content_revisions WHERE object_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1',
-            [$objectId]
+    public function testRestoreRouteIsGone(): void
+    {
+        $base = dirname(__DIR__);
+        $auth = new \Core\Auth($this->db);
+        $registry = new \Core\ModuleRegistry();
+        $renderer = new \Core\ContentRenderer($this->db, $registry);
+        $module = new PagesModule(
+            $this->db,
+            new \Core\View($base),
+            $renderer,
+            new \Core\ObjectDeleter($this->db, $registry),
+            new \Core\Csrf($this->db, $auth)
         );
-        $this->assertSame('original text', (string)$latest['body']);
-        $this->assertSame('a1', (string)$latest['author_id']);
-    }
-
-    public function testRestoreLatestIsNoOp(): void
-    {
-        $revisionIds = $this->pageWithRevisions(["one", "two"]);
-        $objectId = (string)$this->db->one(
-            "SELECT p.object_id FROM pages p JOIN content_objects o ON o.id = p.object_id WHERE o.slug = 'about'"
-        )['object_id'];
-        $countBefore = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
-        $response = $this->controller->restoreRevision('about', $revisionIds[1], $this->admin);
-        $this->assertSame(302, $response->status());
-        $this->assertStringContainsString('notice', $response->header('Location') ?? '');
-        $countAfter = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
-        $this->assertSame($countBefore, $countAfter, 'restoring the latest revision must not create rows');
-    }
-
-    public function testRestoreUnknownRevision404(): void
-    {
-        $this->pageWithRevisions(['one']);
-        $this->assertSame(404, $this->controller->restoreRevision('about', 'bogus', $this->admin)->status());
+        $router = new \Core\Router();
+        foreach ($module->routes($router) as $route) {
+            $router->{$route['method'] === 'GET' ? 'get' : 'post'}($route['pattern'], $route['handler'], $route['roles']);
+        }
+        try {
+            $router->dispatch('POST', '/pages/about/revisions/some-id/restore');
+            $this->fail('restore route must be gone');
+        } catch (\Core\RouteNotFoundException $e) {
+            $this->assertStringContainsString('No route', $e->getMessage());
+        }
     }
 }

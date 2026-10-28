@@ -119,7 +119,6 @@ final class WritingModule implements ModuleInterface
             $routes[] = ['method' => 'GET', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions', 'handler' => fn ($params, $user) => $this->revisions->index($user, $params['id'], $type, $params['slug']), 'roles' => ['user']];
             $routes[] = ['method' => 'GET', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions/compare', 'handler' => fn ($params, $user) => $this->revisions->compare($user, $params['id'], $type, $params['slug']), 'roles' => ['user']];
             $routes[] = ['method' => 'GET', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions/{revisionId}', 'handler' => fn ($params, $user) => $this->revisions->show($user, $params['id'], $type, $params['slug'], $params['revisionId']), 'roles' => ['user']];
-            $routes[] = ['method' => 'POST', 'pattern' => '/writing/{id}/' . $type . 's/{slug}/revisions/{revisionId}/restore', 'handler' => fn ($params, $user) => $this->revisions->restore($user, $params['id'], $type, $params['slug'], $params['revisionId']), 'roles' => ['user']];
         }
         return $routes;
     }

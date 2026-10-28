@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace Writing;
 
-use Core\Auth;
 use Core\Csrf;
 use Core\Database;
 use Core\Diff;
@@ -13,13 +12,15 @@ use Core\View;
 
 /**
  * Revision history for Writing objects (chapters, characters,
- * backgrounds): newest-first list, inline diff against the predecessor
- * (or any other revision via the compare form), and restore.
+ * backgrounds): newest-first list (capped at the last 10 revisions),
+ * inline diff against the predecessor (or any other revision via the
+ * compare form), and the compact "recent revisions" list embedded on
+ * the object pages.
  *
  * Every save already creates a row in content_revisions; this
- * controller only reads that data. Restore NEVER rewrites history - it
- * inserts a NEW revision with the old content, authored by the
- * restorer, so the restore action itself stays visible in the history.
+ * controller only reads that data. History is a pure reference tool:
+ * there is no restore - copy & paste from the diff view is the
+ * intended way back to an old state.
  */
 final class RevisionController
 {
@@ -70,8 +71,6 @@ final class RevisionController
             ];
         }
 
-        $notice = trim((string)($_GET['notice'] ?? ''));
-
         return $this->page($user, 'modules/Writing/templates/revisions.php', [
             'title' => t('writing', 'history_title', ['title' => (string)$object['title']]),
             'projectId' => $projectId,
@@ -82,8 +81,45 @@ final class RevisionController
             'rows' => $rows,
             'revisionIds' => array_column($rows, 'id'),
             'canEdit' => $this->access->canEdit($user, $projectId),
-            'notice' => $notice === '' ? null : $notice,
         ]);
+    }
+
+    /**
+     * The most recent revisions of an object for the compact
+     * "recent revisions" list embedded on the object pages. The latest
+     * revision is skipped (it is the page itself); each returned row
+     * links to its diff view. One query path for all three templates.
+     *
+     * @return list<array{id: string, author: string, created_at: string, added: int, removed: int}>
+     */
+    public function recent(string $objectId, int $limit = 10): array
+    {
+        $revisions = $this->revisions($objectId, $limit + 1);
+        if ($revisions === []) {
+            return [];
+        }
+        // Drop the latest revision (the object page shows its content);
+        // keep at most $limit rows.
+        array_shift($revisions);
+        $rows = [];
+        foreach ($revisions as $revision) {
+            $predecessor = $this->predecessor($objectId, $revision);
+            $added = 0;
+            $removed = 0;
+            if ($predecessor !== null) {
+                $stats = Diff::stats((string)$predecessor['body'], (string)$revision['body']);
+                $added = $stats['added'];
+                $removed = $stats['removed'];
+            }
+            $rows[] = [
+                'id' => (string)$revision['id'],
+                'author' => (string)($revision['author'] ?? ''),
+                'created_at' => (string)$revision['created_at'],
+                'added' => $added,
+                'removed' => $removed,
+            ];
+        }
+        return $rows;
     }
 
     /**
@@ -132,48 +168,6 @@ final class RevisionController
             return $this->notFound($user);
         }
         return $this->diffResponse($user, $projectId, $type, $slug, $object, $from, $to);
-    }
-
-    /**
-     * POST .../revisions/{revisionId}/restore - creates a NEW revision
-     * with the old content, authored by the restorer. Restoring the
-     * latest revision is a no-op redirect with an info message.
-     * CSRF is enforced globally by App for every POST route.
-     */
-    public function restore(User $user, string $projectId, string $type, string $slug, string $revisionId): Response
-    {
-        $object = $this->findObject($projectId, $type, $slug);
-        if ($object === null || !$this->access->canEdit($user, $projectId)) {
-            return $this->notFound($user);
-        }
-        $revision = $this->findRevision((string)$object['object_id'], $revisionId);
-        if ($revision === null) {
-            return $this->notFound($user);
-        }
-
-        if ((string)$revision['id'] === $this->latestRevisionId((string)$object['object_id'])) {
-            return Response::redirect($this->historyUrl($projectId, $type, $slug, t('writing', 'history_restore_noop')));
-        }
-
-        $this->db->run(
-            'INSERT INTO content_revisions (id, object_id, title, summary, body, author_id)
-             VALUES (?, ?, ?, ?, ?, ?)',
-            [
-                Auth::uuid4(),
-                (string)$object['object_id'],
-                (string)$revision['title'],
-                (string)($revision['summary'] ?? ''),
-                (string)$revision['body'],
-                $user->id(),
-            ]
-        );
-        return Response::redirect($this->historyUrl($projectId, $type, $slug, t('writing', 'history_restore_done')));
-    }
-
-    private function historyUrl(string $projectId, string $type, string $slug, ?string $notice = null): string
-    {
-        $url = '/writing/' . rawurlencode($projectId) . '/' . $type . 's/' . rawurlencode($slug) . '/revisions';
-        return $notice === null ? $url : $url . '?notice=' . urlencode($notice);
     }
 
     /**
@@ -241,15 +235,16 @@ final class RevisionController
         );
     }
 
-    /** @return list<array<string, mixed>> revisions newest-first */
-    private function revisions(string $objectId): array
+    /** @return list<array<string, mixed>> the newest revisions first, at most $limit rows */
+    private function revisions(string $objectId, int $limit = 10): array
     {
         return $this->db->all(
             'SELECT r.id, r.title, r.body, r.created_at, r.rowid, u.username AS author
              FROM content_revisions r
              LEFT JOIN users u ON u.id = r.author_id
              WHERE r.object_id = ?
-             ORDER BY r.created_at DESC, r.rowid DESC',
+             ORDER BY r.created_at DESC, r.rowid DESC
+             LIMIT ' . max(1, $limit),
             [$objectId]
         );
     }
@@ -264,16 +259,6 @@ final class RevisionController
              WHERE r.object_id = ? AND r.id = ?',
             [$objectId, $revisionId]
         );
-    }
-
-    private function latestRevisionId(string $objectId): string
-    {
-        $row = $this->db->one(
-            'SELECT id FROM content_revisions WHERE object_id = ?
-             ORDER BY created_at DESC, rowid DESC LIMIT 1',
-            [$objectId]
-        );
-        return $row === null ? '' : (string)$row['id'];
     }
 
     /**

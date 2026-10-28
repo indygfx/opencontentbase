@@ -20,9 +20,16 @@ final class CharacterController
         private Csrf $csrf,
         private ProjectAccess $access,
         private ContentRenderer $rendererService,
-        private string $basePath = ''
+        private string $basePath = '',
+        private ?RevisionController $revisions = null
     ) {
         $this->images = new ImageStore($basePath);
+    }
+
+    /** Lazily built revision-history reader for the embedded recent list. */
+    private function revisions(): RevisionController
+    {
+        return $this->revisions ??= new RevisionController($this->db, $this->view, $this->csrf, $this->access);
     }
 
     public function create(User $user, string $projectId): Response
@@ -76,6 +83,8 @@ final class CharacterController
             'rendered' => $this->rendererService->render((string)$character['body']),
             'canEdit' => $this->access->canEdit($user, $projectId),
             'imageError' => $imageError,
+            'recentRevisions' => $this->revisions()->recent((string)$character['object_id']),
+            'recentBase' => '/writing/' . rawurlencode($projectId) . '/characters/' . rawurlencode($slug),
             'error' => null,
         ]);
     }

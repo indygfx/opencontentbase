@@ -4,9 +4,6 @@
     </p>
     <h1><?= e(t('writing', 'history')) ?></h1>
     <p class="muted"><?= e($objectTitle) ?> &middot; <?= e(t('writing', 'history_intro')) ?></p>
-    <?php if (!empty($notice)): ?>
-        <p class="notice"><?= e($notice) ?></p>
-    <?php endif; ?>
 
     <?php if ($rows === []): ?>
         <p class="muted"><?= e(t('writing', 'history_empty')) ?></p>
@@ -18,7 +15,6 @@
                 <th><?= e(t('writing', 'history_col_author')) ?></th>
                 <th><?= e(t('writing', 'history_col_when')) ?></th>
                 <th><?= e(t('writing', 'history_col_changes')) ?></th>
-                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -40,16 +36,6 @@
                         <?php else: ?>
                             <span class="diffstat-added">+<?= (int)$row['added'] ?></span>
                             <span class="diffstat-removed">&minus;<?= (int)$row['removed'] ?></span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php if ($canEdit && !$row['isLatest']): ?>
-                            <form class="inline" method="post"
-                                  action="/writing/<?= e($projectId) ?>/<?= e($type) ?>s/<?= e($slug) ?>/revisions/<?= e($row['id']) ?>/restore"
-                                  data-confirm="<?= e(t('writing', 'history_restore_confirm')) ?>">
-                                <?= $csrf->field() ?>
-                                <button type="submit"><?= e(t('writing', 'history_restore')) ?></button>
-                            </form>
                         <?php endif; ?>
                     </td>
                 </tr>

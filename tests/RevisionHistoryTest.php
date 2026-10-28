@@ -21,9 +21,9 @@ use Writing\WritingModule;
 
 /**
  * Revision history for Writing objects (chapters, characters,
- * backgrounds): newest-first list with author and +/- stats, inline
- * diff against the predecessor, arbitrary compare, and restore that
- * creates a NEW revision instead of rewriting history.
+ * backgrounds): newest-first list (capped at 10) with author and +/-
+ * stats, inline diff against the predecessor, arbitrary compare, and
+ * the compact recent-revisions list embedded on the object pages.
  */
 final class RevisionHistoryTest extends TestCase
 {
@@ -251,76 +251,125 @@ final class RevisionHistoryTest extends TestCase
         $_GET = [];
     }
 
-    public function testRestoreCreatesNewRevisionAuthoredByRestorer(): void
+    public function testListCapsAtTenRows(): void
     {
-        [$objectId, $revisionIds] = $this->chapterWithRevisions(["original text", "changed text"]);
-        $countBefore = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
+        // 12 revisions exist; the list must show at most 10.
+        $bodies = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $bodies[] = "body line {$i}";
+        }
+        [$objectId, $revisionIds] = $this->chapterWithRevisions($bodies);
+        $response = $this->controller->index($this->owner, 'p1', 'chapter', 'chapter-1');
+        $this->assertSame(200, $response->status());
+        $body = $response->body();
+        // The newest 10 of the 12 revisions are linked, the two oldest are not.
+        $linked = 0;
+        foreach ($revisionIds as $i => $id) {
+            if ($i >= 2) {
+                $this->assertStringContainsString($id, $body, "revision {$i} must be listed");
+                $linked++;
+            } else {
+                $this->assertStringNotContainsString($id, $body, "revision {$i} must be capped away");
+            }
+        }
+        $this->assertSame(10, $linked);
+    }
 
-        $_POST = ['_csrf' => 'irrelevant'];
-        $response = $this->controller->restore($this->member, 'p1', 'chapter', 'chapter-1', $revisionIds[0]);
-        $this->assertSame(302, $response->status());
+    public function testRecentReturnsAtMostTenRowsWithoutLatest(): void
+    {
+        $bodies = [];
+        for ($i = 1; $i <= 14; $i++) {
+            $bodies[] = "v{$i}";
+        }
+        [$objectId, $revisionIds] = $this->chapterWithRevisions($bodies);
+        $recent = $this->controller->recent($objectId);
+        $this->assertCount(10, $recent);
+        // The latest revision (index 13, the page itself) is not listed.
+        $ids = array_column($recent, 'id');
+        $this->assertNotContains($revisionIds[13], $ids);
+        // The newest of the remaining revisions comes first.
+        $this->assertSame($revisionIds[12], $ids[0]);
+        // Rows carry the diff stats vs. their predecessor.
+        $this->assertSame(1, $recent[0]['removed']);
+        $this->assertSame(1, $recent[0]['added']);
+        $this->assertSame('owner', $recent[0]['author']);
+    }
+
+    public function testRecentSkipsCurrentAndShowsCurrentHintWhenNoOtherRevisions(): void
+    {
+        [$objectId, $revisionIds] = $this->chapterWithRevisions(["only revision"]);
+        $this->assertSame([], $this->controller->recent($objectId));
+    }
+
+    public function testChapterPageEmbedsRecentRevisions(): void
+    {
+        [$objectId, $revisionIds] = $this->chapterWithRevisions(["first text", "second text"]);
+        $response = $this->chapters->show($this->owner, 'p1', 'chapter-1');
+        $this->assertSame(200, $response->status());
+        $body = $response->body();
+        // Collapsed by default, "Recent revisions" section present.
+        $this->assertStringContainsString('<details class="recent-revisions">', $body);
+        $this->assertStringContainsString(t('writing', 'history_recent'), $body);
+        $this->assertStringContainsString(t('writing', 'history_recent_current'), $body);
+        // The previous revision links to its diff view; the current
+        // revision (the page itself) is not listed.
+        $this->assertStringContainsString('/writing/p1/chapters/chapter-1/revisions/' . $revisionIds[0], $body);
+        $this->assertStringNotContainsString('/writing/p1/chapters/chapter-1/revisions/' . $revisionIds[1] . '"', $body);
+        // Link to the full history page remains.
+        $this->assertStringContainsString('/writing/p1/chapters/chapter-1/revisions"', $body);
+    }
+
+    public function testCharacterAndBackgroundPagesEmbedRecentRevisions(): void
+    {
+        // Character with a second revision.
+        $_POST = ['slug' => 'hero', 'title' => 'Hero', 'body' => 'Brave'];
+        $this->characters->store($this->owner, 'p1');
+        $_POST = ['slug' => 'hero', 'title' => 'Hero', 'body' => 'Brave and strong'];
+        $this->characters->update($this->owner, 'p1', 'hero');
         $_POST = [];
+        $body = $this->characters->show($this->owner, 'p1', 'hero')->body();
+        $this->assertStringContainsString('<details class="recent-revisions">', $body);
+        $this->assertStringContainsString('/writing/p1/characters/hero/revisions', $body);
 
-        $countAfter = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
-        $this->assertSame($countBefore + 1, $countAfter, 'restore must create a new revision');
-        // Old rows intact.
-        $oldRow = $this->db->one('SELECT body FROM content_revisions WHERE id = ?', [$revisionIds[0]]);
-        $this->assertSame('original text', (string)$oldRow['body']);
-        // The new revision carries the restored content and the restorer as author.
-        $latest = $this->db->one(
-            'SELECT body, author_id FROM content_revisions WHERE object_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1',
-            [$objectId]
+        // Background with a second revision.
+        $_POST = ['slug' => 'world', 'title' => 'World', 'body' => 'Old'];
+        $this->backgrounds->store($this->owner, 'p1');
+        $_POST = ['slug' => 'world', 'title' => 'World', 'body' => 'Ancient'];
+        $this->backgrounds->update($this->owner, 'p1', 'world');
+        $_POST = [];
+        $body = $this->backgrounds->show($this->owner, 'p1', 'world')->body();
+        $this->assertStringContainsString('<details class="recent-revisions">', $body);
+        $this->assertStringContainsString('/writing/p1/backgrounds/world/revisions', $body);
+    }
+
+    public function testRestoreRouteIsGone(): void
+    {
+        // The restore route must no longer be registered.
+        [$objectId, $revisionIds] = $this->chapterWithRevisions(["one", "two"]);
+        $router = new \Core\Router();
+        foreach ($this->moduleRoutes() as $route) {
+            $router->{$route['method'] === 'GET' ? 'get' : 'post'}($route['pattern'], $route['handler'], $route['roles']);
+        }
+        try {
+            $router->dispatch('POST', '/writing/p1/chapters/chapter-1/revisions/' . $revisionIds[0] . '/restore');
+            $this->fail('restore route must be gone');
+        } catch (\Core\RouteNotFoundException $e) {
+            $this->assertStringContainsString('No route', $e->getMessage());
+        }
+    }
+
+    /** Module routes need a WritingModule instance; build one lazily. */
+    private function moduleRoutes(): array
+    {
+        $base = dirname(__DIR__);
+        $auth = new \Core\Auth($this->db);
+        $module = new WritingModule(
+            $this->db,
+            new \Core\View($base),
+            new \Core\Csrf($this->db, $auth),
+            new \Core\ContentRenderer($this->db, new \Core\ModuleRegistry())
         );
-        $this->assertSame('original text', (string)$latest['body']);
-        $this->assertSame('m1', (string)$latest['author_id']);
-    }
-
-    public function testRestoreLatestIsNoOpRedirect(): void
-    {
-        [$objectId, $revisionIds] = $this->chapterWithRevisions(["one", "two"]);
-        $countBefore = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
-        $_POST = ['_csrf' => 'x'];
-        $response = $this->controller->restore($this->owner, 'p1', 'chapter', 'chapter-1', $revisionIds[1]);
-        $this->assertSame(302, $response->status());
-        $this->assertStringContainsString('notice', $response->header('Location') ?? '');
-        $countAfter = (int)$this->db->one(
-            'SELECT COUNT(*) AS c FROM content_revisions WHERE object_id = ?', [$objectId]
-        )['c'];
-        $this->assertSame($countBefore, $countAfter, 'restoring the latest revision must not create rows');
-        $_POST = [];
-    }
-
-    public function testRestoreStrangerDenied(): void
-    {
-        [$objectId, $revisionIds] = $this->chapterWithRevisions(["one", "two"]);
-        $_POST = ['_csrf' => 'x'];
-        $response = $this->controller->restore($this->stranger, 'p1', 'chapter', 'chapter-1', $revisionIds[0]);
-        $this->assertSame(404, $response->status());
-        $_POST = [];
-    }
-
-    public function testRestoreOnlyForEditors(): void
-    {
-        // canEdit covers owner and members; strangers never reach this
-        // branch (App additionally enforces CSRF for real POST routes).
-        [$objectId, $revisionIds] = $this->chapterWithRevisions(["one", "two"]);
-        $_POST = [];
-        $response = $this->controller->restore($this->owner, 'p1', 'chapter', 'chapter-1', $revisionIds[0]);
-        $this->assertSame(302, $response->status());
-    }
-
-    public function testRestoreUnknownRevision404(): void
-    {
-        $this->chapterWithRevisions(["one"]);
-        $_POST = ['_csrf' => 'x'];
-        $this->assertSame(404, $this->controller->restore($this->owner, 'p1', 'chapter', 'chapter-1', 'missing')->status());
-        $_POST = [];
+        return $module->routes(new \Core\Router());
     }
 
     public function testHistoryWorksForCharactersAndBackgrounds(): void

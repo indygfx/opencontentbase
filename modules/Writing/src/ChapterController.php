@@ -18,8 +18,15 @@ final class ChapterController
         private Csrf $csrf,
         private ProjectAccess $access,
         private ContentRenderer $rendererService,
-        private ChapterSynopsisController $synopses
+        private ChapterSynopsisController $synopses,
+        private ?RevisionController $revisions = null
     ) {
+    }
+
+    /** Lazily built revision-history reader for the embedded recent list. */
+    private function revisions(): RevisionController
+    {
+        return $this->revisions ??= new RevisionController($this->db, $this->view, $this->csrf, $this->access);
     }
 
     public function create(User $user, string $projectId): Response
@@ -86,6 +93,8 @@ final class ChapterController
             'chapter' => $chapter,
             'rendered' => $this->rendererService->render((string)$chapter['body']),
             'canEdit' => $this->access->canEdit($user, $projectId),
+            'recentRevisions' => $this->revisions()->recent((string)$chapter['object_id']),
+            'recentBase' => '/writing/' . rawurlencode($projectId) . '/chapters/' . rawurlencode($slug),
             'error' => null,
         ]);
     }

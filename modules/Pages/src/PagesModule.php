@@ -47,7 +47,6 @@ final class PagesModule implements ModuleInterface
             // {revisionId} route; "revisions" never matches a placeholder.
             ['method' => 'GET', 'pattern' => '/pages/{slug}/revisions', 'handler' => fn ($params, $user) => $c->revisions($params['slug'], $user), 'roles' => ['admin']],
             ['method' => 'GET', 'pattern' => '/pages/{slug}/revisions/{revisionId}', 'handler' => fn ($params, $user) => $c->revisionDiff($params['slug'], $params['revisionId'], $user), 'roles' => ['admin']],
-            ['method' => 'POST', 'pattern' => '/pages/{slug}/revisions/{revisionId}/restore', 'handler' => fn ($params, $user) => $c->restoreRevision($params['slug'], $params['revisionId'], $user), 'roles' => ['admin']],
         ];
     }
 

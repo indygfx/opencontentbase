@@ -191,7 +191,8 @@ final class PagesController
              FROM content_revisions r
              LEFT JOIN users u ON u.id = r.author_id
              WHERE r.object_id = ?
-             ORDER BY r.created_at DESC, r.rowid DESC',
+             ORDER BY r.created_at DESC, r.rowid DESC
+             LIMIT 10',
             [$page['object_id']]
         );
         $rows = [];
@@ -215,12 +216,10 @@ final class PagesController
                 'isOldest' => $i === $count - 1,
             ];
         }
-        $notice = trim((string)($_GET['notice'] ?? ''));
         return $this->page($user, 'modules/Pages/templates/revisions.php', [
             'title' => t('pages', 'history_title', ['title' => (string)$page['title']]),
             'page' => $page,
             'rows' => $rows,
-            'notice' => $notice === '' ? null : $notice,
         ]);
     }
 
@@ -266,36 +265,6 @@ final class PagesController
             'segments' => $segments,
             'titleChanged' => (string)$from['title'] !== (string)$revision['title'],
         ]);
-    }
-
-    /**
-     * POST /pages/{slug}/revisions/{revisionId}/restore - creates a NEW
-     * revision with the old content, authored by the restorer. Restoring
-     * the latest revision is a no-op redirect with an info message.
-     * CSRF is enforced globally by App for every POST route.
-     */
-    public function restoreRevision(string $slug, string $revisionId, User $user): Response
-    {
-        $page = $this->findPage($slug);
-        if ($page === null) {
-            return $this->notFound($user);
-        }
-        $revision = $this->findRevision((string)$page['object_id'], $revisionId);
-        if ($revision === null) {
-            return $this->notFound($user);
-        }
-        $latest = $this->db->one(
-            'SELECT id FROM content_revisions WHERE object_id = ?
-             ORDER BY created_at DESC, rowid DESC LIMIT 1',
-            [$page['object_id']]
-        );
-        if ($latest !== null && (string)$latest['id'] === (string)$revision['id']) {
-            return Response::redirect('/pages/' . rawurlencode($slug) . '/revisions?notice='
-                . urlencode(t('pages', 'history_restore_noop')));
-        }
-        $this->insertRevision((string)$page['object_id'], (string)$revision['title'], (string)$revision['body'], $user);
-        return Response::redirect('/pages/' . rawurlencode($slug) . '/revisions?notice='
-            . urlencode(t('pages', 'history_restore_done')));
     }
 
     /** @return array<string, mixed>|null */

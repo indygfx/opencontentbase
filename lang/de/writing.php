@@ -254,9 +254,7 @@ return [
     'history_compare' => 'Vergleichen',
     'history_compare_from' => 'Von',
     'history_compare_to' => 'Bis',
-    'history_restore' => 'Wiederherstellen',
-    'history_restore_confirm' => 'Diese Revision wiederherstellen? Es wird eine neue Revision mit diesem Inhalt erstellt.',
-    'history_restore_done' => 'Revision wiederhergestellt - eine neue Revision wurde erstellt.',
-    'history_restore_noop' => 'Diese Revision ist bereits die aktuelle - nichts wiederherzustellen.',
     'history_not_found' => 'Versionsverlauf nicht gefunden.',
+    'history_recent' => 'Letzte Revisionen',
+    'history_recent_current' => 'Die aktuelle Revision ist die Seite selbst - gelistete Revisionen führen zur Diff-Ansicht.',
 ];

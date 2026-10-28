@@ -41,8 +41,6 @@ return [
     'history_title_changed' => 'Title changed: {from} &rarr; {to}',
     'history_no_changes' => 'No changes.',
     'history_show_all' => 'Show all',
-    'history_restore' => 'Restore',
-    'history_restore_confirm' => 'Restore this revision? A new revision with this content will be created.',
-    'history_restore_done' => 'Revision restored - a new revision was created.',
-    'history_restore_noop' => 'This revision is already the current one - nothing to restore.',
+    'history_recent' => 'Recent revisions',
+    'history_recent_current' => 'The current revision is the page itself - listed revisions link to their diff view.',
 ];
