@@ -186,7 +186,8 @@ bundle.json                    manifest: format version, story metadata, object 
 - Built on PHP's bundled `ZipArchive`, writing to a temp file (no dependency additions).
 - Slugs are sanitized to `[a-z0-9-]` for archive paths; download filename is the slugified story title (`{story-slug}.zip`).
 - Empty stories produce a valid ZIP containing only `story.md` + `bundle.json`; `relations.json` is omitted when no relations exist.
-- Tests: `tests/StoryExportTest.php` covers ZIP structure, frontmatter escaping and round-trip of special characters, exact body preservation, relations references, access control (stranger gets 403, no ZIP) and the empty-story case.
+- **Server requirement:** the export needs the PHP ZIP extension (`ext-zip`, listed in composer `suggest`). Servers without it never crash: the exporter guards the extension up front (`ExportUnavailableException`), and the controller renders a translated, friendly error page (503, "export unavailable") instead of a fatal `Class "ZipArchive" not found`; other server-side export problems (temp directory, disk space) render a 500 error page. Tests substitute a failing export provider to cover both error pages.
+- Tests: `tests/StoryExportTest.php` covers ZIP structure, frontmatter escaping and round-trip of special characters, exact body preservation, relations references, access control (stranger gets 403, no ZIP), the empty-story case and the friendly error pages for missing/broken export capability.
 
 ## Writing module: progress targets and dashboard progress bars
 

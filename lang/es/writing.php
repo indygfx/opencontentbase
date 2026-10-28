@@ -257,4 +257,6 @@ return [
     'history_not_found' => 'Historial de revisiones no encontrado.',
     'history_recent' => 'Revisiones recientes',
     'history_recent_current' => 'La revisión actual es la página misma - las revisiones listadas llevan a su vista de diferencias.',
+    'error_export_unavailable' => 'La exportación no está disponible en este servidor: falta la extensión ZIP de PHP. Pida al administrador que instale/active la extensión zip (ext-zip).',
+    'error_export_failed' => 'No se pudo crear la exportación. Inténtelo de nuevo; si el problema persiste, pida al administrador que revise la configuración del servidor (directorio temporal, espacio en disco).',
 ];

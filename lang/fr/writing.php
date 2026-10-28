@@ -257,4 +257,6 @@ return [
     'history_not_found' => 'Historique des révisions introuvable.',
     'history_recent' => 'Révisions récentes',
     'history_recent_current' => 'La révision actuelle est la page elle-même - les révisions listées mènent à leur vue de diff.',
+    'error_export_unavailable' => 'L\'export n\'est pas disponible sur ce serveur : l\'extension ZIP de PHP est manquante. Demandez à l\'administrateur d\'installer/activer l\'extension zip (ext-zip).',
+    'error_export_failed' => 'L\'export n\'a pas pu être créé. Veuillez réessayer ; si le problème persiste, demandez à l\'administrateur de vérifier la configuration du serveur (répertoire temporaire, espace disque).',
 ];

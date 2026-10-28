@@ -257,4 +257,6 @@ return [
     'history_not_found' => 'Versionsverlauf nicht gefunden.',
     'history_recent' => 'Letzte Revisionen',
     'history_recent_current' => 'Die aktuelle Revision ist die Seite selbst - gelistete Revisionen führen zur Diff-Ansicht.',
+    'error_export_unavailable' => 'Der Export ist auf diesem Server nicht verfügbar: Die PHP-ZIP-Erweiterung fehlt. Bitte den Administrator, die Erweiterung zip (ext-zip) zu installieren/aktivieren.',
+    'error_export_failed' => 'Der Export konnte nicht erstellt werden. Bitte erneut versuchen; falls das Problem bestehen bleibt, den Administrator bitten, die Serverkonfiguration (Temp-Verzeichnis, Speicherplatz) zu prüfen.',
 ];

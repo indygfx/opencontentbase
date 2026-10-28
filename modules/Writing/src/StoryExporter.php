@@ -11,7 +11,7 @@ use Core\Database;
  * one file per object with YAML frontmatter, raw Markdown bodies,
  * relations.json for the relationship web and bundle.json as manifest.
  */
-final class StoryExporter
+final class StoryExporter implements StoryExportProvider
 {
     public const FORMAT_VERSION = 1;
 
@@ -27,6 +27,9 @@ final class StoryExporter
      */
     public function export(string $projectId): array
     {
+        if (!class_exists('ZipArchive')) {
+            throw new ExportUnavailableException('The PHP ZIP extension (ext-zip) is not installed.');
+        }
         $project = $this->project($projectId);
         if ($project === null) {
             throw new \RuntimeException('Story not found.');

@@ -37,7 +37,7 @@ final class WritingModule implements ModuleInterface
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer, $basePath);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
-        $this->export = new StoryExportController($db, $this->access);
+        $this->export = new StoryExportController($db, $this->access, $view, $csrf);
         $this->graph = new GraphController($db, $view, $csrf, $this->access, new CharacterMentions($db), $this->relationships);
         $this->revisions = new RevisionController($db, $view, $csrf, $this->access);
     }

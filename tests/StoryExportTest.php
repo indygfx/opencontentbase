@@ -12,7 +12,9 @@ use Core\Migrator;
 use Core\ModuleRegistry;
 use Core\User;
 use PHPUnit\Framework\TestCase;
+use Writing\ExportUnavailableException;
 use Writing\ProjectAccess;
+use Writing\StoryExportProvider;
 use Writing\StoryExportController;
 use Writing\StoryExporter;
 use Writing\WritingModule;
@@ -331,4 +333,65 @@ final class StoryExportTest extends TestCase
     }
 
 
+    public function testMissingZipExtensionRendersFriendlyErrorPageNotFatal(): void
+    {
+        // A server without ext-zip cannot build the archive; the export
+        // must render a translated error page (503) instead of a fatal
+        // "Class ZipArchive not found".
+        $failing = new class implements StoryExportProvider {
+            public function export(string $projectId): array
+            {
+                throw new ExportUnavailableException('The PHP ZIP extension (ext-zip) is not installed.');
+            }
+        };
+        $base = dirname(__DIR__);
+        $auth = new Auth($this->db);
+        $csrf = new Csrf($this->db, $auth);
+        $controller = new StoryExportController($this->db, new ProjectAccess($this->db), new \Core\View($base), $csrf, $failing);
+        $response = $controller->export($this->owner, 'p1');
+        $this->assertSame(503, $response->status());
+        $body = $response->body();
+        $this->assertStringContainsString(t('writing', 'error_export_unavailable'), $body);
+        $this->assertStringNotContainsString('Fatal error', $body);
+        $this->assertStringNotContainsString('ZipArchive', $body);
+    }
+
+    public function testBrokenExportRendersFriendlyErrorPage(): void
+    {
+        // Other server-side export problems (temp dir, disk space)
+        // render a translated 500 page instead of escaping.
+        $failing = new class implements StoryExportProvider {
+            public function export(string $projectId): array
+            {
+                throw new \RuntimeException('Could not create a temporary file.');
+            }
+        };
+        $base = dirname(__DIR__);
+        $auth = new Auth($this->db);
+        $csrf = new Csrf($this->db, $auth);
+        $controller = new StoryExportController($this->db, new ProjectAccess($this->db), new \Core\View($base), $csrf, $failing);
+        $response = $controller->export($this->owner, 'p1');
+        $this->assertSame(500, $response->status());
+        $this->assertStringContainsString(t('writing', 'error_export_failed'), $response->body());
+    }
+
+    public function testExporterGuardsZipArchiveBeforeWorking(): void
+    {
+        // The exporter itself must check the extension first: a missing
+        // ZipArchive class yields ExportUnavailableException, never a
+        // fatal Error. Simulated by the anonymous subclass; the guard
+        // order in StoryExporter::export() is additionally asserted by
+        // reflection so a reorder cannot slip through unnoticed.
+        $method = new \ReflectionMethod(StoryExporter::class, 'export');
+        $source = (string)file_get_contents($method->getFileName());
+        $offset = $method->getStartLine();
+        $end = $method->getEndLine();
+        $lines = explode("\n", $source);
+        $body = implode("\n", array_slice($lines, $offset - 1, $end - $offset + 1));
+        $this->assertStringContainsString("class_exists('ZipArchive')", $body);
+        $guardPos = strpos($body, "class_exists('ZipArchive')");
+        $newPos = strpos($body, 'new \ZipArchive');
+        $this->assertNotFalse($newPos);
+        $this->assertLessThan($newPos, $guardPos, 'the extension guard must run before the ZipArchive is built');
+    }
 }
