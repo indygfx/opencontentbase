@@ -76,9 +76,11 @@ final class WritingController
             return $this->notFound($user);
         }
         $isOwner = $this->access->isOwner($user, $id);
+        $importSuccess = trim((string)($_GET['import'] ?? ''));
         return $this->page($user, 'modules/Writing/templates/project.php', [
             'title' => (string)$project['title'],
             'project' => $project,
+            'importSuccess' => $importSuccess === '' ? null : $importSuccess,
             'isOwner' => $isOwner,
             'members' => $this->access->members($id),
             'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],
@@ -384,9 +386,11 @@ final class WritingController
     {
         $id = (string)$project['id'];
         $isOwner = $this->access->isOwner($user, $id);
+        $importSuccess = trim((string)($_GET['import'] ?? ''));
         return $this->page($user, 'modules/Writing/templates/project.php', [
             'title' => (string)$project['title'],
             'project' => $project,
+            'importSuccess' => $importSuccess === '' ? null : $importSuccess,
             'isOwner' => $isOwner,
             'members' => $this->access->members($id),
             'shareTargets' => $isOwner ? $this->shareTargets($id, (string)$project['owner_id']) : [],

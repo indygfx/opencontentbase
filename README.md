@@ -157,7 +157,7 @@ Once a user has written a real chapter (more than three paragraphs), the writing
 - **Rendering**: CSS cross-fade without JavaScript for a single slide; `public/assets/js/story-slider.js` adds automatic rotation (8 s) and navigation dots for two or more slides.
 - **Privacy**: only the user's own chapters are ever shown; shared stories of other users do not qualify.
 
-## Writing module: story export as a Markdown bundle (format version 1)
+## Writing module: export & import as a Markdown bundle (format version 1)
 
 Every story dashboard has an **Export** button (`GET /writing/{id}/export`, owner and members only) that downloads a ZIP archive – a portable, human-readable Markdown bundle with one file per object. The format is **stable (format version 1)** and documented here as the contract for import tools.
 
@@ -189,6 +189,42 @@ bundle.json                    manifest: format version, story metadata, object 
 - Empty stories produce a valid ZIP containing only `story.md` + `bundle.json`; `relations.json` is omitted when no relations exist.
 - **Server requirement:** the export needs the PHP ZIP extension (`ext-zip`, listed in composer `suggest`). Servers without it never crash: the exporter guards the extension up front (`ExportUnavailableException`), and the controller renders a translated, friendly error page (503, "export unavailable") instead of a fatal `Class "ZipArchive" not found`; other server-side export problems (temp directory, disk space) render a 500 error page. Tests substitute a failing export provider to cover both error pages.
 - Tests: `tests/StoryExportTest.php` covers ZIP structure, frontmatter escaping and round-trip of special characters, exact body preservation, relations references, access control (stranger gets 403, no ZIP), the empty-story case and the friendly error pages for missing/broken export capability.
+
+### Import (format version 1)
+
+`GET/POST /writing/import` (login required) uploads a format-v1 bundle ZIP
+(max 10 MB) and imports it as a **new story** owned by the importing user -
+the counterpart to the export for instance-to-instance migration and
+restores from an exported archive. The writing dashboard carries an
+"Import story" link next to the "New story" form.
+
+- **Always a new story, never a merge**: the import never touches existing
+  data. If the source story still exists elsewhere, both coexist with
+  different UUIDs.
+- **UUID remapping**: every imported object gets a fresh UUID via a
+  source-UUID -> new-UUID map, so chapter->synopsis and relation->character
+  references stay intact after the import.
+- **Slugs**: source slugs are preserved, deduplicated within the new story
+  (`same-slug`, `same-slug-2`, ...).
+- **Conservative & transactional**: the full bundle is validated before
+  anything is written (manifest present, format version 1, story.md and
+  frontmatter parseable, no path-traversal entries, no dangling synopsis or
+  relation references); on any inconsistency the import aborts with a
+  translated error and NOTHING is written. Inserts run inside one SQLite
+  transaction - a failure rolls back completely.
+- **v1 scope**: bundles carry no stance, so imported relations get stance
+  NULL (neutral rendering). Kinds unknown to RelationKinds are allowed -
+  the graph falls back to the neutral group.
+- **Security**: entry names are validated against the known bundle layout
+  (no `..`, no absolute paths, no backslashes, max 1000 entries).
+- Tests: `tests/StoryImportTest.php` covers the golden path (build ->
+  export -> import with identical chapter bodies, synopsis remapping,
+  relations pointing at the new characters), the export -> import ->
+  export roundtrip (bundle.json identical except story_uuid/exported_at),
+  all error cases (not a ZIP, missing manifest, unsupported version,
+  missing story.md, dangling references, path traversal, broken
+  frontmatter), slug deduplication, unknown-kind tolerance and the upload
+  form (rendering, 422 without a file, 302 to the new dashboard).
 
 ## Writing module: progress targets and dashboard progress bars
 
@@ -440,7 +476,7 @@ route (access checks mirror the object pages).
 1. Core + auth + module registry (done)
 2. Content pipeline with `[[type:slug]]` (done in the core)
 3. pages reference module (done)
-4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, two-layer taxonomy of structural role kinds and emotional stances), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export (mostly done; see the Writing module sections above)
+4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, two-layer taxonomy of structural role kinds and emotional stances), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export and bundle import (done; see the "export & import" section)
 5. Editor refinements, diffs, graph UI, revisions per content object (done: weighted circular relationship graph, version history with diffs and restore for chapters, characters, backgrounds and pages), board (open)
 6. UI languages via array files (en, de, es, fr), per-account language setting (done)
 

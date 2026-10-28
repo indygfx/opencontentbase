@@ -7,7 +7,9 @@ namespace Core;
 final class Router
 {
     /** @var list<string> path segments that never match a placeholder (e.g. /pages/new vs /pages/{slug}) */
-    private const RESERVED = ['new'];
+    private const RESERVED = ['new', 'import'];
+    // 'import' is reserved so /writing/import is not swallowed by the
+    // /writing/{id} story route (module routes register after it).
 
     /** @var list<array{pattern: string, handler: callable, roles: list<string>}> */
     private array $routes = [];

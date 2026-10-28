@@ -57,6 +57,9 @@ function progressBar(string $section, array $entry, string $label): string
         <p><a class="button" href="/writing/<?= e($project['id']) ?>/setup"><?= e(t('writing', 'novel_setup')) ?></a></p>
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/export"><?= e(t('writing', 'export_story')) ?></a></p>
+    <?php if (!empty($importSuccess)): ?>
+        <p class="success"><?= e($importSuccess) ?></p>
+    <?php endif; ?>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>
     <?php endif; ?>

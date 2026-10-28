@@ -36,6 +36,7 @@
         <input id="title" name="title" required minlength="2" maxlength="200" placeholder="<?= e(t('writing', 'my_novel_placeholder')) ?>" autofocus>
         <button type="submit"><?= e(t('writing', 'create_story')) ?></button>
     </form>
+    <p><a href="/writing/import"><?= e(t('writing', 'import_story')) ?></a></p>
 
     <h2><?= e(t('writing', 'my_stories')) ?></h2>
     <?php if ($projects === []): ?>
