@@ -27,7 +27,7 @@ The built bundle is committed, so a plain PHP deployment needs no Node toolchain
 
 
 
-Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. There are **no hardcoded credentials**: on a fresh install every route redirects to the first-start setup page (`/setup`) where you create the first admin account (username + password); once any user exists, `/setup` is gone for good. For scripted setups the CLI offers `php bin/user create <username> [--role=<admin|editor|user>]` with an interactive password prompt. composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done, as are version history with diffs and restore (see "Version history and diffs"); the remaining roadmap item is a board.
+Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. There are **no hardcoded credentials**: on a fresh install every route redirects to the first-start setup page (`/setup`) where you create the first admin account (username + password); once any user exists, `/setup` is gone for good. For scripted setups the CLI offers `php bin/user create <username> [--role=<admin|editor|user>]` with an interactive password prompt. composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done, as are version history with diffs (see "Version history and diffs"); the remaining roadmap item is a board.
 
 ## Architecture
 
@@ -217,6 +217,13 @@ restores from an exported archive. The writing dashboard carries an
   the graph falls back to the neutral group.
 - **Security**: entry names are validated against the known bundle layout
   (no `..`, no absolute paths, no backslashes, max 1000 entries).
+- **Server configuration**: the upload goes through PHP's file upload
+  mechanism, so `upload_max_filesize` (and `post_max_size`) must be at
+  least 10 MB - PHP's default of 2M makes bigger bundles fail with a
+  friendly upload error before the importer even runs.
+- **Bundle authoring note**: the schema enforces one chapter per chapter
+  synopsis (`UNIQUE (chapters.chapter_synopsis_id)`), so a bundle with two
+  chapters referencing the same `synopsis_uuid` is rejected as invalid.
 - Tests: `tests/StoryImportTest.php` covers the golden path (build ->
   export -> import with identical chapter bodies, synopsis remapping,
   relations pointing at the new characters), the export -> import ->
@@ -424,8 +431,11 @@ stroke color is stance-group-level.
 ## Version history and diffs
 
 Every save already writes a row into `content_revisions`; the history
-views make that data usable - list, diff, restore - for chapters,
-characters and backgrounds (Writing module) and for pages.
+views make that data usable - list and diff - for chapters, characters
+and backgrounds (Writing module) and for pages. The history is a pure
+reference tool: there is **no restore** - copy & paste from the diff
+view is the intended way back to an old state (history is never
+rewritten either way).
 
 **Routes (Writing):** `GET /writing/{id}/{type}s/{slug}/revisions`
 (`{type}` = chapter|character|background; synopses have no history),
@@ -434,14 +444,22 @@ revision diffs against empty text) and `GET
 .../revisions/compare?from=A&to=B` (any two revisions of the same
 object - foreign ids yield 404). Object pages carry a "History" link.
 
-**Routes (Pages):** `GET /pages/{slug}/revisions`,
-`GET .../revisions/{revisionId}` and `POST
-.../revisions/{revisionId}/restore` - admin-only, same rendering, no
+**Routes (Pages):** `GET /pages/{slug}/revisions` and
+`GET .../revisions/{revisionId}` - admin-only, same rendering, no
 compare form.
 
-**List:** newest-first table with revision link, author, timestamp,
-`+added/−removed` line counts vs. the predecessor (computed by the diff
-engine, not stored) and a "current" badge on the latest revision.
+**List (capped at 10):** every revision list shows at most the **10
+newest revisions** (newest first; older ones are simply not listed) as
+a table with revision link, author, timestamp, `+added/−removed` line
+counts vs. the predecessor (computed by the diff engine, not stored)
+and a "current" badge on the latest revision.
+
+**Embedded "Recent revisions" on Writing object pages:** the chapter,
+character and background pages embed a compact, collapsed (`<details>`)
+list of up to 10 revisions - date, author, `+N/−N` per row, each row
+linking directly to its diff view. The current revision is skipped (it
+is the page itself) with a hint instead; a link to the full history
+page remains.
 
 **Diff engine:** `src/Core/Diff.php` (pure PHP, static, no
 dependencies) - `compare()` computes a line-based LCS and returns
@@ -454,13 +472,8 @@ unchanged lines dimmed; at most 3 context lines around each change, the
 collapsed gap opens via a "show all" `<details>` element. A title
 change is shown above the diff.
 
-**Restore:** `POST .../revisions/{revisionId}/restore` (CSRF, owner and
-members; admin for pages) **creates a NEW revision** with the old
-content, authored by the restorer - history is never rewritten, so the
-restore action itself stays visible and revertible. Restoring the
-latest revision is a no-op redirect with an info message. Unknown or
-foreign revision ids yield 404; strangers get 404 on every history
-route (access checks mirror the object pages).
+Unknown or foreign revision ids yield 404; strangers get 404 on every
+history route (access checks mirror the object pages).
 
 ## Known gaps (roadmap phase 5)
 - **Pages module purpose is undecided (open decision)**: what pages are
@@ -477,7 +490,7 @@ route (access checks mirror the object pages).
 2. Content pipeline with `[[type:slug]]` (done in the core)
 3. pages reference module (done)
 4. Writing app module: projects -> characters (n) with portrait images, relationships (n:m, two-layer taxonomy of structural role kinds and emotional stances), chapters -> text via content_revisions, backgrounds (4 categories), mention-based weighting, story export and bundle import (done; see the "export & import" section)
-5. Editor refinements, diffs, graph UI, revisions per content object (done: weighted circular relationship graph, version history with diffs and restore for chapters, characters, backgrounds and pages), board (open)
+5. Editor refinements, diffs, graph UI, revisions per content object (done: weighted circular relationship graph, version history with diffs for chapters, characters, backgrounds and pages - reference-only, capped at the 10 newest revisions with an embedded recent list, no restore), board (open)
 6. UI languages via array files (en, de, es, fr), per-account language setting (done)
 
 Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).
