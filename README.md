@@ -53,13 +53,16 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
 
 `smoke-test.sh` boots the built-in PHP server on **127.0.0.1 only** with a fresh temporary database (your `data/contentbase.sqlite` is not touched) and probes the critical paths:
 
-1. Login page renders
-2. Login as `admin`/`admin` (created on first start)
-3. Writing dashboard renders (`/writing`)
+1. First start: every route (e.g. `/login`) redirects to the setup page (`/setup`); the setup form renders
+2. Create the first admin account via the setup form (username + password, guest-CSRF cookie + token); redirects to the login page and `/setup` is 404 afterwards
+3. Log in with the created credentials; the writing dashboard renders (`/writing`) with the new-story form
 4. Account language switch to German via `POST /profile/language` (incl. CSRF) and German UI check
 5. Language dropdown on the profile page
 6. Switch back to English
-7. Pages module and 404 handling
+7. Pages module (admin) and 404 handling for unknown stories
+8. Login page renders for guests
+
+All steps verified green locally (fresh instance, temp database). CI does not run the smoke test - it is a manual probe against a fresh or running instance.
 
 ```bash
 composer install
@@ -99,8 +102,6 @@ php -S localhost:8080 -t public
 ```
 
 > **Note on `composer.lock`:** The lock file is intentionally not checked in (see `.gitignore`). It is created locally by `composer install` and pins the exact package versions there. When debugging "works on my machine" situations or after `composer update`, remember that every system has its own lock file – document versions if needed.
-
-On first start the user **admin / admin** is created automatically (change it immediately).
 
 ## Structure
 

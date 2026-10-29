@@ -64,13 +64,49 @@ if [ -z "$BASE" ]; then
 fi
 
 echo "Probing $URL ..."
-BODY="$(curl -sf "$URL/login")"
-echo "[1/7] Login page"
-check "login page renders" "$BODY" 'Sign in'
+echo "[1/9] First start: setup gate redirects to /setup"
+CODE="$(curl -s -o /dev/null -w '%{http_code}' "$URL/login")"
+if [ "$CODE" = "302" ] || [ "$CODE" = "303" ]; then
+    echo "  ok  - /login redirects while no user exists ($CODE)"
+else
+    echo "  FAIL - /login returned $CODE (expected redirect to /setup on a fresh instance)"
+    FAILED=1
+fi
+rm -f /tmp/cb_smoke_cookies.txt
+BODY="$(curl -sf -c /tmp/cb_smoke_cookies.txt "$URL/setup")"
+check "setup page renders" "$BODY" 'First-start setup'
+check "setup form present" "$BODY" 'name="username"'
 
-echo "[2/7] Login as admin/admin"
-BODY="$(curl -sf -c /tmp/cb_smoke_cookies.txt -X POST "$URL/login" \
-    --data-urlencode 'username=admin' --data-urlencode 'password=admin' \
+echo "[2/9] Create the first admin account via the setup form"
+CSRF="$(printf '%s' "$BODY" | grep -o 'name="_csrf" value="[0-9a-f]*"' | head -1 | grep -o '[0-9a-f]\{64\}')"
+if [ -z "$CSRF" ]; then
+    echo "  FAIL - no CSRF token on setup form"; FAILED=1
+else
+    CODE="$(curl -s -b /tmp/cb_smoke_cookies.txt -c /tmp/cb_smoke_cookies.txt -o /dev/null -w '%{http_code}' \
+        -X POST "$URL/setup" \
+        --data-urlencode 'username=smoketest' \
+        --data-urlencode 'password=smoke-pass-1' \
+        --data-urlencode 'password_confirm=smoke-pass-1' \
+        --data-urlencode "_csrf=$CSRF")"
+    if [ "$CODE" = "302" ] || [ "$CODE" = "303" ]; then
+        echo "  ok  - setup redirected to the login page ($CODE)"
+    else
+        echo "  FAIL - POST /setup returned $CODE (expected redirect)"
+        FAILED=1
+    fi
+fi
+CODE="$(curl -s -o /dev/null -w '%{http_code}' "$URL/setup")"
+if [ "$CODE" = "404" ]; then
+    echo "  ok  - /setup is 404 after the first account exists"
+else
+    echo "  FAIL - GET /setup returned $CODE (expected 404)"
+    FAILED=1
+fi
+
+echo "[3/9] Login with the created credentials"
+BODY="$(curl -sf -b /tmp/cb_smoke_cookies.txt -c /tmp/cb_smoke_cookies.txt -X POST "$URL/login" \
+    --data-urlencode 'username=smoketest' --data-urlencode 'password=smoke-pass-1' \
+    --data-urlencode "_csrf=$CSRF" \
     -o /dev/null -w '%{http_code}')"
 if [ "$BODY" = "303" ] || [ "$BODY" = "302" ]; then
     echo "  ok  - login redirected ($BODY)"
@@ -80,11 +116,11 @@ else
 fi
 
 BODY="$(curl -sf -b /tmp/cb_smoke_cookies.txt "$URL/writing")"
-echo "[3/7] Writing dashboard"
+echo "[4/9] Writing dashboard"
 check "dashboard renders" "$BODY" 'Stories'
 check "new story form" "$BODY" 'Create story'
 
-echo "[4/7] Language switch to German"
+echo "[5/9] Language switch to German"
 CSRF="$(printf '%s' "$BODY" | grep -o 'name="_csrf" value="[0-9a-f]*"' | head -1 | grep -o '[0-9a-f]\{64\}')"
 if [ -z "$CSRF" ]; then
     echo "  FAIL - no CSRF token found on dashboard"; FAILED=1
@@ -102,12 +138,12 @@ else
     check "German dashboard heading" "$BODY" 'Neue Story'
 fi
 
-echo "[5/7] Language dropdown on profile"
+echo "[6/9] Language dropdown on profile"
 BODY="$(curl -sf -b /tmp/cb_smoke_cookies.txt "$URL/profile")"
 check "language select present" "$BODY" 'name="language"'
 check "German option present" "$BODY" 'Deutsch'
 
-echo "[6/7] Switch back to English"
+echo "[7/9] Switch back to English"
 CSRF="$(printf '%s' "$BODY" | grep -o 'name="_csrf" value="[0-9a-f]*"' | head -1 | grep -o '[0-9a-f]\{64\}')"
 CODE="$(curl -s -b /tmp/cb_smoke_cookies.txt -o /dev/null -w '%{http_code}' \
     -X POST "$URL/profile/language" \
@@ -118,7 +154,7 @@ else
     echo "  FAIL - switch back returned $CODE"; FAILED=1
 fi
 
-echo "[7/7] Pages module (admin) and 404 handling"
+echo "[8/9] Pages module (admin) and 404 handling"
 BODY="$(curl -sf -b /tmp/cb_smoke_cookies.txt "$URL/pages")"
 check "pages list renders" "$BODY" 'Pages'
 CODE="$(curl -s -b /tmp/cb_smoke_cookies.txt -o /dev/null -w '%{http_code}' "$URL/writing/does-not-exist")"
@@ -127,6 +163,10 @@ if [ "$CODE" = "404" ]; then
 else
     echo "  FAIL - unknown story returned $CODE"; FAILED=1
 fi
+
+echo "[9/9] Login page (guest view)"
+BODY="$(curl -sf "$URL/login")"
+check "login page renders" "$BODY" 'Sign in'
 
 rm -f /tmp/cb_smoke_cookies.txt
 if [ "$FAILED" = "0" ]; then
