@@ -494,4 +494,4 @@ history route (access checks mirror the object pages).
 5. Editor refinements, diffs, graph UI, revisions per content object (done: weighted circular relationship graph, version history with diffs for chapters, characters, backgrounds and pages - reference-only, capped at the 10 newest revisions with an embedded recent list, no restore), board (open)
 6. UI languages via array files (en, de, es, fr), per-account language setting (done)
 
-Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md).
+Detailed planning for step 4 (projects, sharing, visibility) is documented in [PLANNING.md](PLANNING.md); the current project status and the open roadmap items (theme extraction, mobile-first + read-only PWA, board) are documented in [ROADMAP.md](ROADMAP.md).

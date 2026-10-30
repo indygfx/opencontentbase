@@ -4,6 +4,9 @@ This document records the architecture decisions **before** any writing app
 code is written. It is the binding framework for phase 4 of the roadmap.
 When changing any of these decisions: update this document first, then build.
 
+The current project status and open roadmap items live in
+[ROADMAP.md](ROADMAP.md).
+
 ## 1. Core model: visibility belongs to the project, not the user
 
 Every account owns their projects. A project (e.g. a novel) bundles all
