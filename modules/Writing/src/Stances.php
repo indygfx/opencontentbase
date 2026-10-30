@@ -17,8 +17,9 @@ namespace Writing;
  * - Add a stance: one line in STANCE_GROUPS + one lang line per language
  *   (stance_<key>); the parity test enforces completeness.
  * - Add a group: one STANCE_GROUPS entry + one CSS class with a stroke
- *   color (layout.php) + stancegroup_<group> lang lines; the legend picks
- *   it up automatically.
+ *   color in public/assets/css/master.css (reading the --rel-<group>-*
+ *   variables) + stancegroup_<group> lang lines; the legend picks it up
+ *   automatically.
  * - Guideline: max 7 groups total for legend readability; prefer fitting
  *   a new stance into an existing group over creating new ones.
  * - Unknown/legacy stance values never break rendering: groupFor() maps

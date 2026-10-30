@@ -112,8 +112,39 @@ lang/              Language files: en/ (default), de/, es/, fr/, one file per do
 modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
 templates/         Layout, Login, Profile, Users, Error
+public/assets/css/ master.css (master theme, :root custom properties), editor.css (Tiptap bundle)
+public/assets/js/  app.js (page glue), editor.js (Tiptap bundle), story-slider.js
 public/index.php   Front controller
 ```
+
+## Theming
+
+All styling lives in one external master stylesheet,
+`public/assets/css/master.css`, loaded by the layout via `<link>`; all
+page-level JavaScript glue (Cmd/Ctrl+S save, auto-slug preview, genre word
+targets) lives in `public/assets/js/app.js`, loaded via `<script src>` in the
+layout footer. No template contains inline `<style>` or inline `<script>`
+blocks anymore (the Tiptap editor bundle `editor.js` and `story-slider.js`
+stay separate files).
+
+- **Custom properties**: a `:root` block at the top of `master.css` holds all
+  colors and shared values, grouped into base (background, ink, muted, line,
+  accent, surfaces, error/success, badge/notice, diff added/removed,
+  progress, slider) and the seven stance groups.
+- **Stance groups**: one variable per group per color context -
+  `--rel-<group>-stroke` (graph edges), `--rel-<group>-fill` (edge labels),
+  `--rel-<group>-bg` (legend swatches) for `love`, `bond`, `esteem`,
+  `hostility`, `rivalry`, `fear`, `neutral`. The `.rel-<group>` classes use
+  only these variables. `tests/ThemeExtractionTest.php` mirrors
+  `Stances::groups()` and fails when a group has no variables/classes.
+- **Child-theme slot**: if a file `public/assets/css/theme.css` exists, the
+  layout loads it right after `master.css` (render-time `file_exists` check).
+  The file is intentionally not shipped. **Rule: child themes override
+  variables, never classes** - a child theme that changes graph or diff
+  colors must keep graph/diff readability (contrast) intact.
+- **Not themed**: the Tiptap editor toolbar styling (`editor.css`) is a
+  third-party bundle with its own assets and is deliberately excluded from
+  theming.
 
 ## Languages (i18n)
 
@@ -379,8 +410,8 @@ source of truth:
   feelings.
 
 Both classes resolve unknown/legacy values to their neutral group, so old
-data never breaks rendering. The actual colors live in the stylesheet
-(`templates/layout.php`), never inline in PHP.
+data never breaks rendering. The actual colors live as CSS custom properties
+in `public/assets/css/master.css` (see "Theming"), never inline in PHP.
 
 **Color decision:** the edge color tells the emotion (stance), the edge
 label tells the role (kind). Colors reuse the previous palette where
@@ -402,10 +433,12 @@ groups coincide (`love` -> pink, `hostility` -> red, `esteem` -> blue,
 
 **Recipe - add a stance group:**
 1. One `STANCE_GROUPS` entry (a stance assigned to the new group).
-2. One CSS class in `templates/layout.php` (`.rel-<group>`) covering
+2. One CSS class in `public/assets/css/master.css` (`.rel-<group>`) covering
    all three color contexts: `stroke` for graph edges, `fill` for
    edge labels (`.graph-edge-label.rel-<group>`), and `background`
-   for the legend swatches (`.graph-legend-swatch.rel-<group>`).
+   for the legend swatches (`.graph-legend-swatch.rel-<group>`) - each
+   reading its own `:root` variable (`--rel-<group>-stroke`,
+   `--rel-<group>-fill`, `--rel-<group>-bg`).
 3. `stancegroup_<group>` lang lines in every language
    (`lang/<code>/writing.php` for `en`, `de`, `es`, `fr`). The legend
    picks the group up automatically.

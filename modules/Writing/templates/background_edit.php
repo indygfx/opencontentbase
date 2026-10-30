@@ -16,16 +16,4 @@
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($background['body'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
     </form>
-    <script>
-    (function () {
-        'use strict';
-        var body = document.getElementById('body');
-        document.addEventListener('keydown', function (ev) {
-            if ((ev.metaKey || ev.ctrlKey) && ev.key === 's') {
-                ev.preventDefault();
-                body.form.submit();
-            }
-        });
-    })();
-    </script>
 </section>

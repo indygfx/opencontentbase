@@ -8,7 +8,7 @@
         <?= $csrf->field() ?>
         <?php if ($page === null): ?>
             <label for="slug"><?= e(t('pages', 'slug_label')) ?> <small class="muted"><?= e(t('pages', 'slug_hint')) ?></small></label>
-            <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" placeholder="<?= e(t('pages', 'slug_placeholder')) ?>" pattern="[a-z0-9-]*" title="<?= e(t('pages', 'slug_title')) ?>">
+            <input id="slug" name="slug" value="<?= e($slug ?? '') ?>" placeholder="<?= e(t('pages', 'slug_placeholder')) ?>" data-slug-preview="<?= e(t('pages', 'slug_preview', ['slug' => ''])) ?>" pattern="[a-z0-9-]*" title="<?= e(t('pages', 'slug_title')) ?>">
         <?php endif; ?>
         <label for="title"><?= e(t('pages', 'title_label')) ?></label>
         <input id="title" name="title" value="<?= e($formTitle ?? ($page['title'] ?? '')) ?>" required maxlength="200">
@@ -23,32 +23,3 @@
         </form>
     <?php endif; ?>
 </section>
-<script>
-(function () {
-    'use strict';
-    var body = document.getElementById('body');
-    var slugInput = document.getElementById('slug');
-    var titleInput = document.getElementById('title');
-    if (slugInput !== null && titleInput !== null) {
-        var syncSlug = function () {
-            if (slugInput.value === '') {
-                var preview = titleInput.value
-                    .toLowerCase()
-                    .replace(/[äöü]/g, function (c) { return {'ä': 'ae', 'ö': 'oe', 'ü': 'ue'}[c]; })
-                    .replace(/ß/g, 'ss')
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-+|-+$/g, '');
-                slugInput.placeholder = <?= json_encode(t('pages', 'slug_preview', ['slug' => ''])) ?> + preview;
-            }
-        };
-        titleInput.addEventListener('input', syncSlug);
-        syncSlug();
-    }
-    document.addEventListener('keydown', function (ev) {
-        if ((ev.metaKey || ev.ctrlKey) && ev.key === 's') {
-            ev.preventDefault();
-            body.form.submit();
-        }
-    });
-})();
-</script>

@@ -33,8 +33,14 @@ The full commit history is in `git log` on `dev`. In short:
 
 ## Open items (priority order, decided 2026-10-30)
 
-The **board** is paused in favor of **mobile-first + read-only PWA**. The
-next concrete step is the **theme extraction**.
+The **board** is paused in favor of **mobile-first + read-only PWA**.
+
+**Done:** theme extraction (step 1) - all inline CSS/JS moved to
+`public/assets/css/master.css` (`:root` custom properties incl. the stance
+group variables) and `public/assets/js/app.js`; the `theme.css` child-theme
+override slot is wired in the layout (file not shipped). See the "Theming"
+section in [README.md](README.md). The next concrete step is the
+**mobile-first audit**.
 
 ### 1. Theme extraction (next step)
 
@@ -67,6 +73,7 @@ Order (important – the extraction is the foundation for everything else):
 1. **Theme extraction** (small): inline CSS -> `public/assets/css/master.css`
    with `:root` variables; inline JS -> static files. MUST happen before
    mobile-first and PWA (service-worker caching needs external assets).
+   **Done** - no inline CSS/JS in templates anymore, zero visual change.
 2. **Mobile-first audit** on the new CSS base.
 3. **Build the board mobile-ready.**
 4. **PWA stage 1**, then **stage 2**.

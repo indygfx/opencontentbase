@@ -54,27 +54,6 @@
         <input type="number" id="target_backgrounds" name="target_backgrounds" min="1" max="100" value="<?= (int)$targets['target_backgrounds'] ?>" required>
         <button type="submit"><?= e(t('writing', 'save_targets')) ?></button>
     </form>
-    <script>
-    (function () {
-        'use strict';
-        var genreSelect = document.getElementById('genre');
-        var wordsInput = document.getElementById('target_words_total');
-        var byGenre = {
-            'General': 90000,
-            'Fantasy': 110000,
-            'Sci-Fi': 100000,
-            'Romance': 80000,
-            'Thriller/Crime': 90000,
-            'Young Adult': 70000
-        };
-        genreSelect.addEventListener('change', function () {
-            var target = byGenre[genreSelect.value];
-            if (typeof target === 'number' && wordsInput !== null) {
-                wordsInput.value = target;
-            }
-        });
-    })();
-    </script>
     <h2><?= e(t('writing', 'share_story')) ?></h2>
     <?php if ($shareTargets !== []): ?>
         <form method="post" action="/writing/<?= e($project['id']) ?>/share">
