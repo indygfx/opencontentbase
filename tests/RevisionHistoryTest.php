@@ -136,7 +136,7 @@ final class RevisionHistoryTest extends TestCase
         // Current badge appears exactly once.
         $this->assertSame(1, substr_count($body, t('writing', 'history_current')));
         // Both rows show +/- stats; the newest row shows a dash instead.
-        $this->assertSame(2, substr_count($body, 'diffstat-added'));
+        $this->assertSame(1, substr_count($body, '<span class="diffstat-added">'));
     }
 
     public function testListStrangerGets404(): void
