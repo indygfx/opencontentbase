@@ -112,6 +112,7 @@ lang/              Language files: en/ (default), de/, es/, fr/, one file per do
 modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
 templates/         Layout, Login, Profile, Users, Error
+docs/              Project docs: mobile-audit.md (mobile-first findings), more as needed
 public/assets/css/ master.css (master theme, :root custom properties), editor.css (Tiptap bundle)
 public/assets/js/  app.js (page glue), editor.js (Tiptap bundle), story-slider.js
 public/index.php   Front controller

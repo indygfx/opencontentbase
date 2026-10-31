@@ -39,8 +39,12 @@ The **board** is paused in favor of **mobile-first + read-only PWA**.
 `public/assets/css/master.css` (`:root` custom properties incl. the stance
 group variables) and `public/assets/js/app.js`; the `theme.css` child-theme
 override slot is wired in the layout (file not shipped). See the "Theming"
-section in [README.md](README.md). The next concrete step is the
-**mobile-first audit**.
+section in [README.md](README.md).
+
+**Done:** mobile-first audit (step 2) - findings in
+[docs/mobile-audit.md](docs/mobile-audit.md); the mobile-first **fixes** are
+the next concrete step (top 5 musts: topbar wrap, table scroll wrapper,
+44 px touch targets, graph readability, slider clipping).
 
 ### 1. Theme extraction (next step)
 
@@ -74,7 +78,8 @@ Order (important – the extraction is the foundation for everything else):
    with `:root` variables; inline JS -> static files. MUST happen before
    mobile-first and PWA (service-worker caching needs external assets).
    **Done** - no inline CSS/JS in templates anymore, zero visual change.
-2. **Mobile-first audit** on the new CSS base.
+2. **Mobile-first audit** on the new CSS base. **Done** - see
+   [docs/mobile-audit.md](docs/mobile-audit.md); fixes pending.
 3. **Build the board mobile-ready.**
 4. **PWA stage 1**, then **stage 2**.
 5. **Child-theme mechanism last**: theme loader (config entry, e.g.
