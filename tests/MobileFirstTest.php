@@ -187,6 +187,34 @@ final class MobileFirstTest extends TestCase
         }
     }
 
+    public function testEditorCssHasExactlyOneMobileBlockWithToolbarRules(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
+        $this->assertSame(1, substr_count($css, '@media (max-width: 768px)'), 'editor.css must have exactly one mobile block');
+        $block = $this->mediaBlock($css, 768);
+        // F8: single scrollable toolbar row
+        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: nowrap;[^}]*overflow-x: auto;/s', $block);
+        // F8: 44px touch targets on toolbar buttons
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-btn \{[^}]*min-height: 44px;[^}]*min-width: 44px;/s', $block);
+        // F8: counter scrolls inline at the end of the row
+        $this->assertMatchesRegularExpression('/\.editor-counter \{[^}]*margin-left: 0;/s', $block);
+        // F8: dropdowns become fixed bottom sheets
+        $this->assertMatchesRegularExpression('/\.editor-menu__dropdown\.is-open \{[^}]*position: fixed;[^}]*bottom: 0\.5rem;[^}]*max-height: 60vh;[^}]*overflow-y: auto;/s', $block);
+        // F8: menu entries reach 44px
+        $this->assertMatchesRegularExpression('/\.editor-menu__entry \{[^}]*min-height: 44px;/s', $block);
+    }
+
+    public function testEditorBundleSourcesUntouchedByMobileFix(): void
+    {
+        // The mobile toolbar fix is CSS-only: no inline script/style in the
+        // edit templates and the editor bundle is referenced as a file.
+        foreach (glob($this->base . '/modules/*/templates/*_edit.php') ?: [] as $file) {
+            $source = (string)file_get_contents($file);
+            $this->assertSame(0, (int)preg_match('/<script(?![^>]*\bsrc=)[^>]*>/', $source), $file);
+        }
+        $this->assertFileExists($this->base . '/public/assets/js/editor.js');
+    }
+
     private function mediaBlock(string $css, int $maxWidth): string
     {
         $needle = '@media (max-width: ' . $maxWidth . 'px)';

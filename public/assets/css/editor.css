@@ -203,3 +203,46 @@
     background: var(--accent);
     color: #fff;
 }
+
+/* Mobile toolbar (audit F8): below 768px the toolbar becomes a single
+   horizontally scrollable row with 44px touch targets, and dropdowns open
+   as fixed bottom sheets so they can never overflow a viewport edge.
+   CSS-only in this file - the editor bundle (editor.js) is untouched, and
+   above 768px nothing changes. */
+@media (max-width: 768px) {
+    .editor-toolbar {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .editor-toolbar-btn {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+    .editor-toolbar-sep {
+        margin: 0 0.1rem;
+        flex: 0 0 auto;
+    }
+    .editor-counter {
+        margin-left: 0;
+        padding-left: 0.75rem;
+        flex: 0 0 auto;
+    }
+    .editor-menu__dropdown.is-open {
+        position: fixed;
+        left: 0.5rem;
+        right: 0.5rem;
+        top: auto;
+        bottom: 0.5rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .editor-menu__entry {
+        min-height: 44px;
+        font-size: 1rem;
+    }
+}

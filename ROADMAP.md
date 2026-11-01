@@ -49,8 +49,13 @@ section in [README.md](README.md).
 F1 (topbar flex-wrap), F6 (`.table-scroll` wrapper around all 13 tables),
 F3 (44 px touch targets), F11 (graph scrolls sideways below 768 px with a
 translated swipe hint), F5 (slider no longer clips excerpts on phones).
-Desktop rendering above 768 px is unchanged. **Phase 2** (open): F4, F7-F10,
-F12-F16 from the audit.
+Desktop rendering above 768 px is unchanged.
+
+**Done:** audit finding F8 (editor toolbar on small screens) - CSS-only mobile
+block in `public/assets/css/editor.css` (single scrollable toolbar row, 44 px
+touch targets, bottom-sheet dropdowns below 768 px); the editor bundle is
+untouched, no rebuild. **Phase 2** (open): F4, F7, F9-F10, F12-F16 from the
+audit.
 
 ### 1. Theme extraction (next step)
 

@@ -13,6 +13,7 @@ All Markdown fields (chapter prose, outline fields, chapter synopsis summaries, 
 - **Shortcuts**: Ctrl/Cmd+B/I, Ctrl/Cmd+K (link), Ctrl/Cmd+S saves the surrounding form.
 - **Forms unchanged**: the editor writes `editor.getMarkdown()` back into the original hidden `<textarea>` on every update and on submit, so the server flow (CSRF, validation, Markdown persistence) is untouched; server-side rendering via league/commonmark stays the single source of truth for display.
 - **Progressive enhancement**: without JavaScript the plain `<textarea>` keeps working as fallback.
+- **Mobile (below 768 px, CSS-only in `editor.css`)**: the toolbar becomes a single horizontally scrollable row (`flex-wrap: nowrap; overflow-x: auto`) with 44 px touch targets on every button; the character counter scrolls inline at the row's end; dropdown menus (headings/lists/blocks) open as fixed bottom sheets (`position: fixed; bottom: 0.5rem; max-height: 60vh`) so they can never overflow a viewport edge. Above 768 px nothing changes. These rules live only in `editor.css` - the editor bundle is not involved and needs no rebuild.
 
 ### Build step (editor bundle)
 
@@ -143,9 +144,10 @@ stay separate files).
   The file is intentionally not shipped. **Rule: child themes override
   variables, never classes** - a child theme that changes graph or diff
   colors must keep graph/diff readability (contrast) intact.
-- **Not themed**: the Tiptap editor toolbar styling (`editor.css`) is a
-  third-party bundle with its own assets and is deliberately excluded from
-  theming.
+- **Not themed**: the Tiptap editor styling (`editor.css`, including its
+  mobile toolbar rules) is a third-party bundle with its own assets and is
+  deliberately excluded from theming - child themes only override
+  `master.css` variables.
 
 ## Mobile-first
 
