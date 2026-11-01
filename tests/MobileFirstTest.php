@@ -192,16 +192,22 @@ final class MobileFirstTest extends TestCase
         $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
         $this->assertSame(1, substr_count($css, '@media (max-width: 768px)'), 'editor.css must have exactly one mobile block');
         $block = $this->mediaBlock($css, 768);
-        // F8: single scrollable toolbar row
-        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: nowrap;[^}]*overflow-x: auto;/s', $block);
+        // F8: single scrollable toolbar row (nowrap, overflow-x, contained overscroll, thin scrollbar)
+        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: nowrap;[^}]*overflow-x: auto;[^}]*overscroll-behavior-x: contain;[^}]*scrollbar-width: thin;/s', $block);
+        // F8: buttons and menus must not shrink in the row
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-btn, \.editor-menu \{[^}]*flex: 0 0 auto;/s', $block);
         // F8: 44px touch targets on toolbar buttons
         $this->assertMatchesRegularExpression('/\.editor-toolbar-btn \{[^}]*min-height: 44px;[^}]*min-width: 44px;/s', $block);
-        // F8: counter scrolls inline at the end of the row
-        $this->assertMatchesRegularExpression('/\.editor-counter \{[^}]*margin-left: 0;/s', $block);
+        // F8: dense separator, counter scrolls inline at the end of the row
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-sep \{[^}]*margin: 0;/s', $block);
+        $this->assertMatchesRegularExpression('/\.editor-counter \{[^}]*margin-left: 0;[^}]*flex: 0 0 auto;/s', $block);
+        // F8: right-edge fade scroll affordance over the toolbar area, colors from :root variables only
+        $this->assertMatchesRegularExpression('/\.editor-wrap::after \{[^}]*linear-gradient\(to right, transparent, var\(--surface\)\)[^}]*pointer-events: none;/s', $block);
+        $this->assertMatchesRegularExpression('/\.editor-wrap \{ position: relative; \}/', $block);
         // F8: dropdowns become fixed bottom sheets
         $this->assertMatchesRegularExpression('/\.editor-menu__dropdown\.is-open \{[^}]*position: fixed;[^}]*bottom: 0\.5rem;[^}]*max-height: 60vh;[^}]*overflow-y: auto;/s', $block);
-        // F8: menu entries reach 44px
-        $this->assertMatchesRegularExpression('/\.editor-menu__entry \{[^}]*min-height: 44px;/s', $block);
+        // F8: menu entries full width and 44px
+        $this->assertMatchesRegularExpression('/\.editor-menu__entry \{[^}]*width: 100%;[^}]*min-height: 44px;[^}]*font-size: 1rem;/s', $block);
     }
 
     public function testEditorBundleSourcesUntouchedByMobileFix(): void

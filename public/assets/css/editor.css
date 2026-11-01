@@ -204,16 +204,26 @@
     color: #fff;
 }
 
-/* Mobile toolbar (audit F8): below 768px the toolbar becomes a single
-   horizontally scrollable row with 44px touch targets, and dropdowns open
-   as fixed bottom sheets so they can never overflow a viewport edge.
-   CSS-only in this file - the editor bundle (editor.js) is untouched, and
-   above 768px nothing changes. */
+/* Mobile toolbar (audit F8): below 768px the toolbar is exactly ONE row at
+   every viewport width - horizontally scrollable when needed (TinyMCE
+   scrollable-toolbar pattern, same as Nextcloud Text's mobile requirement),
+   44px touch targets, no shrinking buttons, a right-edge fade hinting the
+   row continues, and dropdowns as fixed bottom sheets so they can never
+   overflow a viewport edge. CSS-only in this file - the editor bundle
+   (editor.js) is untouched, and above 768px nothing changes.
+   Future options (would need a bundle change): a "..." overflow menu for
+   rarely used block actions, a bottom-anchored toolbar. */
 @media (max-width: 768px) {
+    .editor-wrap { position: relative; }
     .editor-toolbar {
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+    }
+    .editor-toolbar-btn, .editor-menu {
+        flex: 0 0 auto;
     }
     .editor-toolbar-btn {
         min-height: 44px;
@@ -221,16 +231,27 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        flex: 0 0 auto;
     }
     .editor-toolbar-sep {
-        margin: 0 0.1rem;
+        margin: 0;
         flex: 0 0 auto;
     }
     .editor-counter {
         margin-left: 0;
         padding-left: 0.75rem;
         flex: 0 0 auto;
+    }
+    /* Scroll affordance: right-edge fade over the toolbar area. With 13
+       buttons the row always overflows at <=768px, so the fade is never wrong. */
+    .editor-wrap::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 24px;
+        height: 2.6rem;
+        background: linear-gradient(to right, transparent, var(--surface));
+        pointer-events: none;
     }
     .editor-menu__dropdown.is-open {
         position: fixed;
@@ -242,6 +263,7 @@
         overflow-y: auto;
     }
     .editor-menu__entry {
+        width: 100%;
         min-height: 44px;
         font-size: 1rem;
     }
