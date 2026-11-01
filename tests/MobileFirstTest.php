@@ -28,6 +28,7 @@ use Writing\WritingModule;
 final class MobileFirstTest extends TestCase
 {
     private string $base;
+    private bool $translatorWasInitialized = false;
     private Database $db;
     private Auth $auth;
     private Csrf $csrf;
@@ -37,6 +38,7 @@ final class MobileFirstTest extends TestCase
     protected function setUp(): void
     {
         $this->base = dirname(__DIR__);
+        $this->translatorWasInitialized = Translator::instance() !== null;
         Translator::init($this->base . '/lang');
         Translator::instance()?->setLang('en');
         $path = sys_get_temp_dir() . '/cb_mobile_' . uniqid() . '.sqlite';
@@ -53,6 +55,9 @@ final class MobileFirstTest extends TestCase
         );
         $this->admin = User::fromRow($this->db->one("SELECT id, username, role FROM users WHERE id = 'a1'"));
         $this->db->run("INSERT INTO projects (id, owner_id, title) VALUES ('p1', 'a1', 'My novel')");
+        $this->db->run(
+            "INSERT INTO chapter_synopses (id, project_id, slug, title) VALUES ('s1', 'p1', 's-one', 'Outline')"
+        );
         $_POST = [];
     }
 
@@ -60,6 +65,10 @@ final class MobileFirstTest extends TestCase
     {
         unset($this->db, $this->auth, $this->csrf, $this->view, $this->admin);
         $_POST = [];
+        if (!$this->translatorWasInitialized) {
+            $prop = new \ReflectionProperty(Translator::class, 'instance');
+            $prop->setValue(null, null);
+        }
     }
 
     public function testMasterCssHasBothMediaQueryBlocks(): void
