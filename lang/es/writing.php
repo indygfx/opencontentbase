@@ -124,6 +124,7 @@ return [
     'graph_legend' => 'Leyenda',
     'graph_level_explanation' => 'El tamaño del nodo y la etiqueta L0-L10 reflejan cuántas veces se menciona un personaje en la prosa (nivel = round(sqrt(menciones) * 1.5), máximo 10). Los personajes de nivel 7 o más forman la zona de protagonistas en el centro.',
     'graph_back_to_relationships' => 'Volver a la lista de relaciones',
+    'graph_scroll_hint' => 'En pantallas pequeñas, desliza el grafo lateralmente para ver todas las etiquetas.',
     'kind_kin' => 'Pariente (genérico)',
     'kind_parent' => 'Padre/Madre',
     'kind_child' => 'Hijo/Hija',

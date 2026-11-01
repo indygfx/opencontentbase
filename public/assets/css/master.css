@@ -67,18 +67,19 @@
     --rel-neutral-bg: #9ca3af;
 }
 body { font-family: system-ui, sans-serif; color: var(--ink); margin: 0; background: var(--bg); }
-.topbar { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; row-gap: 0.25rem; padding: 0.75rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--line); }
 .brand { font-weight: 700; text-decoration: none; color: var(--ink); }
-.topbar nav { display: flex; gap: 1rem; align-items: center; }
-.topbar nav a { color: var(--accent); text-decoration: none; }
+.topbar nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+.topbar nav a { color: var(--accent); text-decoration: none; display: inline-block; min-height: 44px; padding: 0.65rem 0.25rem; box-sizing: border-box; }
 main { max-width: 52rem; margin: 1.5rem auto; padding: 0 1rem; }
 h1, h2 { margin-top: 0; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; background: var(--surface); }
 th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); }
 label { display: block; margin-bottom: 1rem; font-weight: 600; }
 input, textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; font: inherit; }
 textarea { font-family: ui-monospace, monospace; }
-button, .button { background: var(--accent); color: var(--surface); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
+button, .button { background: var(--accent); color: var(--surface); border: none; padding: 0.5rem 1rem; min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
 form.inline { display: inline; margin: 0; }
 .error { color: var(--error); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem; }
@@ -92,6 +93,7 @@ form.inline { display: inline; margin: 0; }
 .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }
 .character-portrait { max-width: 10rem; max-height: 10rem; border: 1px solid var(--line); border-radius: 50%; display: block; margin-bottom: 1rem; }
 .graph-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem; margin-bottom: 1rem; }
+.graph-scroll-hint { display: none; }
 .relationship-graph { width: 100%; height: auto; display: block; }
 .graph-node-circle { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: 1.5; }
 .graph-node-label-bg { fill: var(--surface); opacity: 0.85; }
@@ -158,5 +160,32 @@ form.inline { display: inline; margin: 0; }
 .story-slide-sep { margin: 0 0.35rem; }
 .story-slider[data-count="1"] .story-slide { position: static; }
 .story-slider-nav { position: absolute; bottom: 0.75rem; right: 1rem; display: flex; gap: 0.4rem; }
-.story-slider-nav button { background: transparent; border: 1px solid var(--slider-dot-line); color: var(--slider-muted); width: 1.6rem; height: 1.6rem; padding: 0; border-radius: 50%; font-size: 0.9rem; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.story-slider-nav button { background: transparent; border: 1px solid var(--slider-dot-line); color: var(--slider-muted); width: 2.75rem; height: 2.75rem; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-size: 0.9rem; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .story-slider-nav button.is-active { background: var(--slider-dot-active-bg); color: var(--slider-dot-active-text); border-color: var(--slider-dot-active-bg); }
+
+/* Mobile overrides (F2): desktop stays the base; everything below only
+   applies at tablet (<=768px) and phone (<=480px) widths. */
+@media (max-width: 768px) {
+    main { padding: 0 0.75rem; margin: 1rem auto; }
+    .card, .content { padding: 1rem; }
+    .topbar { padding: 0.5rem 0.75rem; }
+    .topbar nav { gap: 0.25rem 0.75rem; }
+    /* F11: graph keeps its 900px design width and scrolls sideways, labels stay legible */
+    .graph-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .relationship-graph { min-width: 900px; }
+    .graph-scroll-hint { display: block; }
+    /* F5: slider excerpts wrap instead of being clipped; the active slide
+       defines the container height, the cross-fade (opacity) still runs */
+    .story-slider { padding: 1.25rem 1rem; overflow: visible; }
+    .story-slides { min-height: 0; }
+    .story-slide.is-active { position: static; }
+    .story-slider-nav { position: static; margin-top: 0.75rem; justify-content: flex-end; }
+}
+@media (max-width: 480px) {
+    .topbar { flex-direction: column; align-items: flex-start; }
+    .topbar nav { width: 100%; }
+    .topbar nav a { flex: 1 1 auto; text-align: center; }
+    button, .button { width: 100%; }
+    form.inline button, .topbar button { width: auto; }
+    .narrow { margin: 1.5rem auto; }
+}

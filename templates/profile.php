@@ -1,9 +1,9 @@
 <section class="card">
     <h1><?= e(t('core', 'profile_title')) ?></h1>
-    <table>
+    <div class="table-scroll"><table>
         <tr><th><?= e(t('core', 'profile_username')) ?></th><td><?= e($user->username()) ?></td></tr>
         <tr><th><?= e(t('core', 'profile_role')) ?></th><td><?= e($user->role()) ?></td></tr>
-    </table>
+    </table></div>
     <h2><?= e(t('core', 'profile_language')) ?></h2>
     <form method="post" action="/profile/language">
         <?= $csrf->field() ?>

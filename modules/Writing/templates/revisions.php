@@ -8,7 +8,7 @@
     <?php if ($rows === []): ?>
         <p class="muted"><?= e(t('writing', 'history_empty')) ?></p>
     <?php else: ?>
-        <table>
+        <div class="table-scroll"><table>
             <thead>
             <tr>
                 <th><?= e(t('writing', 'history_col_revision')) ?></th>
@@ -41,7 +41,7 @@
                 </tr>
             <?php endforeach; ?>
             </tbody>
-        </table>
+        </table></div>
 
         <?php if ($canEdit && count($revisionIds) > 1): ?>
             <h2><?= e(t('writing', 'history_compare')) ?></h2>

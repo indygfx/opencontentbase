@@ -107,7 +107,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('outlines', $progress['outlines'], $progress['outlines']['actual'] . ' / ' . $progress['outlines']['target'] . ' ' . t('writing', 'chapters')) ?>
     <p class="muted"><?= e(t('writing', 'chapter_outlines_hint')) ?></p>
     <?php if ($synopses !== []): ?>
-        <table>
+        <div class="table-scroll"><table>
             <tr><th>#</th><th><?= e(t('writing', 'outline')) ?></th><th><?= e(t('writing', 'summary')) ?></th><th><?= e(t('writing', 'prose')) ?></th><th></th></tr>
             <?php foreach ($synopses as $i => $s): ?>
                 <tr>
@@ -120,7 +120,7 @@ function progressBar(string $section, array $entry, string $label): string
                     <td><a href="/writing/<?= e($project['id']) ?>/synopses/<?= e($s['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'no_outlines_yet')) ?></p>
     <?php endif; ?>
@@ -130,7 +130,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('characters', $progress['characters'], $progress['characters']['actual'] . ' / ' . $progress['characters']['target'] . ' ' . t('writing', 'characters')) ?>
     <p class="muted"><?= e(t('writing', 'characters_hint')) ?></p>
     <?php if ($characters !== []): ?>
-        <table>
+        <div class="table-scroll"><table>
             <tr><th><?= e(t('writing', 'name')) ?></th><th><?= e(t('pages', 'table_slug')) ?></th><th></th></tr>
             <?php foreach ($characters as $ch): ?>
                 <tr>
@@ -139,7 +139,7 @@ function progressBar(string $section, array $entry, string $label): string
                     <td><a href="/writing/<?= e($project['id']) ?>/characters/<?= e($ch['slug']) ?>"><?= e(t('writing', 'open')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'no_characters_yet')) ?></p>
     <?php endif; ?>
@@ -149,7 +149,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('relations', $progress['relations'], $progress['relations']['actual'] . ' / ' . $progress['relations']['target'] . ' ' . t('writing', 'relations')) ?>
     <p class="muted"><?= e(t('writing', 'relationship_web_hint')) ?></p>
     <?php if ($relations !== []): ?>
-        <table>
+        <div class="table-scroll"><table>
             <tr><th><?= e(t('writing', 'from')) ?></th><th><?= e(t('writing', 'kind')) ?></th><th><?= e(t('writing', 'to')) ?></th><th><?= e(t('writing', 'conflict')) ?></th><th></th></tr>
             <?php foreach ($relations as $r): ?>
                 <tr>
@@ -160,7 +160,7 @@ function progressBar(string $section, array $entry, string $label): string
                     <td><a href="/writing/<?= e($project['id']) ?>/relations/<?= e($r['id']) ?>/edit"><?= e(t('writing', 'edit')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'no_relationships_yet')) ?></p>
     <?php endif; ?>
@@ -170,7 +170,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('backgrounds', $progress['backgrounds'], $progress['backgrounds']['actual'] . ' / ' . $progress['backgrounds']['target'] . ' ' . t('writing', 'backgrounds')) ?>
     <p class="muted"><?= e(t('writing', 'backgrounds_hint')) ?></p>
     <?php if ($backgrounds !== []): ?>
-        <table>
+        <div class="table-scroll"><table>
             <tr><th><?= e(t('pages', 'table_title')) ?></th><th><?= e(t('pages', 'table_slug')) ?></th><th></th></tr>
             <?php foreach ($backgrounds as $b): ?>
                 <tr>
@@ -179,7 +179,7 @@ function progressBar(string $section, array $entry, string $label): string
                     <td><a href="/writing/<?= e($project['id']) ?>/backgrounds/<?= e($b['slug']) ?>"><?= e(t('writing', 'open')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'no_backgrounds_yet')) ?></p>
     <?php endif; ?>
@@ -189,7 +189,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('chapters', $progress['chapters'], number_format($progress['chapters']['actual']) . ' / ' . number_format($progress['chapters']['target']) . ' ' . t('writing', 'words')) ?>
     <p class="muted"><?= e(t('writing', 'written_chapters_hint')) ?></p>
     <?php if ($chapters !== []): ?>
-        <table>
+        <div class="table-scroll"><table>
             <tr><th>#</th><th><?= e(t('writing', 'chapter')) ?></th><th></th></tr>
             <?php foreach ($chapters as $i => $ch): ?>
                 <tr>
@@ -198,7 +198,7 @@ function progressBar(string $section, array $entry, string $label): string
                     <td><a href="/writing/<?= e($project['id']) ?>/chapters/<?= e($ch['slug']) ?>/edit"><?= e(t('writing', 'open')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'no_written_chapters_yet')) ?></p>
     <?php endif; ?>

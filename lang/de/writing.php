@@ -124,6 +124,7 @@ return [
     'graph_legend' => 'Legende',
     'graph_level_explanation' => 'Knotengröße und die L0-L10-Kennzahl zeigen, wie oft ein Charakter im Kapiteltext erwähnt wird (Level = round(sqrt(Nennungen) * 1.5), höchstens 10). Charaktere ab Level 7 bilden die Protagonistenzone im Zentrum.',
     'graph_back_to_relationships' => 'Zurück zur Beziehungsliste',
+    'graph_scroll_hint' => 'Auf kleinen Bildschirmen den Graph seitwärts wischen, um alle Beschriftungen zu sehen.',
     'kind_kin' => 'Verwandter (generisch)',
     'kind_parent' => 'Elternteil',
     'kind_child' => 'Kind',

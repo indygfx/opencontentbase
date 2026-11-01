@@ -124,6 +124,7 @@ return [
     'graph_legend' => 'Legend',
     'graph_level_explanation' => 'Node size and the L0-L10 label reflect how often a character is mentioned in the chapter prose (level = round(sqrt(mentions) * 1.5), capped at 10). Characters with level 7 or higher form the protagonist zone in the center.',
     'graph_back_to_relationships' => 'Back to the relationship list',
+    'graph_scroll_hint' => 'On small screens, swipe the graph sideways to see all labels.',
     'kind_kin' => 'Relative (generic)',
     'kind_parent' => 'Parent',
     'kind_child' => 'Child',

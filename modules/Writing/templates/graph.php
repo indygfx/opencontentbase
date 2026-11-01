@@ -10,6 +10,7 @@
     <?php endif; ?>
 
     <?php if ($svg !== ''): ?>
+        <p class="muted graph-scroll-hint"><?= e(t('writing', 'graph_scroll_hint')) ?></p>
         <div class="graph-wrap"><?= $svg /* built by RelationshipGraph, all dynamic parts escaped */ ?></div>
     <?php endif; ?>
 

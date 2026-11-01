@@ -16,7 +16,7 @@
 
 <section>
     <h2><?= e(t('pages', 'revisions')) ?></h2>
-    <table>
+    <div class="table-scroll"><table>
         <thead>
         <tr>
             <th><?= e(t('pages', 'table_title')) ?></th>
@@ -33,5 +33,5 @@
             </tr>
         <?php endforeach; ?>
         </tbody>
-    </table>
+    </table></div>
 </section>

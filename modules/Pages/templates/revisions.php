@@ -6,7 +6,7 @@
     <?php if ($rows === []): ?>
         <p class="muted"><?= e(t('pages', 'history_empty')) ?></p>
     <?php else: ?>
-        <table>
+        <div class="table-scroll"><table>
             <thead>
             <tr>
                 <th><?= e(t('pages', 'history_col_revision')) ?></th>
@@ -39,6 +39,6 @@
                 </tr>
             <?php endforeach; ?>
             </tbody>
-        </table>
+        </table></div>
     <?php endif; ?>
 </section>

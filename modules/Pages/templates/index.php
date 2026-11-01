@@ -3,7 +3,7 @@
     <?php if (empty($pages)): ?>
         <p class="muted"><?= e(t('pages', 'no_pages')) ?></p>
     <?php else: ?>
-        <table>
+        <div class="table-scroll"><table>
             <thead>
             <tr>
                 <th><?= e(t('pages', 'table_title')) ?></th>
@@ -20,7 +20,7 @@
                 </tr>
             <?php endforeach; ?>
             </tbody>
-        </table>
+        </table></div>
     <?php endif; ?>
     <p><a class="button" href="/pages/new"><?= e(t('pages', 'new_page')) ?></a></p>
 </section>

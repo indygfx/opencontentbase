@@ -73,7 +73,7 @@
 
     <?php if ($members !== []): ?>
         <h3><?= e(t('writing', 'shared_with')) ?></h3>
-        <table>
+        <div class="table-scroll"><table>
             <tr><th><?= e(t('core', 'profile_username')) ?></th><th><?= e(t('core', 'users_role')) ?></th><th></th></tr>
             <?php foreach ($members as $m): ?>
                 <tr>
@@ -88,7 +88,7 @@
                     </td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php endif; ?>
 
     <h2><?= e(t('writing', 'danger_zone')) ?></h2>

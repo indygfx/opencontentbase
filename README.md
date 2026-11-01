@@ -147,6 +147,31 @@ stay separate files).
   third-party bundle with its own assets and is deliberately excluded from
   theming.
 
+## Mobile-first
+
+The audit and the fix phases are tracked in [docs/mobile-audit.md](docs/mobile-audit.md).
+Strategy: **desktop stays the base** - all mobile adjustments live in two
+override blocks at the END of `master.css`: `@media (max-width: 768px)`
+(tablet) and `@media (max-width: 480px)` (phone). Nothing changes visually
+above 768 px.
+
+- **Tables**: every list `<table>` is wrapped in `<div class="table-scroll">`
+  (`overflow-x: auto; -webkit-overflow-scrolling: touch`) - tables keep their
+  natural width and scroll sideways on phones instead of squeezing columns.
+  Recipe for new views: always wrap tables in `.table-scroll`
+  (enforced by `tests/MobileFirstTest.php`).
+- **Touch targets**: buttons, nav links and slider dots have a 44 px minimum
+  hit area (padding-based, no font growth) - base CSS, not breakpoint-bound.
+- **Topbar**: wraps via `flex-wrap` (pure CSS, no hamburger/JS); below 480 px
+  it stacks brand over nav.
+- **Graph**: the SVG keeps its 900 px design width; below 768 px
+  `.graph-wrap` scrolls sideways (`.relationship-graph { min-width: 900px }`)
+  so labels stay legible, and a translated hint (`graph_scroll_hint`, visible
+  only below 768 px via `.graph-scroll-hint`) tells the user to swipe.
+- **Slider**: below 768 px the excerpt slides are not clipped anymore - the
+  active slide defines the height (`min-height: 0` on `.story-slides`,
+  `overflow: visible`), the cross-fade and dots keep working.
+
 ## Languages (i18n)
 
 The UI is fully translated via flat PHP array files – no gettext, no tooling, no build step.

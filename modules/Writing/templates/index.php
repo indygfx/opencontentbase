@@ -42,7 +42,7 @@
     <?php if ($projects === []): ?>
         <p class="muted"><?= e(t('writing', 'no_stories')) ?></p>
     <?php else: ?>
-        <table>
+        <div class="table-scroll"><table>
             <tr>
                 <th><?= e(t('pages', 'table_title')) ?></th>
                 <th><?= e(t('writing', 'owner')) ?></th>
@@ -62,6 +62,6 @@
                     <td><a href="/writing/<?= e($p['id']) ?>"><?= e(t('writing', 'open')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
-        </table>
+        </table></div>
     <?php endif; ?>
 </section>

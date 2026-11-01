@@ -24,7 +24,7 @@
         <button type="submit"><?= e(t('core', 'users_create_submit')) ?></button>
     </form>
     <h2><?= e(t('core', 'users_existing')) ?></h2>
-    <table>
+    <div class="table-scroll"><table>
         <tr>
             <th><?= e(t('core', 'profile_username')) ?></th>
             <th><?= e(t('core', 'users_role')) ?></th>
@@ -69,5 +69,5 @@
                 </td>
             </tr>
         <?php endforeach; ?>
-    </table>
+    </table></div>
 </section>

@@ -124,6 +124,7 @@ return [
     'graph_legend' => 'Légende',
     'graph_level_explanation' => 'La taille du nœud et l’étiquette L0-L10 indiquent la fréquence de mention du personnage dans la prose (niveau = round(sqrt(mentions) * 1.5), plafonné à 10). Les personnages de niveau 7 ou plus forment la zone des protagonistes au centre.',
     'graph_back_to_relationships' => 'Retour à la liste des relations',
+    'graph_scroll_hint' => 'Sur les petits écrans, faites glisser le graphe latéralement pour voir toutes les étiquettes.',
     'kind_kin' => 'Parent (générique)',
     'kind_parent' => 'Parent',
     'kind_child' => 'Enfant',

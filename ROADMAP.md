@@ -42,9 +42,15 @@ override slot is wired in the layout (file not shipped). See the "Theming"
 section in [README.md](README.md).
 
 **Done:** mobile-first audit (step 2) - findings in
-[docs/mobile-audit.md](docs/mobile-audit.md); the mobile-first **fixes** are
-the next concrete step (top 5 musts: topbar wrap, table scroll wrapper,
-44 px touch targets, graph readability, slider clipping).
+[docs/mobile-audit.md](docs/mobile-audit.md).
+
+**Done:** mobile-first fixes phase 1 - F2 (breakpoints: `@media
+(max-width: 768px)` / `(max-width: 480px)` blocks at the end of master.css),
+F1 (topbar flex-wrap), F6 (`.table-scroll` wrapper around all 13 tables),
+F3 (44 px touch targets), F11 (graph scrolls sideways below 768 px with a
+translated swipe hint), F5 (slider no longer clips excerpts on phones).
+Desktop rendering above 768 px is unchanged. **Phase 2** (open): F4, F7-F10,
+F12-F16 from the audit.
 
 ### 1. Theme extraction (next step)
 
@@ -79,7 +85,8 @@ Order (important – the extraction is the foundation for everything else):
    mobile-first and PWA (service-worker caching needs external assets).
    **Done** - no inline CSS/JS in templates anymore, zero visual change.
 2. **Mobile-first audit** on the new CSS base. **Done** - see
-   [docs/mobile-audit.md](docs/mobile-audit.md); fixes pending.
+   [docs/mobile-audit.md](docs/mobile-audit.md); fixes phase 1 done
+   (top 5 + enabler), phase 2 findings pending.
 3. **Build the board mobile-ready.**
 4. **PWA stage 1**, then **stage 2**.
 5. **Child-theme mechanism last**: theme loader (config entry, e.g.
