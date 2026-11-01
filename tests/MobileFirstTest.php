@@ -109,7 +109,15 @@ final class MobileFirstTest extends TestCase
         $this->assertGreaterThanOrEqual(12, $tables, 'audit expects at least 12 wrapped tables');
     }
 
-    public function testRenderedStoryDashboardWrapsTables(): void
+    /**
+     * The project template declares helper functions, so it can only be
+     * rendered once per process - this single test covers the dashboard
+     * (project.php) plus the users list (users.php).
+     *
+     * @runInSeparateProcess
+     * @preserveGlobalState disabled
+     */
+    public function testRenderedStoryDashboardAndUsersListWrapTables(): void
     {
         $controller = new WritingController(
             $this->db,
