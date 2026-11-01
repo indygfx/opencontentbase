@@ -120,9 +120,11 @@ final class MobileFirstTest extends TestCase
         );
         $body = $controller->show($this->admin, 'p1')->body();
         $this->assertStringContainsString('<div class="table-scroll"><table>', $body);
+        $users = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
+        $this->assertStringContainsString('<div class="table-scroll"><table>', $users->index($this->admin)->body());
     }
 
-    public function testRenderedDashboardAndUsersPagesWrapTables(): void
+    public function testRenderedDashboardWrapsStoryListTable(): void
     {
         $writing = new WritingController(
             $this->db,
@@ -132,8 +134,6 @@ final class MobileFirstTest extends TestCase
             new ContentRenderer($this->db, new ModuleRegistry())
         );
         $this->assertStringContainsString('<div class="table-scroll"><table>', $writing->index($this->admin)->body());
-        $users = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
-        $this->assertStringContainsString('<div class="table-scroll"><table>', $users->index($this->admin)->body());
     }
 
     public function testGraphPageContainsScrollHintAndSvg(): void
