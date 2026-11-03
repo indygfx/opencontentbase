@@ -195,8 +195,8 @@ final class MobileFirstTest extends TestCase
         // F8 collapse pattern: toolbar wraps, collapsed shows only the first row
         $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: wrap;[^}]*overflow-x: hidden;/s', $block);
         $this->assertMatchesRegularExpression('/\.editor-toolbar\.is-collapsed \{[^}]*max-height: 3\.6rem;[^}]*overflow: hidden;[^}]*padding-right: 3\.4rem;/s', $block);
-        // F8: chevron toggle anchored on the toolbar's right edge, 44px target
-        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*position: absolute;[^}]*right: 0\.25rem;[^}]*min-width: 44px;[^}]*min-height: 44px;/s', $block);
+        // F8: chevron toggle anchored on the toolbar's right edge, 44px target, never full-width
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*position: absolute;[^}]*right: 0\.25rem;[^}]*width: auto;[^}]*min-width: 44px;[^}]*min-height: 44px;/s', $block);
         // F8: buttons and menus must not shrink when wrapping
         $this->assertMatchesRegularExpression('/\.editor-toolbar-btn, \.editor-menu \{[^}]*flex: 0 0 auto;/s', $block);
         // F8: 44px touch targets on toolbar buttons
@@ -208,6 +208,18 @@ final class MobileFirstTest extends TestCase
         $this->assertMatchesRegularExpression('/\.editor-menu__dropdown\.is-open \{[^}]*position: fixed;[^}]*bottom: 0\.5rem;[^}]*max-height: 60vh;[^}]*overflow-y: auto;/s', $block);
         // F8: menu entries full width and 44px
         $this->assertMatchesRegularExpression('/\.editor-menu__entry \{[^}]*width: 100%;[^}]*min-height: 44px;[^}]*font-size: 1rem;/s', $block);
+    }
+
+    public function testToolbarToggleIsNeverFullWidthEvenBelow480(): void
+    {
+        // master.css sets `button { width: 100% }` inside its 480px block (element
+        // selector, specificity 0-0-1); editor.css's `.editor-toolbar-toggle
+        // { width: auto }` (class selector, 0-1-0) must override it in every block.
+        $master = (string)file_get_contents($this->base . '/public/assets/css/master.css');
+        $this->assertMatchesRegularExpression('/button, \.button \{ width: 100%; \}/', $this->mediaBlock($master, 480));
+        $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
+        $block768 = $this->mediaBlock($css, 768);
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*width: auto;/s', $block768);
     }
 
     public function testEditorCssHasNoObsoleteScrollAffordanceLeft(): void

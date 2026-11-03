@@ -237,6 +237,7 @@
         right: 0.25rem;
         top: 0.35rem;
         z-index: 11;
+        width: auto; /* never full-width: the class selector beats master.css's button { width: 100% } at <=480px */
         min-width: 44px;
         min-height: 44px;
         display: inline-flex;
