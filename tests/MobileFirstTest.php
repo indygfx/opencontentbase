@@ -218,7 +218,13 @@ final class MobileFirstTest extends TestCase
         $this->assertStringNotContainsString('scrollbar-width', $css);
         $this->assertStringNotContainsString('overscroll-behavior', $css);
         $this->assertStringNotContainsString('-webkit-overflow-scrolling', $css);
-        $this->assertStringNotContainsString('overflow-x: auto', $css);
+        // No horizontal scrolling in the mobile block (the desktop
+        // .editor-prose pre code-block scroll outside @media stays).
+        $mobileBlocks = '';
+        if (preg_match_all('/@media[^{]*\{(?:[^{}]|\{[^{}]*\})*\}/s', $css, $m) === 1 || !empty($m[0])) {
+            $mobileBlocks = implode("\n", $m[0]);
+        }
+        $this->assertStringNotContainsString('overflow-x: auto', $mobileBlocks);
         // The wrap anchor is not needed anymore (toggle anchors on the sticky toolbar).
         $this->assertStringNotContainsString('.editor-wrap { position: relative; }', $css);
     }
