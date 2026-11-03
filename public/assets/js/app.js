@@ -56,3 +56,83 @@
         });
     }
 })();
+
+/* Editor toolbar collapse (mobile <=768px, audit F8): the toolbar wraps into
+   multiple rows; while collapsed only the first row is visible and a chevron
+   toggle on the toolbar's right edge reveals/hides the wrapped rows. The
+   toggle is only shown when a second row actually exists (measured), so
+   one-row viewports never see it. Purely additive - the editor bundle's DOM
+   and listeners are untouched. */
+(function () {
+    'use strict';
+    var mq = window.matchMedia('(max-width: 768px)');
+    var CHEVRON_DOWN = '⌄';
+    var CHEVRON_UP = '⌃';
+
+    function setup(bar) {
+        if (bar.dataset.collapseReady === '1') {
+            return;
+        }
+        bar.dataset.collapseReady = '1';
+        var toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'editor-toolbar-toggle';
+        toggle.setAttribute('aria-label', 'More formatting');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.hidden = true;
+        toggle.textContent = CHEVRON_DOWN;
+        toggle.addEventListener('click', function () {
+            var collapsed = bar.classList.toggle('is-collapsed');
+            toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            toggle.textContent = collapsed ? CHEVRON_DOWN : CHEVRON_UP;
+        });
+        bar.appendChild(toggle);
+    }
+
+    function update(bar) {
+        var toggle = bar.querySelector('.editor-toolbar-toggle');
+        if (toggle === null) {
+            return;
+        }
+        if (!mq.matches) {
+            // Desktop: never collapsed, no toggle.
+            bar.classList.remove('is-collapsed');
+            toggle.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.textContent = CHEVRON_DOWN;
+            return;
+        }
+        // Mobile: collapse first, then measure whether wrapped rows are hidden.
+        bar.classList.add('is-collapsed');
+        var overflows = bar.scrollHeight > bar.clientHeight + 2;
+        if (overflows) {
+            toggle.hidden = false;
+        } else {
+            bar.classList.remove('is-collapsed');
+            toggle.hidden = true;
+            toggle.setAttribute('aria-expanded', 'false');
+            toggle.textContent = CHEVRON_DOWN;
+        }
+    }
+
+    function updateAll() {
+        var bars = document.querySelectorAll('.editor-toolbar');
+        bars.forEach(function (bar) {
+            setup(bar);
+            update(bar);
+        });
+    }
+
+    function init() {
+        updateAll();
+    }
+
+    if (typeof mq.addEventListener === 'function') {
+        mq.addEventListener('change', updateAll);
+    } else if (typeof mq.addListener === 'function') {
+        mq.addListener(updateAll);
+    }
+    window.addEventListener('resize', updateAll);
+    document.addEventListener('DOMContentLoaded', init);
+    window.addEventListener('load', init);
+})();

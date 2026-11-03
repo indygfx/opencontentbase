@@ -213,14 +213,46 @@
    (editor.js) is untouched, and above 768px nothing changes.
    Future options (would need a bundle change): a "..." overflow menu for
    rarely used block actions, a bottom-anchored toolbar. */
+/* Mobile toolbar (audit F8, collapse pattern): below 768px the toolbar WRAPS
+   into multiple rows; only the first row is visible while collapsed and a
+   chevron toggle on the toolbar's right edge reveals/hides the wrapped rows
+   (app.js measures whether a second row exists, so one-row viewports never
+   show the toggle). Touch targets are 44px, dropdowns open as fixed bottom
+   sheets so they can never overflow a viewport edge. CSS + app.js only - the
+   editor bundle (editor.js) is untouched, and above 768px nothing changes.
+   Future options (would need a bundle change): a "..." overflow menu for
+   rarely used block actions, a bottom-anchored toolbar. */
 @media (max-width: 768px) {
-    .editor-wrap { position: relative; }
     .editor-toolbar {
         flex-wrap: wrap;
         overflow-x: hidden;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-x: contain;
-        scrollbar-width: thin;
+    }
+    .editor-toolbar.is-collapsed {
+        max-height: 3.6rem;
+        overflow: hidden;
+        padding-right: 3.4rem;
+    }
+    .editor-toolbar-toggle {
+        position: absolute;
+        right: 0.25rem;
+        top: 0.35rem;
+        z-index: 11;
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+        background: #f8fafc;
+        border-radius: 4px;
+        cursor: pointer;
+        color: inherit;
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+    .editor-toolbar-toggle:hover {
+        border-color: var(--line);
+        background: #fff;
     }
     .editor-toolbar-btn, .editor-menu {
         flex: 0 0 auto;
@@ -240,18 +272,6 @@
         margin-left: 0;
         padding-left: 0.75rem;
         flex: 0 0 auto;
-    }
-    /* Scroll affordance: right-edge fade over the toolbar area. With 13
-       buttons the row always overflows at <=768px, so the fade is never wrong. */
-    .editor-wrap::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 24px;
-        height: 2.6rem;
-        background: linear-gradient(to right, transparent, var(--surface));
-        pointer-events: none;
     }
     .editor-menu__dropdown.is-open {
         position: fixed;

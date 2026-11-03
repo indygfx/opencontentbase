@@ -51,11 +51,12 @@ F3 (44 px touch targets), F11 (graph scrolls sideways below 768 px with a
 translated swipe hint), F5 (slider no longer clips excerpts on phones).
 Desktop rendering above 768 px is unchanged.
 
-**Done:** audit finding F8 (editor toolbar on small screens) - CSS-only mobile
-block in `public/assets/css/editor.css` (single scrollable toolbar row, 44 px
-touch targets, bottom-sheet dropdowns below 768 px); the editor bundle is
-untouched, no rebuild. **Phase 2** (open): F4, F7, F9-F10, F12-F16 from the
-audit.
+**Done:** audit finding F8 (editor toolbar on small screens) - **collapse
+pattern**: below 768 px the toolbar wraps and shows only the first row, a
+measured chevron toggle (`app.js`, CSS in `editor.css`) reveals the rest,
+44 px touch targets, bottom-sheet dropdowns. The earlier scrollable-single-row
+approach was superseded by wrap+collapse. Editor bundle untouched, no rebuild.
+**Phase 2** (open): F4, F7, F9-F10, F12-F16 from the audit.
 
 ### 1. Theme extraction (next step)
 

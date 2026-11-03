@@ -187,27 +187,59 @@ final class MobileFirstTest extends TestCase
         }
     }
 
-    public function testEditorCssHasExactlyOneMobileBlockWithToolbarRules(): void
+    public function testEditorCssHasExactlyOneMobileBlockWithCollapseRules(): void
     {
         $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
-        $this->assertSame(1, substr_count($css, '@media (max-width: 768px)'), 'editor.css must have exactly one mobile block');
+        $this->assertSame(1, substr_count($css, '@media (max-width: 768px)'), 'editor.css must have exactly one 768px block');
         $block = $this->mediaBlock($css, 768);
-        // F8: single scrollable toolbar row (nowrap, overflow-x, contained overscroll, thin scrollbar)
-        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: nowrap;[^}]*overflow-x: auto;[^}]*overscroll-behavior-x: contain;[^}]*scrollbar-width: thin;/s', $block);
-        // F8: buttons and menus must not shrink in the row
+        // F8 collapse pattern: toolbar wraps, collapsed shows only the first row
+        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: wrap;[^}]*overflow-x: hidden;/s', $block);
+        $this->assertMatchesRegularExpression('/\.editor-toolbar\.is-collapsed \{[^}]*max-height: 3\.6rem;[^}]*overflow: hidden;[^}]*padding-right: 3\.4rem;/s', $block);
+        // F8: chevron toggle anchored on the toolbar's right edge, 44px target
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*position: absolute;[^}]*right: 0\.25rem;[^}]*min-width: 44px;[^}]*min-height: 44px;/s', $block);
+        // F8: buttons and menus must not shrink when wrapping
         $this->assertMatchesRegularExpression('/\.editor-toolbar-btn, \.editor-menu \{[^}]*flex: 0 0 auto;/s', $block);
         // F8: 44px touch targets on toolbar buttons
         $this->assertMatchesRegularExpression('/\.editor-toolbar-btn \{[^}]*min-height: 44px;[^}]*min-width: 44px;/s', $block);
-        // F8: dense separator, counter scrolls inline at the end of the row
+        // F8: dense separator, counter inline at the end
         $this->assertMatchesRegularExpression('/\.editor-toolbar-sep \{[^}]*margin: 0;/s', $block);
         $this->assertMatchesRegularExpression('/\.editor-counter \{[^}]*margin-left: 0;[^}]*flex: 0 0 auto;/s', $block);
-        // F8: right-edge fade scroll affordance over the toolbar area, colors from :root variables only
-        $this->assertMatchesRegularExpression('/\.editor-wrap::after \{[^}]*linear-gradient\(to right, transparent, var\(--surface\)\)[^}]*pointer-events: none;/s', $block);
-        $this->assertMatchesRegularExpression('/\.editor-wrap \{ position: relative; \}/', $block);
         // F8: dropdowns become fixed bottom sheets
         $this->assertMatchesRegularExpression('/\.editor-menu__dropdown\.is-open \{[^}]*position: fixed;[^}]*bottom: 0\.5rem;[^}]*max-height: 60vh;[^}]*overflow-y: auto;/s', $block);
         // F8: menu entries full width and 44px
         $this->assertMatchesRegularExpression('/\.editor-menu__entry \{[^}]*width: 100%;[^}]*min-height: 44px;[^}]*font-size: 1rem;/s', $block);
+    }
+
+    public function testEditorCssHasNoObsoleteScrollAffordanceLeft(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
+        // The scrollable-row approach is superseded by wrap+collapse: no fade, no scrollbar styling.
+        $this->assertStringNotContainsString('.editor-wrap::after', $css);
+        $this->assertStringNotContainsString('scrollbar-width', $css);
+        $this->assertStringNotContainsString('overscroll-behavior', $css);
+        $this->assertStringNotContainsString('-webkit-overflow-scrolling', $css);
+        $this->assertStringNotContainsString('overflow-x: auto', $css);
+        // The wrap anchor is not needed anymore (toggle anchors on the sticky toolbar).
+        $this->assertStringNotContainsString('.editor-wrap { position: relative; }', $css);
+    }
+
+    public function testAppJsImplementsToolbarCollapse(): void
+    {
+        $js = (string)file_get_contents($this->base . '/public/assets/js/app.js');
+        // single breakpoint source
+        $this->assertStringContainsString("matchMedia('(max-width: 768px)')", $js);
+        // idempotent setup guard
+        $this->assertStringContainsString('collapseReady', $js);
+        // toggle button creation with a11y attributes
+        $this->assertStringContainsString("className = 'editor-toolbar-toggle'", $js);
+        $this->assertStringContainsString('aria-expanded', $js);
+        // measured overflow detection (collapse first, then compare heights)
+        $this->assertStringContainsString('scrollHeight > bar.clientHeight', $js);
+        // runs on breakpoint change, resize, DOMContentLoaded and load
+        $this->assertStringContainsString("mq.addEventListener('change'", $js);
+        $this->assertStringContainsString("window.addEventListener('resize'", $js);
+        $this->assertStringContainsString("document.addEventListener('DOMContentLoaded'", $js);
+        $this->assertStringContainsString("window.addEventListener('load'", $js);
     }
 
     public function testEditorBundleSourcesUntouchedByMobileFix(): void
