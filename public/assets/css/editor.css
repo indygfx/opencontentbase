@@ -218,6 +218,7 @@
    chevron toggle on the toolbar's right edge reveals/hides the wrapped rows
    (app.js measures whether a second row exists, so one-row viewports never
    show the toggle). Touch targets are 44px, dropdowns open as fixed bottom
+   The toggle keeps width: auto (never full-width, unlike the generic button rule).
    sheets so they can never overflow a viewport edge. CSS + app.js only - the
    editor bundle (editor.js) is untouched, and above 768px nothing changes.
    Future options (would need a bundle change): a "..." overflow menu for
@@ -237,7 +238,7 @@
         right: 0.25rem;
         top: 0.35rem;
         z-index: 11;
-        width: auto; /* never full-width: the class selector beats master.css's button { width: 100% } at <=480px */
+        width: auto;
         min-width: 44px;
         min-height: 44px;
         display: inline-flex;
