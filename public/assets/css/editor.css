@@ -229,7 +229,7 @@
         overflow-x: hidden;
     }
     .editor-toolbar.is-collapsed {
-        max-height: 3.6rem;
+        max-height: 44px;
         overflow: hidden;
         padding-right: 3.4rem;
     }
