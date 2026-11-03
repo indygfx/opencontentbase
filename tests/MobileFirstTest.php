@@ -216,7 +216,7 @@ final class MobileFirstTest extends TestCase
         // selector, specificity 0-0-1); editor.css's `.editor-toolbar-toggle
         // { width: auto }` (class selector, 0-1-0) must override it in every block.
         $master = (string)file_get_contents($this->base . '/public/assets/css/master.css');
-        $this->assertMatchesRegularExpression('/button, \.button \{ width: 100%; \}/', $this->mediaBlock($master, 480));
+        $this->assertMatchesRegularExpression('/button, \.button \{[^}]*width: 100%;/s', $this->mediaBlock($master, 480));
         $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
         $block768 = $this->mediaBlock($css, 768);
         $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*width: auto;/s', $block768);
