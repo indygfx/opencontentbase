@@ -4,3 +4,5 @@ data
 composer.lock
 .phpunit.cache
 node_modules/
+snapshot*
+.snapshotignore

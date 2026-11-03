@@ -216,8 +216,8 @@
 @media (max-width: 768px) {
     .editor-wrap { position: relative; }
     .editor-toolbar {
-        flex-wrap: nowrap;
-        overflow-x: auto;
+        flex-wrap: wrap;
+        overflow-x: hidden;
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-x: contain;
         scrollbar-width: thin;
@@ -266,5 +266,10 @@
         width: 100%;
         min-height: 44px;
         font-size: 1rem;
+    }
+}
+@media (max-width: 480px) {
+    button.editor-toolbar-btn {
+        width:auto;
     }
 }
