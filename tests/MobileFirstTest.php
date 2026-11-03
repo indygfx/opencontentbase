@@ -194,7 +194,7 @@ final class MobileFirstTest extends TestCase
         $block = $this->mediaBlock($css, 768);
         // F8 collapse pattern: toolbar wraps, collapsed shows only the first row
         $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: wrap;[^}]*overflow-x: hidden;/s', $block);
-        $this->assertMatchesRegularExpression('/\.editor-toolbar\.is-collapsed \{[^}]*max-height: 3\.6rem;[^}]*overflow: hidden;[^}]*padding-right: 3\.4rem;/s', $block);
+        $this->assertMatchesRegularExpression('/\.editor-toolbar\.is-collapsed \{[^}]*max-height: 44px;[^}]*overflow: hidden;[^}]*padding-right: 3\.4rem;/s', $block);
         // F8: chevron toggle anchored on the toolbar's right edge, 44px target, never full-width
         $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*position: absolute;[^}]*right: 0\.25rem;[^}]*width: auto;[^}]*min-width: 44px;[^}]*min-height: 44px;/s', $block);
         // F8: buttons and menus must not shrink when wrapping
