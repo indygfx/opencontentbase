@@ -277,4 +277,5 @@ return [
     'error_import_invalid_frontmatter' => 'El paquete contiene un archivo con frontmatter roto.',
     'error_import_dangling_synopsis' => 'Un capítulo hace referencia a un esquema que no forma parte del paquete.',
     'error_import_dangling_relation' => 'Una relación hace referencia a un personaje que no forma parte del paquete.',
+    'more_actions' => 'Más acciones',
 ];

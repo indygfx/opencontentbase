@@ -53,10 +53,15 @@ function progressBar(string $section, array $entry, string $label): string
         <div class="progress-track"><div class="progress-bar<?= $overall >= 1.0 ? ' is-done' : ' is-partial' ?>" style="width: <?= (int)round($overall * 100) ?>%"></div></div>
         <span class="progress-label"><?= number_format($overall * 100) ?>% <?= e(t('writing', 'overall')) ?></span>
     </div>
+    <div class="dashboard-actions">
     <?php if ($isOwner): ?>
         <p><a class="button" href="/writing/<?= e($project['id']) ?>/setup"><?= e(t('writing', 'novel_setup')) ?></a></p>
     <?php endif; ?>
-    <p><a class="button" href="/writing/<?= e($project['id']) ?>/export"><?= e(t('writing', 'export_story')) ?></a></p>
+        <div class="actions-secondary">
+            <span class="actions-secondary-label"><?= e(t('writing', 'more_actions')) ?></span>
+            <p><a class="button" href="/writing/<?= e($project['id']) ?>/export"><?= e(t('writing', 'export_story')) ?></a></p>
+        </div>
+    </div>
     <?php if (!empty($importSuccess)): ?>
         <p class="success"><?= e($importSuccess) ?></p>
     <?php endif; ?>

@@ -174,6 +174,21 @@ above 768 px.
 - **Slider**: below 768 px the excerpt slides are not clipped anymore - the
   active slide defines the height (`min-height: 0` on `.story-slides`,
   `overflow: visible`), the cross-fade and dots keep working.
+- **Forms**: `select` elements render full-width below 768 px like inputs
+  (`select { width: 100%; max-width: 100% }` in the 768 px block).
+- **Dashboard actions**: below 768 px the secondary actions (export) form a
+  labeled group (`more_actions`, translated) with full-width buttons; the label
+  is hidden and the layout unchanged above 768 px.
+- **Users table**: below 768 px the inline action forms (role select, password
+  reset, delete) stack vertically inside the `.table-scroll` wrapper instead of
+  overflowing their cells.
+- **Progress bars**: below 768 px the label wraps below the bar
+  (`.progress { flex-wrap: wrap }`, `.progress-label { flex: 1 1 100% }`)
+  instead of squeezing the track.
+- **Overflow safety (base rules, all viewports)**: `.content` images, `pre`
+  blocks and tables get `max-width: 100%` (`pre` also `overflow-x: auto`), and
+  long words wrap via `overflow-wrap: break-word` on `main`, `.card`, `.notice`
+  and `.badge`.
 
 ## Languages (i18n)
 

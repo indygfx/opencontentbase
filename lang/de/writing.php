@@ -277,4 +277,5 @@ return [
     'error_import_invalid_frontmatter' => 'Das Bundle enthält eine Datei mit fehlerhaftem Frontmatter.',
     'error_import_dangling_synopsis' => 'Ein Kapitel verweist auf eine Gliederung, die nicht Teil des Bundles ist.',
     'error_import_dangling_relation' => 'Eine Beziehung verweist auf einen Charakter, der nicht Teil des Bundles ist.',
+    'more_actions' => 'Weitere Aktionen',
 ];

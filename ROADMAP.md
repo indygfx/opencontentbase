@@ -56,7 +56,15 @@ pattern**: below 768 px the toolbar wraps and shows only the first row, a
 measured chevron toggle (`app.js`, CSS in `editor.css`) reveals the rest,
 44 px touch targets, bottom-sheet dropdowns. The earlier scrollable-single-row
 approach was superseded by wrap+collapse. Editor bundle untouched, no rebuild.
-**Phase 2** (open): F4, F7, F9-F10, F12-F16 from the audit.
+**Done:** mobile-first fixes phase 2 - F4 (dashboard actions grouped; secondary
+actions in a labeled group with full-width buttons below 768 px), F7 (selects
+full-width below 768 px), F10 (verified OK - the textarea fallback is already
+full-width), F12 (inline action forms in the users table stack vertically below
+768 px inside the `.table-scroll` wrapper), F13 (`.content` img/pre/table
+overflow safety - base rule, all viewports), F15 (progress label wraps below
+the bar below 768 px), F16 (long words wrap via `overflow-wrap: break-word` -
+base rule). F9 (editor toolbar compact) is covered by the collapse-pattern
+entry above. **Open (cosmetic only):** file-upload cosmetics on the setup page.
 
 ### 1. Theme extraction (next step)
 

@@ -21,9 +21,12 @@ use Writing\WritingController;
 use Writing\WritingModule;
 
 /**
- * Mobile-first phase 1 (docs/mobile-audit.md F1/F2/F3/F5/F6/F11): table-scroll
- * wrappers in rendered pages, graph scroll wrapper + hint, both media-query
- * blocks and the touch-target rules in master.css.
+ * Mobile-first phases 1+2 (docs/mobile-audit.md): table-scroll wrappers in
+ * rendered pages, graph scroll wrapper + hint, both media-query blocks and the
+ * touch-target rules in master.css (phase 1: F1/F2/F3/F5/F6/F11); phase 2
+ * (F4/F7/F12/F13/F15/F16) covers the breakpoint-independent overflow-safety
+ * base rules and the 768 px overrides for selects, users-table action cells,
+ * progress labels and the dashboard action groups.
  */
 final class MobileFirstTest extends TestCase
 {
@@ -99,6 +102,47 @@ final class MobileFirstTest extends TestCase
         $this->assertStringContainsString('.story-slides { min-height: 0; }', $tablet);
     }
 
+    public function testMasterCssPhase2BaseRulesAreBreakpointIndependent(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/master.css');
+        $base = substr($css, 0, (int)strpos($css, '@media'));
+        // F13: rendered Markdown cannot overflow the reading column on any viewport
+        $this->assertStringContainsString('.content img, .content pre, .content table { max-width: 100%; }', $base);
+        $this->assertStringContainsString('.content pre { overflow-x: auto; }', $base);
+        // F16: long words (de/fr compounds, flash messages) wrap instead of overflowing
+        $this->assertStringContainsString('main, .card, .notice, .badge { overflow-wrap: break-word; }', $base);
+        // F10: textarea fallback stays full-width (positive audit finding, no change needed)
+        $this->assertStringContainsString('input, textarea { width: 100%;', $base);
+        // F4: the secondary-actions label only appears below 768 px - desktop unchanged
+        $this->assertStringContainsString('.actions-secondary-label { display: none; }', $base);
+        $this->assertStringNotContainsString('select { width: 100%', $base);
+    }
+
+    public function testMasterCssPhase2TabletOverrides(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/master.css');
+        $tablet = $this->mediaBlock($css, 768);
+        // F7: selects render full-width below 768 px
+        $this->assertStringContainsString('select { width: 100%; max-width: 100%; box-sizing: border-box; }', $tablet);
+        // F12: inline action forms inside scrollable tables stack vertically
+        $this->assertStringContainsString('.table-scroll form.inline { display: block;', $tablet);
+        $this->assertStringContainsString('.table-scroll details { margin-bottom: 0.5rem; }', $tablet);
+        // F15: progress label wraps below the bar instead of squeezing it
+        $this->assertStringContainsString('.progress { flex-wrap: wrap; }', $tablet);
+        $this->assertStringContainsString('.progress-label { flex: 1 1 100%; }', $tablet);
+        // F4: labeled secondary action group, full-width buttons below 768 px
+        $this->assertStringContainsString('.actions-secondary-label { display: block;', $tablet);
+        $this->assertStringContainsString('.dashboard-actions .button { width: 100%; }', $tablet);
+    }
+
+    public function testMoreActionsKeyExistsInAllLanguages(): void
+    {
+        foreach (['en', 'de', 'es', 'fr'] as $code) {
+            $file = $this->base . '/lang/' . $code . '/writing.php';
+            $this->assertStringContainsString("'more_actions'", (string)file_get_contents($file), $file);
+        }
+    }
+
     public function testEveryTemplateTableIsWrappedInTableScroll(): void
     {
         $files = array_merge(
@@ -137,8 +181,15 @@ final class MobileFirstTest extends TestCase
         );
         $body = $controller->show($this->admin, 'p1')->body();
         $this->assertStringContainsString('<div class="table-scroll"><table>', $body);
+        // F4: dashboard actions are grouped; secondary actions carry a labeled group
+        $this->assertStringContainsString('class="dashboard-actions"', $body);
+        $this->assertStringContainsString('class="actions-secondary"', $body);
+        $this->assertStringContainsString('class="actions-secondary-label">More actions<', $body);
         $users = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
-        $this->assertStringContainsString('<div class="table-scroll"><table>', $users->index($this->admin)->body());
+        $usersBody = $users->index($this->admin)->body();
+        $this->assertStringContainsString('<div class="table-scroll"><table>', $usersBody);
+        // F12: the users table keeps its inline action forms inside the scroll wrapper
+        $this->assertStringContainsString('<form class="inline"', $usersBody);
     }
 
     public function testRenderedDashboardWrapsStoryListTable(): void

@@ -1,5 +1,13 @@
 # Mobile-first audit (analysis only)
 
+> **Addendum (2026-11-04, `dev` @ `b76e5c3` and later):** the findings below are
+> the point-in-time analysis and are intentionally not rewritten. Implementation
+> status: phase 1 (F1, F2, F3, F5, F6, F11) and phase 2 (F4, F7, F10 - verified OK
+> without changes, F12, F13, F15, F16) are implemented on `dev`; the editor
+> toolbar finding (F9 in this document) is covered by the collapse pattern in
+> `editor.css` + `app.js` (see ROADMAP.md). Only the file-upload cosmetics (F8
+> here) remain open as an optional cosmetic item.
+
 **Date:** 2026-10-30 · **Base:** `dev` @ `bde20a5` (theme extraction done, CI green: 352 tests / 2329 assertions)
 **Scope:** smartphone-first (360 px), tablet second (768 px). This document is
 the planning basis for the mobile-first fix prompt. **Nothing was changed** -

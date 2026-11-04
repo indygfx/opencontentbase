@@ -81,11 +81,17 @@ input, textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); b
 textarea { font-family: ui-monospace, monospace; }
 button, .button { background: var(--accent); color: var(--surface); border: none; padding: 0.5rem 1rem; min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
 form.inline { display: inline; margin: 0; }
+.actions-secondary-label { display: none; }
 .error { color: var(--error); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem; }
 .narrow { max-width: 24rem; margin: 3rem auto; }
 .content { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem; }
 .content table { border: 1px solid var(--line); }
+/* F13: rendered Markdown never overflows the reading column (any viewport) */
+.content img, .content pre, .content table { max-width: 100%; }
+.content pre { overflow-x: auto; }
+/* F16: long words (de/fr compounds, flash messages) wrap instead of overflowing */
+main, .card, .notice, .badge { overflow-wrap: break-word; }
 .broken-link { color: var(--error); background: var(--error-bg); border-bottom: 1px dashed var(--error); }
 .outline-box { background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
 .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
@@ -180,6 +186,18 @@ form.inline { display: inline; margin: 0; }
     .story-slides { min-height: 0; }
     .story-slide.is-active { position: static; }
     .story-slider-nav { position: static; margin-top: 0.75rem; justify-content: flex-end; }
+    /* F7: selects render full-width like inputs */
+    select { width: 100%; max-width: 100%; box-sizing: border-box; }
+    /* F12: action cells of scrollable tables stack their inline forms */
+    .table-scroll form.inline { display: block; margin: 0 0 0.5rem; }
+    .table-scroll details { margin-bottom: 0.5rem; }
+    /* F15: progress label wraps below the bar instead of squeezing it */
+    .progress { flex-wrap: wrap; }
+    .progress-label { flex: 1 1 100%; }
+    /* F4: secondary dashboard actions become a labeled, stacked group */
+    .actions-secondary { border-top: 1px solid var(--line); margin-top: 0.75rem; padding-top: 0.75rem; }
+    .actions-secondary-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 0.5rem; }
+    .dashboard-actions .button { width: 100%; }
 }
 @media (max-width: 480px) {
     .topbar { flex-direction: column; align-items: flex-start; }
