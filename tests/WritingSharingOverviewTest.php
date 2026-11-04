@@ -118,10 +118,9 @@ final class WritingSharingOverviewTest extends TestCase
         $this->assertSame(1, substr_count($body, 'class="shared-by"'));
         $this->assertStringContainsString('Shared by m1', $body);
         // the setup page is owner-only (verified guard below), so the hint is NOT a link
-        $this->assertStringContainsString('<span class="shared-by">', $body);
-        $this->assertStringNotContainsString('<a class="shared-by"', $body);
         $pos = strpos($body, 'class="shared-by"');
-        $this->assertSame('<span', substr($body, $pos - 5, 5), 'shared-by hint must be a plain span, not a link');
+        $this->assertMatchesRegularExpression('/<span class="shared-by">/', $body);
+        $this->assertDoesNotMatchRegularExpression('/<a[^>]*class="shared-by"/', $body, 'shared-by hint must be a plain span, not a link');
         $tdEnd = strpos($body, '</td>', $pos);
         $this->assertStringNotContainsString('<a', substr($body, $pos, (int)$tdEnd - $pos));
         // p3's members do NOT render as a stack for the member view (still only p1's stack link)
