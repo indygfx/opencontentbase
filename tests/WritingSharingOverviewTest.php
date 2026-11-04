@@ -121,7 +121,9 @@ final class WritingSharingOverviewTest extends TestCase
         $this->assertStringContainsString('<span class="shared-by">', $body);
         $this->assertStringNotContainsString('<a class="shared-by"', $body);
         $pos = strpos($body, 'class="shared-by"');
-        $this->assertStringNotContainsString('<a ', substr($body, (int)$pos, 400));
+        $this->assertSame('<span', substr($body, $pos - 5, 5), 'shared-by hint must be a plain span, not a link');
+        $tdEnd = strpos($body, '</td>', $pos);
+        $this->assertStringNotContainsString('<a', substr($body, $pos, (int)$tdEnd - $pos));
         // p3's members do NOT render as a stack for the member view (still only p1's stack link)
         $this->assertSame(1, substr_count($body, '<a class="avatar-stack share-stack"'));
         // as the owner, m1 sees p3 as own project with a 2-member stack link (no counter)
