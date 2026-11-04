@@ -59,6 +59,12 @@
     font-size: 0.75rem;
 }
 
+/* Chevron toggle: hidden by default, only displayed inside the 768px block
+   below (and re-hidden there via [hidden] when app.js hides it). */
+.editor-toolbar-toggle {
+    display: none;
+}
+
 .editor-content {
     padding: 0.75rem 1rem;
     min-height: 10rem;
@@ -217,7 +223,8 @@
    into multiple rows; only the first row is visible while collapsed and a
    chevron toggle on the toolbar's right edge reveals/hides the wrapped rows
    (app.js measures whether a second row exists, so one-row viewports never
-   show the toggle). Touch targets are 44px, dropdowns open as fixed bottom
+   show the toggle; the toggle is display: none by default and only rendered
+   inside this block). Touch targets are 44px, dropdowns open as fixed bottom
    The toggle keeps width: auto (never full-width, unlike the generic button rule).
    sheets so they can never overflow a viewport edge. CSS + app.js only - the
    editor bundle (editor.js) is untouched, and above 768px nothing changes.
@@ -255,6 +262,11 @@
     .editor-toolbar-toggle:hover {
         border-color: var(--line);
         background: #fff;
+    }
+    /* app.js sets the hidden attribute on one-row viewports and on desktop -
+       this must beat the display: inline-flex above (higher specificity). */
+    .editor-toolbar-toggle[hidden] {
+        display: none;
     }
     .editor-toolbar-btn, .editor-menu {
         flex: 0 0 auto;

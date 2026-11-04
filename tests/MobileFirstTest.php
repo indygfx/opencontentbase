@@ -197,6 +197,12 @@ final class MobileFirstTest extends TestCase
         $this->assertMatchesRegularExpression('/\.editor-toolbar\.is-collapsed \{[^}]*max-height: 44px;[^}]*overflow: hidden;[^}]*padding-right: 3\.4rem;/s', $block);
         // F8: chevron toggle anchored on the toolbar's right edge, 44px target, never full-width
         $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*position: absolute;[^}]*right: 0\.25rem;[^}]*width: auto;[^}]*min-width: 44px;[^}]*min-height: 44px;/s', $block);
+        // toggle is display: none by default (outside any media query) and only
+        // displayed inside the 768px block, where [hidden] still wins
+        $base = substr($css, 0, (int)strpos($css, '@media'));
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*display: none;/s', $base);
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*display: inline-flex;/s', $block);
+        $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle\[hidden\] \{[^}]*display: none;/s', $block);
         // F8: buttons and menus must not shrink when wrapping
         $this->assertMatchesRegularExpression('/\.editor-toolbar-btn, \.editor-menu \{[^}]*flex: 0 0 auto;/s', $block);
         // F8: 44px touch targets on toolbar buttons
