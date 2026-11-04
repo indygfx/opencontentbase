@@ -61,8 +61,10 @@
    multiple rows; while collapsed only the first row is visible and a chevron
    toggle on the toolbar's right edge reveals/hides the wrapped rows. The
    toggle is only shown when a second row actually exists (measured), so
-   one-row viewports never see it. Purely additive - the editor bundle's DOM
-   and listeners are untouched. */
+   one-row viewports never see it. The choice is sticky: resize and breakpoint
+   changes re-measure but re-apply the stored state, so an expanded toolbar
+   stays expanded until the toggle is tapped again. Purely additive - the
+   editor bundle's DOM and listeners are untouched. */
 (function () {
     'use strict';
     var mq = window.matchMedia('(max-width: 768px)');
@@ -74,6 +76,7 @@
             return;
         }
         bar.dataset.collapseReady = '1';
+        bar.dataset.collapsed = '1';
         var toggle = document.createElement('button');
         toggle.type = 'button';
         toggle.className = 'editor-toolbar-toggle';
@@ -83,6 +86,7 @@
         toggle.textContent = CHEVRON_DOWN;
         toggle.addEventListener('click', function () {
             var collapsed = bar.classList.toggle('is-collapsed');
+            bar.dataset.collapsed = collapsed ? '1' : '0';
             toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
             toggle.textContent = collapsed ? CHEVRON_DOWN : CHEVRON_UP;
         });
@@ -95,24 +99,30 @@
             return;
         }
         if (!mq.matches) {
-            // Desktop: never collapsed, no toggle.
+            // Desktop: never collapsed, no toggle. The stored choice is kept
+            // so it is restored when the viewport goes back to mobile.
             bar.classList.remove('is-collapsed');
+            toggle.hidden = true;
+            return;
+        }
+        // Mobile: collapse to measure whether wrapped rows are hidden, then
+        // re-apply the stored collapsed/expanded choice.
+        bar.classList.add('is-collapsed');
+        var overflows = bar.scrollHeight > bar.clientHeight + 2;
+        if (!overflows) {
+            // Single row: nothing to reveal, no toggle.
+            bar.classList.remove('is-collapsed');
+            bar.dataset.collapsed = '1';
             toggle.hidden = true;
             toggle.setAttribute('aria-expanded', 'false');
             toggle.textContent = CHEVRON_DOWN;
             return;
         }
-        // Mobile: collapse first, then measure whether wrapped rows are hidden.
-        bar.classList.add('is-collapsed');
-        var overflows = bar.scrollHeight > bar.clientHeight + 2;
-        if (overflows) {
-            toggle.hidden = false;
-        } else {
-            bar.classList.remove('is-collapsed');
-            toggle.hidden = true;
-            toggle.setAttribute('aria-expanded', 'false');
-            toggle.textContent = CHEVRON_DOWN;
-        }
+        var collapsed = bar.dataset.collapsed !== '0';
+        bar.classList.toggle('is-collapsed', collapsed);
+        toggle.hidden = false;
+        toggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        toggle.textContent = collapsed ? CHEVRON_DOWN : CHEVRON_UP;
     }
 
     function updateAll() {

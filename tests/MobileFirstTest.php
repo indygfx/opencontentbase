@@ -253,6 +253,10 @@ final class MobileFirstTest extends TestCase
         $this->assertStringContainsString('aria-expanded', $js);
         // measured overflow detection (collapse first, then compare heights)
         $this->assertStringContainsString('scrollHeight > bar.clientHeight', $js);
+        // sticky collapse state: the tap stores the choice and update() re-applies
+        // it, so resize/breakpoint changes never re-collapse an expanded toolbar
+        $this->assertStringContainsString("bar.dataset.collapsed = collapsed ? '1' : '0'", $js);
+        $this->assertStringContainsString("bar.classList.toggle('is-collapsed', collapsed)", $js);
         // runs on breakpoint change, resize, DOMContentLoaded and load
         $this->assertStringContainsString("mq.addEventListener('change'", $js);
         $this->assertStringContainsString("window.addEventListener('resize'", $js);
