@@ -278,4 +278,7 @@ return [
     'error_import_dangling_synopsis' => 'Un capítulo hace referencia a un esquema que no forma parte del paquete.',
     'error_import_dangling_relation' => 'Una relación hace referencia a un personaje que no forma parte del paquete.',
     'more_actions' => 'Más acciones',
+    'shared_by' => 'Compartido por {name}',
+    'shared_with_names' => 'Compartido con {names} ({count})',
+    'more_members' => '+{n} más',
 ];

@@ -222,6 +222,15 @@ Each story has a dashboard (`/writing/{id}`) that follows the snowflake method t
 - **Relationship Web**: who knows whom, how they are connected – and where the conflict lies. Relations are two-layer: the **kind** describes the structural relation (role) and the **stance** describes the feeling – both directional, so A->B may be `spouse` + `love` while B->A is `spouse` + `hatred`. Uniqueness rule: one relation per character pair per direction, regardless of kind or stance – enforced by both the application validation and the database UNIQUE index on `character_relations (from_character_id, to_character_id)` (migration v14); the stance column was added in migration v15 (nullable, old rows render as neutral).
 - **Backgrounds**: the world your story stands on – its historical, geographical, religious and political context.
 
+## Writing module: sharing state on the story overview
+
+The overview (`/writing`) lists every visible project with its sharing state. All members are fetched with ONE grouped query (`ProjectAccess::membersForProjects`, grouped by project id in PHP - no per-row queries):
+
+- **Own projects**: after the title an inline avatar stack - overlapping 28 px circles with white initials on a deterministic tone picked from the `--avatar-1..6` palette in `master.css` `:root` (child themes override variables only; `border: 2px solid var(--surface)` + negative margin create the overlap). Cap: the first 3 members; a final muted `+N` circle counts the rest. The stack's `title` attribute lists all member names (comma-separated), the `aria-label` reads the translated "Shared with {names} ({count})".
+- **Shared projects** (you are a member): a "Shared by {name}" hint with the owner's single avatar circle - no stack for a single person.
+- **Own projects without members**: no sharing block at all.
+- The stack is fixed-size and inline (28 px circles, 24 px advance), so it needs no responsive rules and stays safe at 360 px.
+
 ## Writing module: story excerpt slider
 
 Once a user has written a real chapter (more than three paragraphs), the writing dashboard (`/writing`) shows a header slider with excerpts from their own stories:

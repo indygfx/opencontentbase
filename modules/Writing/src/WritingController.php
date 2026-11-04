@@ -38,14 +38,22 @@ final class WritingController
 
     public function index(User $user): Response
     {
+        return $this->indexView($user, null, 200);
+    }
+
+    private function indexView(User $user, ?string $error, int $status): Response
+    {
         $slider = new StorySlider($this->db);
+        $projects = $this->access->visibleProjects($user);
+        $projectIds = array_map(static fn (array $p): string => (string)$p['id'], $projects);
         return $this->page($user, 'modules/Writing/templates/index.php', [
             'title' => t('writing', 'stories_title'),
-            'projects' => $this->access->visibleProjects($user),
+            'projects' => $projects,
+            'membersByProject' => $this->access->membersForProjects($projectIds),
             'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
-            'error' => null,
+            'error' => $error,
             'success' => null,
-        ]);
+        ], $status);
     }
 
     public function store(User $user): Response
@@ -406,14 +414,7 @@ final class WritingController
 
     private function indexError(User $user, string $error): Response
     {
-        $slider = new StorySlider($this->db);
-        return $this->page($user, 'modules/Writing/templates/index.php', [
-            'title' => t('writing', 'stories_title'),
-            'projects' => $this->access->visibleProjects($user),
-            'slides' => $slider->slides($user, (string)($_COOKIE['cb_csrf'] ?? '')),
-            'error' => $error,
-            'success' => null,
-        ], 422);
+        return $this->indexView($user, $error, 422);
     }
 
     public function uploadCover(User $user, string $id): Response

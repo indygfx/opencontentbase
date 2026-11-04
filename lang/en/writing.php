@@ -278,4 +278,7 @@ return [
     'error_import_dangling_synopsis' => 'A chapter references an outline that is not part of the bundle.',
     'error_import_dangling_relation' => 'A relation references a character that is not part of the bundle.',
     'more_actions' => 'More actions',
+    'shared_by' => 'Shared by {name}',
+    'shared_with_names' => 'Shared with {names} ({count})',
+    'more_members' => '+{n} more',
 ];

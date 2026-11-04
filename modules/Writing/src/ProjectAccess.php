@@ -66,4 +66,37 @@ final class ProjectAccess
             [$projectId]
         );
     }
+
+    /**
+     * All member rows (owner + member roles) for the given projects in ONE
+     * grouped query, grouped in PHP by project id - the overview must not
+     * run one members() query per row (no N+1).
+     *
+     * @param list<string> $projectIds
+     * @return array<string, list<array{user_id: string, username: string, role: string}>>
+     */
+    public function membersForProjects(array $projectIds): array
+    {
+        if ($projectIds === []) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
+        $rows = $this->db->all(
+            "SELECT m.project_id, m.user_id, u.username, m.role
+             FROM project_members m
+             JOIN users u ON u.id = m.user_id
+             WHERE m.project_id IN ($placeholders)
+             ORDER BY u.username",
+            array_values($projectIds)
+        );
+        $byProject = [];
+        foreach ($rows as $row) {
+            $byProject[(string)$row['project_id']][] = [
+                'user_id' => (string)$row['user_id'],
+                'username' => (string)$row['username'],
+                'role' => (string)$row['role'],
+            ];
+        }
+        return $byProject;
+    }
 }

@@ -278,4 +278,7 @@ return [
     'error_import_dangling_synopsis' => 'Un chapitre fait référence à un plan qui ne fait pas partie du bundle.',
     'error_import_dangling_relation' => 'Une relation fait référence à un personnage qui ne fait pas partie du bundle.',
     'more_actions' => 'Plus d’actions',
+    'shared_by' => 'Partagé par {name}',
+    'shared_with_names' => 'Partagé avec {names} ({count})',
+    'more_members' => '+{n} de plus',
 ];

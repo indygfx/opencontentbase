@@ -65,6 +65,14 @@
     --rel-neutral-stroke: #9ca3af;
     --rel-neutral-fill: #6b7280;
     --rel-neutral-bg: #9ca3af;
+    /* Avatar palette for the sharing stacks on the writing overview (6 muted
+       tones; child themes override variables only) */
+    --avatar-1: #64748b;
+    --avatar-2: #7c3aed;
+    --avatar-3: #0e7490;
+    --avatar-4: #b45309;
+    --avatar-5: #be185d;
+    --avatar-6: #4d7c0f;
 }
 body { font-family: system-ui, sans-serif; color: var(--ink); margin: 0; background: var(--bg); }
 .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; row-gap: 0.25rem; padding: 0.75rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--line); }
@@ -96,6 +104,20 @@ main, .card, .notice, .badge { overflow-wrap: break-word; }
 .outline-box { background: var(--bg); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
 .outline-box h2 { margin: 0 0 0.5rem 0; font-size: 1rem; }
 .muted { color: var(--muted); }
+/* Sharing display on the writing overview: fixed-size inline avatar stack
+   (28px circles, 24px advance via -4px overlap, no responsive rules needed) */
+.avatar-stack { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 0.5rem; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; color: #fff; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; margin-left: -4px; }
+.avatar-stack .avatar:first-child { margin-left: 0; }
+.avatar-tone-1 { background: var(--avatar-1); }
+.avatar-tone-2 { background: var(--avatar-2); }
+.avatar-tone-3 { background: var(--avatar-3); }
+.avatar-tone-4 { background: var(--avatar-4); }
+.avatar-tone-5 { background: var(--avatar-5); }
+.avatar-tone-6 { background: var(--avatar-6); }
+.avatar-more { background: var(--muted); }
+.shared-by { margin-left: 0.5rem; color: var(--muted); font-size: 0.85rem; }
+.shared-by .avatar { margin: 0 0.35rem 0 0; vertical-align: middle; }
 .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }
 .character-portrait { max-width: 10rem; max-height: 10rem; border: 1px solid var(--line); border-radius: 50%; display: block; margin-bottom: 1rem; }
 .graph-wrap { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.5rem; margin-bottom: 1rem; }
