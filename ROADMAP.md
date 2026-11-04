@@ -33,7 +33,9 @@ The full commit history is in `git log` on `dev`. In short:
 - Writing overview (`/writing`) shows the sharing state on each project row:
   avatar stack (cap 3 + `+N` counter + full names in the tooltip) for own
   projects, a "shared by" hint for shared ones; members fetched in one
-  grouped query (`ProjectAccess::membersForProjects`, no N+1)
+  grouped query (`ProjectAccess::membersForProjects`, no N+1). The stack
+  links to the owner-only setup page, whose Sharing block lists all shared
+  accounts with avatars - this resolves the `+N` counter on touch devices
 
 ## Open items (priority order, decided 2026-10-30)
 

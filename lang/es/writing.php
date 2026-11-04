@@ -35,7 +35,7 @@ return [
     'who_to_invite' => 'a quién invitar',
     'share' => 'Compartir',
     'no_share_targets' => 'No queda ningún otro usuario con quien compartir esta historia.',
-    'shared_with' => 'Compartida con',
+    'sharing_section' => 'Uso compartido',
     'revoke' => 'Revocar',
     'danger_zone' => 'Zona de peligro',
     'confirm_delete_story' => '¿Eliminar esta historia y todo su contenido?',
@@ -279,6 +279,6 @@ return [
     'error_import_dangling_relation' => 'Una relación hace referencia a un personaje que no forma parte del paquete.',
     'more_actions' => 'Más acciones',
     'shared_by' => 'Compartido por {name}',
-    'shared_with_names' => 'Compartido con {names} ({count})',
+    'shared_with_manage' => 'Compartido con {names} ({count}) - gestionar el uso compartido',
     'more_members' => '+{n} más',
 ];

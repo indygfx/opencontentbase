@@ -107,8 +107,11 @@ main, .card, .notice, .badge { overflow-wrap: break-word; }
 /* Sharing display on the writing overview: fixed-size inline avatar stack
    (28px circles, 24px advance via -4px overlap, no responsive rules needed) */
 .avatar-stack { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 0.5rem; }
-.avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; color: #fff; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; margin-left: -4px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; color: #fff; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.avatar-stack .avatar { margin-left: -4px; }
 .avatar-stack .avatar:first-child { margin-left: 0; }
+a.avatar-stack { text-decoration: none; color: inherit; }
+a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-color: var(--accent); }
 .avatar-tone-1 { background: var(--avatar-1); }
 .avatar-tone-2 { background: var(--avatar-2); }
 .avatar-tone-3 { background: var(--avatar-3); }

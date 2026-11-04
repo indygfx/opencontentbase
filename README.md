@@ -226,8 +226,9 @@ Each story has a dashboard (`/writing/{id}`) that follows the snowflake method t
 
 The overview (`/writing`) lists every visible project with its sharing state. All members are fetched with ONE grouped query (`ProjectAccess::membersForProjects`, grouped by project id in PHP - no per-row queries):
 
-- **Own projects**: after the title an inline avatar stack - overlapping 28 px circles with white initials on a deterministic tone picked from the `--avatar-1..6` palette in `master.css` `:root` (child themes override variables only; `border: 2px solid var(--surface)` + negative margin create the overlap). Cap: the first 3 members; a final muted `+N` circle counts the rest. The stack's `title` attribute lists all member names (comma-separated), the `aria-label` reads the translated "Shared with {names} ({count})".
-- **Shared projects** (you are a member): a "Shared by {name}" hint with the owner's single avatar circle - no stack for a single person.
+- **Own projects**: after the title an inline avatar stack - overlapping 28 px circles with white initials on a deterministic tone picked from the `--avatar-1..6` palette in `master.css` `:root` (child themes override variables only; `border: 2px solid var(--surface)` + negative margin create the overlap). Cap: the first 3 members; a final muted `+N` circle counts the rest. The stack's `title` attribute lists all member names (comma-separated), the `aria-label` reads the translated "Shared with {names} ({count}) - manage sharing".
+- **The stack is a link** to the story's setup page (`<a class="avatar-stack share-stack" href="/writing/{id}/setup">`), a sibling of the title link (never nested). Touch devices cannot hover the tooltip, so the link is how the `+N` counter is resolved on mobile: the setup page's **Sharing** block lists ALL shared accounts (avatar circle + username + role per row, revoke buttons inline).
+- **Shared projects** (you are a member): a "Shared by {name}" hint with the owner's single avatar circle - no stack, and deliberately NO link, because the setup page is owner-only (`GET /writing/{id}/setup` returns 403 for members).
 - **Own projects without members**: no sharing block at all.
 - The stack is fixed-size and inline (28 px circles, 24 px advance), so it needs no responsive rules and stays safe at 360 px.
 

@@ -35,7 +35,7 @@ return [
     'who_to_invite' => 'wen einladen',
     'share' => 'Teilen',
     'no_share_targets' => 'Es gibt keinen weiteren Nutzer, mit dem du diese Story teilen kannst.',
-    'shared_with' => 'Geteilt mit',
+    'sharing_section' => 'Freigabe',
     'revoke' => 'Entziehen',
     'danger_zone' => 'Gefahrenzone',
     'confirm_delete_story' => 'Diese Story und ihren gesamten Inhalt löschen?',
@@ -279,6 +279,6 @@ return [
     'error_import_dangling_relation' => 'Eine Beziehung verweist auf einen Charakter, der nicht Teil des Bundles ist.',
     'more_actions' => 'Weitere Aktionen',
     'shared_by' => 'Geteilt von {name}',
-    'shared_with_names' => 'Geteilt mit {names} ({count})',
+    'shared_with_manage' => 'Geteilt mit {names} ({count}) - Freigabe verwalten',
     'more_members' => '+{n} weitere',
 ];

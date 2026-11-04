@@ -35,7 +35,7 @@ return [
     'who_to_invite' => 'who to invite',
     'share' => 'Share',
     'no_share_targets' => 'There is no other user left to share this story with.',
-    'shared_with' => 'Shared with',
+    'sharing_section' => 'Sharing',
     'revoke' => 'Revoke',
     'danger_zone' => 'Danger zone',
     'confirm_delete_story' => 'Delete this story and all its content?',
@@ -279,6 +279,6 @@ return [
     'error_import_dangling_relation' => 'A relation references a character that is not part of the bundle.',
     'more_actions' => 'More actions',
     'shared_by' => 'Shared by {name}',
-    'shared_with_names' => 'Shared with {names} ({count})',
+    'shared_with_manage' => 'Shared with {names} ({count}) - manage sharing',
     'more_members' => '+{n} more',
 ];

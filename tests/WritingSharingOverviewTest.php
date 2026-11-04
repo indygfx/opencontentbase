@@ -95,18 +95,19 @@ final class WritingSharingOverviewTest extends TestCase
         return User::fromRow($this->db->one("SELECT id, username, role FROM users WHERE id = ?", [$id]));
     }
 
-    public function testOwnProjectWithManyMembersRendersCappedStackCounterAndTooltip(): void
+    public function testOwnProjectWithManyMembersRendersCappedLinkedStackCounterAndTooltip(): void
     {
         $body = $this->renderOverview($this->owner);
-        // one stack (p1), capped at 3 avatar circles + one +N counter circle
-        $this->assertSame(1, substr_count($body, 'class="avatar-stack"'));
+        // one stack (p1) rendered as a LINK to the setup page, capped at 3 circles + one +N counter
+        $this->assertSame(1, substr_count($body, '<a class="avatar-stack share-stack"'));
+        $this->assertStringContainsString('<a class="avatar-stack share-stack" href="/writing/p1/setup"', $body);
         $this->assertSame(1, substr_count($body, 'avatar-more'));
         $this->assertStringContainsString('>+2</span>', $body);
         // 3 stack avatars + 1 shared-by avatar (p3) = 4 tone circles
         $this->assertSame(4, substr_count($body, 'avatar avatar-tone-'));
-        // tooltip carries all five names, aria-label the translated text + count
+        // tooltip carries all five names, aria-label the translated manage-sharing phrase + count
         $this->assertStringContainsString('title="m1, m2, m3, m4, m5"', $body);
-        $this->assertStringContainsString('aria-label="Shared with m1, m2, m3, m4, m5 (5)"', $body);
+        $this->assertStringContainsString('aria-label="Shared with m1, m2, m3, m4, m5 (5) - manage sharing"', $body);
         $this->assertStringContainsString('title="+2 more"', $body);
     }
 
@@ -116,13 +117,19 @@ final class WritingSharingOverviewTest extends TestCase
         // p3 is shared with o1: exactly one "shared by" hint naming the owner m1
         $this->assertSame(1, substr_count($body, 'class="shared-by"'));
         $this->assertStringContainsString('Shared by m1', $body);
-        // p3's members do NOT render as a stack for the member view (still only p1's stack)
-        $this->assertSame(1, substr_count($body, 'class="avatar-stack"'));
-        // as the owner, m1 sees p3 as own project with a 2-member stack (no counter)
+        // the setup page is owner-only (verified guard below), so the hint is NOT a link
+        $this->assertStringContainsString('<span class="shared-by">', $body);
+        $this->assertStringNotContainsString('<a class="shared-by"', $body);
+        $pos = strpos($body, 'class="shared-by"');
+        $this->assertStringNotContainsString('<a ', substr($body, (int)$pos, 400));
+        // p3's members do NOT render as a stack for the member view (still only p1's stack link)
+        $this->assertSame(1, substr_count($body, '<a class="avatar-stack share-stack"'));
+        // as the owner, m1 sees p3 as own project with a 2-member stack link (no counter)
         $bodyAsOwner = $this->renderOverview($this->user('m1'));
-        $this->assertSame(1, substr_count($bodyAsOwner, 'class="avatar-stack"'));
+        $this->assertSame(1, substr_count($bodyAsOwner, '<a class="avatar-stack share-stack"'));
+        $this->assertStringContainsString('href="/writing/p3/setup"', $bodyAsOwner);
         $this->assertSame(0, substr_count($bodyAsOwner, 'avatar-more'));
-        $this->assertStringContainsString('aria-label="Shared with m2, o1 (2)"', $bodyAsOwner);
+        $this->assertStringContainsString('aria-label="Shared with m2, o1 (2) - manage sharing"', $bodyAsOwner);
         $this->assertStringContainsString('Shared by o1', $bodyAsOwner);
     }
 
@@ -134,6 +141,44 @@ final class WritingSharingOverviewTest extends TestCase
         $row = substr($body, $pos, (int)strpos($body, '</tr>', $pos) - $pos);
         $this->assertStringNotContainsString('avatar', $row);
         $this->assertStringNotContainsString('shared-by', $row);
+        $this->assertStringNotContainsString('share-stack', $row);
+    }
+
+    public function testSetupPageShowsFullSharedAccountsListWithAvatars(): void
+    {
+        $controller = new WritingController(
+            $this->db,
+            $this->view,
+            $this->csrf,
+            new ProjectAccess($this->db),
+            new ContentRenderer($this->db, new ModuleRegistry())
+        );
+        $response = $controller->setup($this->owner, 'p1');
+        $this->assertSame(200, $response->status());
+        $body = $response->body();
+        // the Sharing block resolves the +N counter on touch: ALL 5 members listed with avatars
+        $this->assertStringContainsString('>Sharing<', $body);
+        $this->assertSame(5, substr_count($body, 'avatar avatar-tone-'));
+        foreach (['m1', 'm2', 'm3', 'm4', 'm5'] as $m) {
+            $this->assertStringContainsString('<td>' . $m . '</td>', $body);
+        }
+        // management stays inline on the setup page (revoke per member, share form above)
+        $this->assertSame(5, substr_count($body, '/unshare'));
+        $this->assertStringContainsString('/share"', $body);
+    }
+
+    public function testSetupPageGuardIsOwnerOnly(): void
+    {
+        $controller = new WritingController(
+            $this->db,
+            $this->view,
+            $this->csrf,
+            new ProjectAccess($this->db),
+            new ContentRenderer($this->db, new ModuleRegistry())
+        );
+        $this->assertSame(200, $controller->setup($this->owner, 'p1')->status());
+        $this->assertSame(403, $controller->setup($this->user('m2'), 'p1')->status(), 'member must not open the setup page');
+        $this->assertSame(404, $controller->setup($this->user('s1'), 'p1')->status(), 'stranger gets 404');
     }
 
     public function testMemberFetchIsOneGroupedQuery(): void
@@ -167,7 +212,8 @@ final class WritingSharingOverviewTest extends TestCase
         $this->assertStringContainsString('.avatar-stack { display: inline-flex;', $baseSection);
         $this->assertStringContainsString('.avatar { width: 28px; height: 28px;', $baseSection);
         $this->assertStringContainsString('border: 2px solid var(--surface);', $baseSection);
-        $this->assertStringContainsString('margin-left: -4px;', $baseSection);
+        $this->assertStringContainsString('.avatar-stack .avatar { margin-left: -4px; }', $baseSection);
+        $this->assertStringContainsString('a.avatar-stack { text-decoration: none;', $baseSection);
         $this->assertStringContainsString('.avatar-more { background: var(--muted); }', $baseSection);
         $this->assertStringContainsString('.shared-by {', $baseSection);
     }
@@ -177,7 +223,7 @@ final class WritingSharingOverviewTest extends TestCase
         foreach (['en', 'de', 'es', 'fr'] as $code) {
             $file = $this->base . '/lang/' . $code . '/writing.php';
             $source = (string)file_get_contents($file);
-            foreach (['shared_by', 'shared_with_names', 'more_members'] as $key) {
+            foreach (['shared_by', 'shared_with_manage', 'more_members', 'sharing_section'] as $key) {
                 $this->assertStringContainsString("'" . $key . "'", $source, $file);
             }
         }

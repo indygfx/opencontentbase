@@ -35,7 +35,7 @@ return [
     'who_to_invite' => 'qui inviter',
     'share' => 'Partager',
     'no_share_targets' => 'Il n’y a plus aucun autre utilisateur avec qui partager cette histoire.',
-    'shared_with' => 'Partagée avec',
+    'sharing_section' => 'Partage',
     'revoke' => 'Révoquer',
     'danger_zone' => 'Zone de danger',
     'confirm_delete_story' => 'Supprimer cette histoire et tout son contenu ?',
@@ -279,6 +279,6 @@ return [
     'error_import_dangling_relation' => 'Une relation fait référence à un personnage qui ne fait pas partie du bundle.',
     'more_actions' => 'Plus d’actions',
     'shared_by' => 'Partagé par {name}',
-    'shared_with_names' => 'Partagé avec {names} ({count})',
+    'shared_with_manage' => 'Partagé avec {names} ({count}) - gérer le partage',
     'more_members' => '+{n} de plus',
 ];

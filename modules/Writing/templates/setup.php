@@ -72,11 +72,12 @@
     <?php endif; ?>
 
     <?php if ($members !== []): ?>
-        <h3><?= e(t('writing', 'shared_with')) ?></h3>
+        <h3><?= e(t('writing', 'sharing_section')) ?></h3>
         <div class="table-scroll"><table>
-            <tr><th><?= e(t('core', 'profile_username')) ?></th><th><?= e(t('core', 'users_role')) ?></th><th></th></tr>
+            <tr><th></th><th><?= e(t('core', 'profile_username')) ?></th><th><?= e(t('core', 'users_role')) ?></th><th></th></tr>
             <?php foreach ($members as $m): ?>
                 <tr>
+                    <td><span class="avatar avatar-tone-<?= \Writing\Avatar::tone($m['username']) ?>" aria-hidden="true"><?= e(\Writing\Avatar::initials($m['username'])) ?></span></td>
                     <td><?= e($m['username']) ?></td>
                     <td><?= e($m['role']) ?></td>
                     <td>
