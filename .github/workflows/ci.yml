@@ -13,14 +13,14 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: sqlite3, mbstring, dom
+          extensions: sqlite3, mbstring, dom, gd
           coverage: none
 
       - name: Composer install
         run: composer install --no-interaction --no-progress
 
       - name: Syntax-Check
-        run: find src modules public -name '*.php' -print0 | xargs -0 -n1 php -l
+        run: find src modules public scripts -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Statische Analyse (phpstan)
         run: vendor/bin/phpstan analyse src modules --no-progress

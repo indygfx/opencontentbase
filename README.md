@@ -190,6 +190,22 @@ above 768 px.
   long words wrap via `overflow-wrap: break-word` on `main`, `.card`, `.notice`
   and `.badge`.
 
+## PWA icons (code-generated)
+
+The app icons are **drawn in code** - no binary source file, no internet access:
+
+```bash
+php scripts/generate-pwa-icons.php
+```
+
+The script (ext-gd) renders a rounded-square canvas with a vertical `#14532d` -> `#16a34a` gradient and a white motif (open book + base bar), and writes:
+
+- `public/assets/icons/icon-192.png` (192x192, motif drawn natively at this size)
+- `public/assets/icons/icon-512.png` (512x512, full-bleed motif)
+- `public/assets/icons/icon-512-maskable.png` (512x512, motif at 70% for the maskable safe zone)
+
+Colors and all proportions are named constants at the top of `scripts/generate-pwa-icons.php` - tweak them there and re-run the script; commit the script and the three PNGs together so they never drift. Verified by `tests/PwaIconTest.php` (exact dimensions, loadable PNGs, brand colors).
+
 ## Languages (i18n)
 
 The UI is fully translated via flat PHP array files – no gettext, no tooling, no build step.

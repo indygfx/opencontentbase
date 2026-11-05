@@ -120,6 +120,7 @@ Deliberately **out of scope**: offline writing, sync, local data storage.
 
 **Stage 1 – reading PWA base (small effort):**
 
+- **App icons (prep done)**: code-generated with GD via `php scripts/generate-pwa-icons.php`; committed PNGs in `public/assets/icons/` (`icon-192.png`, `icon-512.png`, `icon-512-maskable.png`); colors/proportions are constants in the script header, re-run to regenerate
 - `manifest.json` (name, icons, theme color) -> installable on phone/tablet
 - Service worker: **cache-first for GET pages** – visited pages are readable
   offline; POSTs stay online
