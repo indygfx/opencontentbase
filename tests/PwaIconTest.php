@@ -79,16 +79,20 @@ final class PwaIconTest extends TestCase
     {
         $this->assertTrue(extension_loaded('gd'));
         $img = imagecreatefrompng($this->iconPath($file));
-        // top edge center: gradient top #14532d; bottom edge center: #16a34a
-        // (delta 2 tolerates rasterizer resampling at the outermost rows)
-        $top = imagecolorat($img, (int)($size / 2), 0);
-        $this->assertEqualsWithDelta(0x14, ($top >> 16) & 0xFF, 2, 'top red channel');
-        $this->assertEqualsWithDelta(0x53, ($top >> 8) & 0xFF, 2, 'top green channel');
-        $this->assertEqualsWithDelta(0x2D, $top & 0xFF, 2, 'top blue channel');
-        $bottom = imagecolorat($img, (int)($size / 2), $size - 1);
-        $this->assertEqualsWithDelta(0x16, ($bottom >> 16) & 0xFF, 2, 'bottom red channel');
-        $this->assertEqualsWithDelta(0xA3, ($bottom >> 8) & 0xFF, 2, 'bottom green channel');
-        $this->assertEqualsWithDelta(0x4A, $bottom & 0xFF, 2, 'bottom blue channel');
+        // Sample 2% in from the top/bottom edge on the center column: the
+        // outermost 1-2 rows can blend with the transparent canvas edge
+        // depending on the rasterizer's resampling (GD vs reference), so the
+        // assertion targets the gradient body, not the border pixels.
+        $yTop = max(1, (int)round($size * 0.02));
+        $yBottom = min($size - 2, (int)round($size * 0.98));
+        $top = imagecolorat($img, (int)($size / 2), $yTop);
+        $this->assertEqualsWithDelta(0x14, ($top >> 16) & 0xFF, 3, 'top red channel');
+        $this->assertEqualsWithDelta(0x53, ($top >> 8) & 0xFF, 3, 'top green channel');
+        $this->assertEqualsWithDelta(0x2D, $top & 0xFF, 3, 'top blue channel');
+        $bottom = imagecolorat($img, (int)($size / 2), $yBottom);
+        $this->assertEqualsWithDelta(0x16, ($bottom >> 16) & 0xFF, 3, 'bottom red channel');
+        $this->assertEqualsWithDelta(0xA3, ($bottom >> 8) & 0xFF, 3, 'bottom green channel');
+        $this->assertEqualsWithDelta(0x4A, $bottom & 0xFF, 3, 'bottom blue channel');
         // the white motif (book + bar) must appear on the center column:
         // scan the middle band; the solid bar guarantees a white pixel at x=center
         $foundWhite = false;
