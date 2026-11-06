@@ -82,13 +82,22 @@
     --accent-soft: rgba(37, 99, 235, 0.12);
     --shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     --avatar-ink: #fff;
+    /* Structural slots for child themes (defaults = the values used before,
+       so the default theme stays pixel-identical) */
+    --topbar-bg: #fff;
+    --topbar-ink: #2563eb;
+    --link: #1f2430;
+    --button-ink: #fff;
+    --button-padding: 0.5rem 1rem;
+    --button-width: auto;
 }
 body { font-family: var(--font-body); color: var(--ink); margin: 0; background: var(--bg); }
-.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; row-gap: 0.25rem; padding: 0.75rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; row-gap: 0.25rem; padding: 0.75rem 1.25rem; background: var(--topbar-bg); border-bottom: 1px solid var(--line); }
 .brand { font-weight: 700; text-decoration: none; color: var(--ink); }
 .topbar nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-.topbar nav a { color: var(--accent); text-decoration: none; display: inline-block; min-height: 44px; padding: 0.65rem 0.25rem; box-sizing: border-box; }
+.topbar nav a { color: var(--topbar-ink); text-decoration: none; display: inline-block; min-height: 44px; padding: 0.65rem 0.25rem; box-sizing: border-box; }
 main { max-width: 52rem; margin: 1.5rem auto; padding: 0 1rem; }
+main a { color: var(--link); }
 h1, h2 { margin-top: 0; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 table { width: 100%; border-collapse: collapse; background: var(--surface); }
@@ -96,7 +105,7 @@ th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var
 label { display: block; margin-bottom: 1rem; font-weight: 600; }
 input, textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; font: inherit; }
 textarea { font-family: var(--font-mono); }
-button, .button { background: var(--accent); color: var(--surface); border: none; padding: 0.5rem 1rem; min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
+button, .button { background: var(--accent); color: var(--button-ink); border: none; padding: var(--button-padding); width: var(--button-width); min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
 form.inline { display: inline; margin: 0; }
 .actions-secondary-label { display: none; }
 .error { color: var(--error); }
@@ -239,7 +248,7 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
     .topbar { flex-direction: column; align-items: flex-start; }
     .topbar nav { width: 100%; }
     .topbar nav a { flex: 1 1 auto; text-align: center; }
-    button, .button { width: 100%; }
+    :root { --button-width: 100%; }
     form.inline button, .topbar button { width: auto; }
     .narrow { margin: 1.5rem auto; }
 }

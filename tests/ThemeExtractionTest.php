@@ -62,10 +62,18 @@ final class ThemeExtractionTest extends TestCase
         $this->assertSame(0, preg_match('/<script(?![^>]*\bsrc=)[^>]*>/', $html));
     }
 
-    public function testNoThemeCssLinkWithoutOverrideFile(): void
+    public function testNerdlineChildThemeIsShippedAndLinkedAfterMasterCss(): void
     {
-        $this->assertFileDoesNotExist($this->base . '/public/assets/css/theme.css');
-        $this->assertStringNotContainsString('theme.css', $this->renderLayout());
+        $path = $this->base . '/public/assets/css/theme.css';
+        $this->assertFileExists($path, 'the Nerdline child theme ships as theme.css');
+        $this->assertStringContainsString('/* Nerdline theme', (string)file_get_contents($path));
+        $html = $this->renderLayout();
+        // loaded right AFTER master.css, so its :root overrides win the cascade
+        $masterPos = strpos($html, '/assets/css/master.css');
+        $themePos = strpos($html, '/assets/css/theme.css');
+        $this->assertNotFalse($masterPos);
+        $this->assertNotFalse($themePos);
+        $this->assertGreaterThan($masterPos, $themePos, 'theme.css must load after master.css');
     }
 
     public function testNoTemplateContainsInlineStyleOrScript(): void

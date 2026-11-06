@@ -1,0 +1,21 @@
+/* Nerdline theme – nerdline media solutions. Overrides :root variables only. */
+:root {
+    --accent: #66BB6A;
+    --link: #1B5E20;
+    --topbar-bg: #66BB6A;
+    --topbar-ink: #0B3D12;
+    --button-ink: #0B3D12;
+    --button-padding: 0 20px;
+    --button-width: auto;
+    --slider-from: #C8E6C9;
+    --slider-to: #C8E6C9;
+    --slider-text: #14351B;
+    --slider-muted: #3D5A40;
+    --slider-link: #1B5E20;
+    --slider-dot-line: #66BB6A;
+    --slider-dot-active-bg: #1B5E20;
+    --slider-dot-active-text: #fff;
+    --code-bg: #E8F5E9;
+    --highlight: #DCEDC8;
+    --accent-soft: rgba(102, 187, 106, 0.12);
+}

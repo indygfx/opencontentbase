@@ -143,11 +143,23 @@ stay separate files).
   `hostility`, `rivalry`, `fear`, `neutral`. The `.rel-<group>` classes use
   only these variables. `tests/ThemeExtractionTest.php` mirrors
   `Stances::groups()` and fails when a group has no variables/classes.
-- **Child-theme slot**: if a file `public/assets/css/theme.css` exists, the
-  layout loads it right after `master.css` (render-time `file_exists` check).
-  The file is intentionally not shipped. **Rule: child themes override
-  variables, never classes** - a child theme that changes graph or diff
-  colors must keep graph/diff readability (contrast) intact.
+- **Child-theme slot**: `public/assets/css/theme.css` is loaded right after
+  `master.css` (render-time `file_exists` check, so the cascade lets the
+  child `:root` win). **It ships as the "Nerdline" theme** (green brand variant
+  by nerdline media solutions) and contains ONLY a `:root` block - **rule:
+  child themes override variables, never classes**. Nerdline overrides:
+  `--accent`, `--link`, `--topbar-bg`, `--topbar-ink`, `--button-ink`,
+  `--button-padding` (`0 20px`), `--button-width` (`auto`), the slider vars
+  (`--slider-from`/`--slider-to` = `#C8E6C9`, plus matching text/dot colors),
+  and the editor vars `--code-bg`, `--highlight`, `--accent-soft` (green-tinted).
+  The structural variables introduced for this (`--topbar-bg`, `--topbar-ink`,
+  `--link`, `--button-ink`, `--button-padding`, `--button-width`, plus
+  `--font-body`, `--font-mono`, `--code-bg`, `--highlight`, `--accent-soft`,
+  `--shadow`, `--avatar-ink` from the readiness fix) all default to the
+  previous hardcoded values, so the default theme stays pixel-identical.
+  Contrast was checked per WCAG AA (see `tests/NerdlineThemeTest.php`).
+  A child theme that changes graph or diff colors must keep graph/diff
+  readability (contrast) intact.
 - **Fully themed, editor included**: `editor.css` is our own hand-maintained
   editor stylesheet (toolbar, dropdowns, prose) and contains **no color or
   font literals outside `:root`** - it only references the shared variables,

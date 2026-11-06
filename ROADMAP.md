@@ -55,6 +55,16 @@ values identical, so the default theme is pixel-identical); enforced by
 `tests/ThemeExtractionTest.php`. A child theme overriding only variables now
 restyles the complete app including the editor and typography.
 
+**Done:** first child theme "Nerdline" (green brand variant by nerdline media
+solutions) shipped as `public/assets/css/theme.css` - variables only, accepted
+by `tests/NerdlineThemeTest.php` (single `:root` block, key values, WCAG AA
+contrast >= 4.5:1 on all theme pairs, pixel-identical default theme). Dogfooding
+notes: content links were ink-colored and only the topbar nav links used the
+accent, so links got their own `--link` (default = ink) while the topbar nav
+uses `--topbar-ink` (default = old accent); phone-width buttons are routed
+through `--button-width` redefined inside the 480 px block. Remaining gap:
+none known - the theme file needed no selectors or rules.
+
 **Done:** mobile-first audit (step 2) - findings in
 [docs/mobile-audit.md](docs/mobile-audit.md).
 

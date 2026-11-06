@@ -38,7 +38,7 @@
 
 .editor-toolbar-btn[aria-pressed="true"] {
     background: var(--accent);
-    color: var(--surface);
+    color: var(--button-ink);
     border-color: var(--accent);
 }
 
@@ -207,7 +207,7 @@
 
 .editor-menu__entry[aria-pressed="true"] {
     background: var(--accent);
-    color: var(--surface);
+    color: var(--button-ink);
 }
 
 /* Mobile toolbar (audit F8, collapse pattern): below 768px the toolbar WRAPS
