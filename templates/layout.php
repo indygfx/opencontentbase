@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="/assets/css/theme.css">
     <?php endif; ?>
     <link rel="stylesheet" href="/assets/css/editor.css">
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#16a34a">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 </head>
-<body>
+<body data-update-available="<?= e(t('core', 'update_available')) ?>" data-reload-now="<?= e(t('core', 'reload_now')) ?>">
 <header class="topbar">
     <a class="brand" href="/"><?= e(t('core', 'brand')) ?></a>
     <nav>

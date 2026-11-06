@@ -46,8 +46,10 @@ function hexToRgb(string $hex): array
 }
 
 /**
- * Filled rounded rectangle. Uses the native imagefilledroundedrectangle()
- * on PHP >= 8.1 when available, otherwise a manual rect + end-ellipse fallback.
+ * Filled rounded rectangle. Uses the native imageroundedrectangle() (PHP >= 8.1)
+ * plus a flood fill when available, otherwise a manual rect + end-ellipse
+ * fallback. (imagefilledroundedrectangle does not exist in GD - checking for
+ * it always took the fallback path.)
  */
 function filledRoundedRect(
     GdImage $img,
@@ -58,8 +60,9 @@ function filledRoundedRect(
     float $radius,
     int $color
 ): void {
-    if (PHP_VERSION_ID >= 80100 && function_exists('imagefilledroundedrectangle')) {
-        imagefilledroundedrectangle($img, (int)round($x0), (int)round($y0), (int)round($x1), (int)round($y1), (int)round($radius), $color);
+    if (PHP_VERSION_ID >= 80100 && function_exists('imageroundedrectangle')) {
+        imageroundedrectangle($img, (int)round($x0), (int)round($y0), (int)round($x1), (int)round($y1), (int)round($radius), $color);
+        imagefill($img, (int)round(($x0 + $x1) / 2), (int)round(($y0 + $y1) / 2), $color);
         return;
     }
     // Manual fallback: middle rectangle + two end ellipses.
@@ -154,8 +157,8 @@ if (!extension_loaded('gd')) {
     fwrite(STDERR, "ext-gd is not enabled - install/enable GD (e.g. php-gd) and re-run.\n");
     exit(1);
 }
-$nativeRounded = PHP_VERSION_ID >= 80100 && function_exists('imagefilledroundedrectangle');
-fwrite(STDOUT, 'PHP ' . PHP_VERSION . ', rounded-rect path: ' . ($nativeRounded ? 'native imagefilledroundedrectangle' : 'manual fallback') . "\n");
+$nativeRounded = PHP_VERSION_ID >= 80100 && function_exists('imageroundedrectangle');
+fwrite(STDOUT, 'PHP ' . PHP_VERSION . ', rounded-rect path: ' . ($nativeRounded ? 'native imageroundedrectangle' : 'manual fallback') . "\n");
 
 if (!is_dir(OUTPUT_DIR)) {
     mkdir(OUTPUT_DIR, 0775, true);

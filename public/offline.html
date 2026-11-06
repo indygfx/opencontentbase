@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Offline - OpenContentBase</title>
+    <meta name="theme-color" content="#16a34a">
+    <link rel="stylesheet" href="/assets/css/master.css">
+</head>
+<body>
+<main>
+    <section class="card narrow">
+        <h1 data-lang="en">You are offline</h1>
+        <h1 data-lang="de" hidden>Du bist offline</h1>
+        <h1 data-lang="es" hidden>Estás sin conexión</h1>
+        <h1 data-lang="fr" hidden>Vous êtes hors ligne</h1>
+
+        <p data-lang="en">Reading content is available for pages you have already visited; editing requires a connection.</p>
+        <p data-lang="de" hidden>Lesen ist für bereits besuchte Seiten verfügbar; Bearbeiten erfordert eine Verbindung.</p>
+        <p data-lang="es" hidden>La lectura está disponible para las páginas ya visitadas; editar requiere conexión.</p>
+        <p data-lang="fr" hidden>La lecture est disponible pour les pages déjà visitées ; la modification nécessite une connexion.</p>
+
+        <p>
+            <button type="button" id="offline-retry"
+                data-label-en="Retry" data-label-de="Erneut versuchen"
+                data-label-es="Reintentar" data-label-fr="Réessayer">Retry</button>
+        </p>
+    </section>
+</main>
+<script>
+// The service worker cannot run PHP or read the session, so the static
+// offline page picks the message matching navigator.language (fallback en).
+(function () {
+    'use strict';
+    var lang = (navigator.language || 'en').slice(0, 2).toLowerCase();
+    if (['en', 'de', 'es', 'fr'].indexOf(lang) === -1) {
+        lang = 'en';
+    }
+    document.documentElement.setAttribute('lang', lang);
+    document.querySelectorAll('[data-lang]').forEach(function (el) {
+        el.hidden = el.getAttribute('data-lang') !== lang;
+    });
+    var btn = document.getElementById('offline-retry');
+    btn.textContent = btn.getAttribute('data-label-' + lang) || btn.getAttribute('data-label-en');
+    btn.addEventListener('click', function () { window.location.reload(); });
+})();
+</script>
+</body>
+</html>

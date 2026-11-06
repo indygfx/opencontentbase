@@ -206,6 +206,30 @@ The script (ext-gd) renders a rounded-square canvas with a vertical `#14532d` ->
 
 Colors and all proportions are named constants at the top of `scripts/generate-pwa-icons.php` - tweak them there and re-run the script; commit the script and the three PNGs together so they never drift. Verified by `tests/PwaIconTest.php` (exact dimensions, loadable PNGs, brand colors).
 
+## PWA (stage 1: install + offline reading)
+
+Stage 1 makes the app installable and readable offline. Plain static files, no build step: `public/manifest.webmanifest`, `public/sw.js` (root scope `/`), `public/offline.html`, plus a guarded registration block in `public/assets/js/app.js`.
+
+- **Install**: the layout links the manifest, `<meta name="theme-color" content="#16a34a">` and an apple-touch-icon. Manifest: name `OpenContentBase`, short name `OCB`, `start_url: /writing`, `scope: /`, `display: standalone`; `theme_color`/`background_color` come from the **icon palette** (`#16a34a`/`#14532d`), not the blue web theme. Icons are the three code-generated PNGs (incl. `purpose: "maskable"`).
+- **Offline behavior by route class** (SW `VERSION = 'v1'`, versioned caches):
+  - `/assets/...` + manifest: **cache-first** (versioned static cache).
+  - Public reading pages (`/`, `/pages...`, `/blog...`): **stale-while-revalidate** for GET.
+  - Other app pages (`/login`, `/profile`, `/users`, ...): **network-first** for GET; the cached copy is served only when the network fails.
+  - Writing module (`/writing...`): **network-only, never cached**; on failure the offline page is served. Offline editing is out of scope.
+  - POST/PUT/DELETE: never cached; on failure a navigation gets the offline page.
+  - Any failed navigation without a cache entry gets `/offline.html` (precached at install; shows the offline message in en/de/es/fr picked via `navigator.language`, with a retry button).
+- **Update flow**: the SW calls `skipWaiting()` + `clients.claim()` on activate and deletes caches of older `VERSION` keys; `app.js` listens for `updatefound`/`controllerchange` and shows a translated toast ("Update available - reload" / "Reload now", keys `core.update_available` / `core.reload_now` in all four languages) with a reload action.
+- **Dev limitation**: registration is guarded by `window.isSecureContext && 'serviceWorker' in navigator`, so the plain-HTTP dev host (`opencontentbase.test`) stays completely untouched and warning-free; the app itself is unaffected either way.
+
+**Manual verification checklist** (the SW runtime needs an HTTPS host or `localhost`; it is not unit-testable - `tests/PwaStage1Test.php` pins the static artifacts):
+
+1. Serve over HTTPS (or `php -S localhost:8000 -t public`): the browser offers the install prompt; after install the app opens standalone with the green icon.
+2. Visit a few reading pages online, then go offline (DevTools): reloading them still works (stale-while-revalidate / network-first cache).
+3. Offline, open a `/writing/...` URL: the offline page appears; editing forms require a connection.
+4. Deploy a new SW `VERSION`: the update toast appears; "Reload now" activates the new worker.
+
+**Known limitations**: (a) offline-cached reading pages render the **guest topbar** for logged-in users (the SW cannot read the session); (b) offline app pages show the **last-seen state**; forms and edits always require a connection.
+
 ## Languages (i18n)
 
 The UI is fully translated via flat PHP array files – no gettext, no tooling, no build step.

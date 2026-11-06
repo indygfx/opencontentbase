@@ -131,7 +131,19 @@ Deliberately **out of scope**: offline writing, sync, local data storage.
 - Offline fallback page of the service worker for unvisited URLs ("only
   previously visited pages available") instead of a browser error
 
-**Stage 2 – make a story available offline (medium effort):**
+**Done:** PWA stage 1 - installable app + offline reading. `public/manifest.webmanifest`
+(name OpenContentBase / OCB, start_url `/writing`, standalone, theme/background color from
+the icon palette `#16a34a`/`#14532d`, the three code-generated icons incl. maskable),
+`public/sw.js` at root scope (`VERSION = 'v1'`; cache-first for `/assets/`+manifest,
+stale-while-revalidate for public reading pages, network-first for other app pages,
+network-only for `/writing`, non-GET never cached, `/offline.html` fallback in en/de/es/fr,
+skipWaiting + clients.claim update flow), guarded registration + update toast in `app.js`
+(`isSecureContext` guard - HTTP dev host untouched). Verified by `tests/PwaStage1Test.php`;
+manual HTTPS checklist in README.md. Known limitations: offline pages show the guest topbar,
+app pages show the last-seen state.
+
+**Stage 2 – make a story available offline (medium effort) - deferred; candidates:**
+background sync for saves, push notifications.
 
 - **On-demand precache per story**: an "Make available offline" button on
   the story dashboard; the service worker caches all chapters, characters

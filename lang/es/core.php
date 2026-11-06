@@ -63,4 +63,6 @@ return [
     'setup_success' => 'Cuenta de administrador creada. Ya puede iniciar sesión.',
     'setup_already_done' => 'La configuración ya se ha completado.',
     'login_throttled' => 'Demasiados intentos fallidos. Inténtelo de nuevo en {seconds} segundos.',
+    'update_available' => 'Actualización disponible - recargar',
+    'reload_now' => 'Recargar ahora',
 ];

@@ -63,4 +63,6 @@ return [
     'setup_success' => 'Compte administrateur créé. Vous pouvez maintenant vous connecter.',
     'setup_already_done' => 'La configuration est déjà terminée.',
     'login_throttled' => 'Trop de tentatives échouées. Réessayez dans {seconds} secondes.',
+    'update_available' => 'Mise à jour disponible - recharger',
+    'reload_now' => 'Recharger maintenant',
 ];

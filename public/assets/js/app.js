@@ -146,3 +146,54 @@
     document.addEventListener('DOMContentLoaded', init);
     window.addEventListener('load', init);
 })();
+
+/* PWA stage 1: service-worker registration + "update available" toast.
+   Guarded by isSecureContext: on plain-HTTP dev hosts (opencontentbase.test)
+   nothing is registered and no console warning appears. The toast texts are
+   translated server-side onto <body> data attributes (layout.php). */
+(function () {
+    'use strict';
+    if (!window.isSecureContext || !('serviceWorker' in navigator)) {
+        return;
+    }
+
+    function showUpdateToast() {
+        if (document.querySelector('.app-toast') !== null) {
+            return;
+        }
+        var toast = document.createElement('div');
+        toast.className = 'notice app-toast';
+        toast.setAttribute('role', 'status');
+        var text = document.createElement('span');
+        text.textContent = document.body.dataset.updateAvailable || 'Update available - reload';
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = document.body.dataset.reloadNow || 'Reload now';
+        button.addEventListener('click', function () { window.location.reload(); });
+        toast.appendChild(text);
+        toast.appendChild(button);
+        document.body.appendChild(toast);
+    }
+
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').then(function (reg) {
+            reg.addEventListener('updatefound', function () {
+                var worker = reg.installing;
+                if (worker === null) {
+                    return;
+                }
+                worker.addEventListener('statechange', function () {
+                    if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                        showUpdateToast();
+                    }
+                });
+            });
+        }).catch(function () {
+            // Registration failure must never break the app (e.g. HTTP dev).
+        });
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+        showUpdateToast();
+    });
+})();

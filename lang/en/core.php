@@ -63,4 +63,6 @@ return [
     'setup_success' => 'Admin account created. You can now sign in.',
     'setup_already_done' => 'The setup is already completed.',
     'login_throttled' => 'Too many failed attempts. Try again in {seconds} seconds.',
+    'update_available' => 'Update available - reload',
+    'reload_now' => 'Reload now',
 ];

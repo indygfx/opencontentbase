@@ -180,6 +180,8 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
 .diffstat-removed { color: var(--diffstat-removed); font-weight: 600; }
 .compare-form { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .success { color: var(--success); }
+/* PWA update toast (app.js): fixed bottom-center notice with a reload button */
+.app-toast { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 0.75rem; }
 .story-slider { background: linear-gradient(135deg, var(--slider-from), var(--slider-to)); border-radius: 6px; padding: 2.25rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
 .story-slides { position: relative; min-height: 9rem; }
 .story-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; }

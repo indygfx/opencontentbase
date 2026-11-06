@@ -63,4 +63,6 @@ return [
     'setup_success' => 'Admin-Konto erstellt. Du kannst dich jetzt anmelden.',
     'setup_already_done' => 'Die Einrichtung ist bereits abgeschlossen.',
     'login_throttled' => 'Zu viele fehlgeschlagene Versuche. Bitte in {seconds} Sekunden erneut versuchen.',
+    'update_available' => 'Update verfügbar - neu laden',
+    'reload_now' => 'Jetzt neu laden',
 ];
