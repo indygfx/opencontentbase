@@ -115,7 +115,7 @@ modules/Pages/     Reference module (routes, migration, controller, templates)
 modules/Writing/   Writing app: projects, chapter synopses, chapters, characters, relationships, backgrounds
 templates/         Layout, Login, Profile, Users, Error
 docs/              Project docs: mobile-audit.md (mobile-first findings), more as needed
-public/assets/css/ master.css (master theme, :root custom properties), editor.css (Tiptap bundle)
+public/assets/css/ master.css (master theme, :root custom properties), editor.css (editor styles, themed via the same variables)
 public/assets/js/  app.js (page glue), editor.js (Tiptap bundle), story-slider.js
 public/index.php   Front controller
 ```
@@ -133,7 +133,10 @@ stay separate files).
 - **Custom properties**: a `:root` block at the top of `master.css` holds all
   colors and shared values, grouped into base (background, ink, muted, line,
   accent, surfaces, error/success, badge/notice, diff added/removed,
-  progress, slider) and the seven stance groups.
+  progress, slider), the seven stance groups, the avatar palette and the
+  semantic extras (typography + editor colors, added in the child-theme
+  readiness fix): `--font-body`, `--font-mono`, `--code-bg`, `--highlight`,
+  `--accent-soft`, `--shadow`, `--avatar-ink`.
 - **Stance groups**: one variable per group per color context -
   `--rel-<group>-stroke` (graph edges), `--rel-<group>-fill` (edge labels),
   `--rel-<group>-bg` (legend swatches) for `love`, `bond`, `esteem`,
@@ -145,10 +148,13 @@ stay separate files).
   The file is intentionally not shipped. **Rule: child themes override
   variables, never classes** - a child theme that changes graph or diff
   colors must keep graph/diff readability (contrast) intact.
-- **Not themed**: the Tiptap editor styling (`editor.css`, including its
-  mobile toolbar rules) is a third-party bundle with its own assets and is
-  deliberately excluded from theming - child themes only override
-  `master.css` variables.
+- **Fully themed, editor included**: `editor.css` is our own hand-maintained
+  editor stylesheet (toolbar, dropdowns, prose) and contains **no color or
+  font literals outside `:root`** - it only references the shared variables,
+  so a variables-only child theme restyles the editor too. Enforced by
+  `tests/ThemeExtractionTest.php` (`testNoColorOrFontLiteralsOutsideRootBlock`,
+  `testEditorCssUsesOnlySharedVariables`). The Tiptap JS bundle (`editor.js`)
+  stays separate and unthemed, as before.
 
 ## Mobile-first
 

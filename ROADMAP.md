@@ -47,6 +47,14 @@ group variables) and `public/assets/js/app.js`; the `theme.css` child-theme
 override slot is wired in the layout (file not shipped). See the "Theming"
 section in [README.md](README.md).
 
+**Done:** child-theme readiness (audit prompt 19 follow-up) - the audit verdict
+READY WITH GAPS is closed: new `:root` variables `--font-body`, `--font-mono`,
+`--code-bg`, `--highlight`, `--accent-soft`, `--shadow`, `--avatar-ink`; zero
+color/font literals outside `:root` in master.css AND editor.css (default
+values identical, so the default theme is pixel-identical); enforced by
+`tests/ThemeExtractionTest.php`. A child theme overriding only variables now
+restyles the complete app including the editor and typography.
+
 **Done:** mobile-first audit (step 2) - findings in
 [docs/mobile-audit.md](docs/mobile-audit.md).
 

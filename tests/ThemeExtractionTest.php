@@ -141,4 +141,70 @@ final class ThemeExtractionTest extends TestCase
         $this->assertFileExists($this->base . '/public/assets/js/editor.js');
         $this->assertFileExists($this->base . '/public/assets/js/story-slider.js');
     }
+
+    /**
+     * Child-theme readiness (audit prompt 19 follow-up, prompt 20): the new
+     * semantic variables exist in :root with the exact previous hardcoded
+     * default values, so the default theme renders pixel-identical.
+     */
+    public function testRootDefinesNewThemeVariablesWithExactDefaults(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/master.css');
+        $root = substr($css, (int)strpos($css, ':root'), (int)strpos($css, '}', (int)strpos($css, ':root')));
+        $expected = [
+            '--font-body: system-ui, sans-serif;',
+            '--font-mono: ui-monospace, monospace;',
+            '--code-bg: #f1f5f9;',
+            '--highlight: #fef08a;',
+            '--accent-soft: rgba(37, 99, 235, 0.12);',
+            '--shadow: 0 4px 12px rgba(0, 0, 0, 0.12);',
+            '--avatar-ink: #fff;',
+        ];
+        foreach ($expected as $line) {
+            $this->assertStringContainsString($line, $root, 'missing :root definition: ' . $line);
+        }
+    }
+
+    /**
+     * No color or font literals outside the :root block in master.css or
+     * editor.css (empty whitelist): a child theme that only overrides
+     * variables can restyle the complete app, editor included.
+     * font-family is allowed only as var(--...).
+     */
+    public function testNoColorOrFontLiteralsOutsideRootBlock(): void
+    {
+        $colorLiteral = '/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/';
+        foreach (['master.css', 'editor.css'] as $file) {
+            $css = (string)file_get_contents($this->base . '/public/assets/css/' . $file);
+            $outsideRoot = $css;
+            $rootPos = strpos($css, ':root');
+            if ($rootPos !== false) {
+                $rootEnd = strpos($css, '}', $rootPos);
+                $outsideRoot = substr($css, 0, $rootPos) . substr($css, (int)$rootEnd + 1);
+            }
+            $this->assertSame(
+                0,
+                (int)preg_match($colorLiteral, $outsideRoot),
+                $file . ': hardcoded color literal outside :root - route it through a variable'
+            );
+            // font-family is allowed outside :root only as var(--...)
+            preg_match_all('/font-family\s*:\s*([^;]+);/', $outsideRoot, $fonts);
+            foreach ($fonts[1] as $value) {
+                $this->assertStringStartsWith('var(', trim($value), $file . ': font-family literal outside :root: ' . $value);
+            }
+        }
+    }
+
+    public function testEditorCssUsesOnlySharedVariables(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
+        // editor.css has no :root of its own; every var() it references must be
+        // defined in master.css's :root (loaded before editor.css in the layout)
+        $master = (string)file_get_contents($this->base . '/public/assets/css/master.css');
+        preg_match_all('/var\((--[a-z0-9-]+)\)/', $css, $m);
+        $this->assertNotEmpty($m[1]);
+        foreach (array_unique($m[1]) as $var) {
+            $this->assertStringContainsString($var . ':', $master, 'editor.css uses undefined variable ' . $var);
+        }
+    }
 }

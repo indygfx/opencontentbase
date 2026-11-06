@@ -1,7 +1,8 @@
 /* Master stylesheet: all base styles as CSS custom properties.
    Child themes (public/assets/css/theme.css, loaded after this file when it
-   exists) override variables only, never classes. The Tiptap editor bundle
-   (editor.css) is intentionally not part of theming. */
+   exists) override variables only, never classes. editor.css is our own
+   hand-maintained editor stylesheet and uses the same variables, so child
+   themes cover the editor as well. */
 :root {
     /* Base */
     --ink: #1f2430;
@@ -73,8 +74,16 @@
     --avatar-4: #b45309;
     --avatar-5: #be185d;
     --avatar-6: #4d7c0f;
+    /* Typography + semantic colors (child themes override these too) */
+    --font-body: system-ui, sans-serif;
+    --font-mono: ui-monospace, monospace;
+    --code-bg: #f1f5f9;
+    --highlight: #fef08a;
+    --accent-soft: rgba(37, 99, 235, 0.12);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    --avatar-ink: #fff;
 }
-body { font-family: system-ui, sans-serif; color: var(--ink); margin: 0; background: var(--bg); }
+body { font-family: var(--font-body); color: var(--ink); margin: 0; background: var(--bg); }
 .topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; row-gap: 0.25rem; padding: 0.75rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--line); }
 .brand { font-weight: 700; text-decoration: none; color: var(--ink); }
 .topbar nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
@@ -86,7 +95,7 @@ table { width: 100%; border-collapse: collapse; background: var(--surface); }
 th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); }
 label { display: block; margin-bottom: 1rem; font-weight: 600; }
 input, textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; font: inherit; }
-textarea { font-family: ui-monospace, monospace; }
+textarea { font-family: var(--font-mono); }
 button, .button { background: var(--accent); color: var(--surface); border: none; padding: 0.5rem 1rem; min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
 form.inline { display: inline; margin: 0; }
 .actions-secondary-label { display: none; }
@@ -107,7 +116,7 @@ main, .card, .notice, .badge { overflow-wrap: break-word; }
 /* Sharing display on the writing overview: fixed-size inline avatar stack
    (28px circles, 24px advance via -4px overlap, no responsive rules needed) */
 .avatar-stack { display: inline-flex; align-items: center; vertical-align: middle; margin-left: 0.5rem; }
-.avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; color: #fff; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface); box-sizing: border-box; color: var(--avatar-ink); font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; }
 .avatar-stack .avatar { margin-left: -4px; }
 .avatar-stack .avatar:first-child { margin-left: 0; }
 a.avatar-stack { text-decoration: none; color: inherit; }
