@@ -60,7 +60,9 @@ final class PwaStage1Test extends TestCase
     {
         $layout = (string)file_get_contents($this->base . '/templates/layout.php');
         $this->assertStringContainsString('<link rel="manifest" href="/manifest.webmanifest">', $layout);
-        $this->assertStringContainsString('<meta name="theme-color" content="#16a34a">', $layout);
+        // theme-color is dynamic since prompt 22 (follows the active theme's
+        // theme_color; rendered value #16a34a is asserted in ThemeExtractionTest)
+        $this->assertStringContainsString('<meta name="theme-color" content="<?= e($ta[\'themeColor\']) ?>">', $layout);
         $this->assertStringContainsString('rel="apple-touch-icon"', $layout);
         // toast strings travel as translated body data attributes
         $this->assertStringContainsString('data-update-available=', $layout);
