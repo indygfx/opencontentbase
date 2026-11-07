@@ -98,8 +98,13 @@ final class MobileFirstTest extends TestCase
         $this->assertStringContainsString('.relationship-graph { min-width: 900px; }', $tablet);
         $this->assertStringContainsString('.graph-wrap { overflow-x: auto;', $tablet);
         $this->assertStringContainsString('.graph-scroll-hint { display: block; }', $tablet);
-        $this->assertStringContainsString('.story-slider { padding: 1.25rem 1rem; overflow: visible; }', $tablet);
-        $this->assertStringContainsString('.story-slides { min-height: 0; }', $tablet);
+        $this->assertStringContainsString('.story-slider { padding: 1.25rem 1rem; }', $tablet);
+        // the unclip rules live in the BASE now (all viewports, prompt 23 follow-up):
+        // active slide is in flow (defines height), nav is a static row below the text
+        $this->assertMatchesRegularExpression('/\.story-slides \{ position: relative; \}/', $css);
+        $this->assertMatchesRegularExpression('/\.story-slide\.is-active \{ position: static; opacity: 1; pointer-events: auto; \}/', $css);
+        $this->assertMatchesRegularExpression('/\.story-slider-nav \{ position: static; margin-top: 0\.75rem;/', $css);
+        $this->assertStringNotContainsString('min-height: 9rem', $css, 'no fixed min-height anymore - long excerpts grow the box');
     }
 
     public function testMasterCssPhase2BaseRulesAreBreakpointIndependent(): void

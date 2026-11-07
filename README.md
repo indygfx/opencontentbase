@@ -10,6 +10,9 @@ Content is written in Markdown (CommonMark with GFM), with security taking prior
   constant `SLIDE_INTERVAL_MS` (16 s, deliberately slow), pauses on
   `pointerenter`/`pointerleave` (Pointer Events, so touch behaves too) and is
   disabled entirely under `prefers-reduced-motion: reduce` (dots still work).
+  The active slide is in normal flow at all viewports, so long excerpts grow
+  the slider box instead of overflowing it, and the dot navigation sits in its
+  own row below the text (never overlapping it).
 - **Buttons**: action buttons in main content get `margin-block: 16px`
   (vertical rhythm); chrome contexts (topbar, inline forms, table cells,
   slider dots, editor toolbar, the story menu button) keep compact spacing,

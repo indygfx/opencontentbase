@@ -219,17 +219,21 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
 .story-menu { position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 15rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); padding: 0.25rem; }
 .story-menu__entry { display: flex; align-items: center; min-height: 44px; padding: 0.5rem 0.75rem; border-radius: 4px; color: var(--ink); text-decoration: none; font-size: 1rem; }
 .story-menu__entry:hover { background: var(--code-bg); }
-.story-slider { background: linear-gradient(135deg, var(--slider-from), var(--slider-to)); border-radius: 6px; padding: 2.25rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
-.story-slides { position: relative; min-height: 9rem; }
+.story-slider { background: linear-gradient(135deg, var(--slider-from), var(--slider-to)); border-radius: 6px; padding: 2.25rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: visible; }
+/* The ACTIVE slide sits in the flow and defines the container height, so long
+   excerpts grow the slider box instead of overflowing it (all viewports);
+   inactive slides stay absolute for the opacity cross-fade. */
+.story-slides { position: relative; }
 .story-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; }
-.story-slide.is-active { opacity: 1; pointer-events: auto; }
+.story-slide.is-active { position: static; opacity: 1; pointer-events: auto; }
 .story-slide blockquote { margin: 0 0 0.75rem 0; color: var(--slider-text); font-size: 1.15rem; line-height: 1.6; font-style: italic; }
 .story-slide figcaption { color: var(--slider-muted); font-size: 0.85rem; }
 .story-slide figcaption a { color: var(--slider-link); }
 .story-slide-book { font-weight: 600; }
 .story-slide-sep { margin: 0 0.35rem; }
 .story-slider[data-count="1"] .story-slide { position: static; }
-.story-slider-nav { position: absolute; bottom: 0.75rem; right: 1rem; display: flex; gap: 0.4rem; }
+/* nav dots get their own row below the slides (margin-top) - they can never overlap the text */
+.story-slider-nav { position: static; margin-top: 0.75rem; justify-content: flex-end; display: flex; gap: 0.4rem; }
 .story-slider-nav button { background: transparent; border: 1px solid var(--slider-dot-line); color: var(--slider-muted); width: 2.75rem; height: 2.75rem; min-width: 44px; min-height: 44px; padding: 0; border-radius: 50%; font-size: 0.9rem; line-height: 1; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .story-slider-nav button.is-active { background: var(--slider-dot-active-bg); color: var(--slider-dot-active-text); border-color: var(--slider-dot-active-bg); }
 
@@ -246,10 +250,7 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
     .graph-scroll-hint { display: block; }
     /* F5: slider excerpts wrap instead of being clipped; the active slide
        defines the container height, the cross-fade (opacity) still runs */
-    .story-slider { padding: 1.25rem 1rem; overflow: visible; }
-    .story-slides { min-height: 0; }
-    .story-slide.is-active { position: static; }
-    .story-slider-nav { position: static; margin-top: 0.75rem; justify-content: flex-end; }
+    .story-slider { padding: 1.25rem 1rem; }
     /* F7: selects render full-width like inputs */
     select { width: 100%; max-width: 100%; box-sizing: border-box; }
     /* F12: action cells of scrollable tables stack their inline forms */
