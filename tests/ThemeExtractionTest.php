@@ -62,20 +62,39 @@ final class ThemeExtractionTest extends TestCase
         $this->assertSame(0, preg_match('/<script(?![^>]*\bsrc=)[^>]*>/', $html));
     }
 
-    public function testLayoutLoadsGlobalDefaultThemeAfterEditorCss(): void
+    public function testLayoutLoadsSelectedThemeAfterEditorCss(): void
     {
         // the legacy single-file slot is gone; themes live in themes/<slug>/
         $this->assertFileDoesNotExist($this->base . '/public/assets/css/theme.css');
         $this->assertFileExists($this->base . '/public/assets/themes/nerdline/css/theme.css');
         $this->assertFileExists($this->base . '/public/assets/themes/nerdline/theme.json');
-        $html = $this->renderLayout(); // no user -> global default 'nerdline'
-        $editorPos = strpos($html, '/assets/css/editor.css');
-        $themePos = strpos($html, '/assets/themes/nerdline/css/theme.css');
-        $this->assertNotFalse($editorPos);
-        $this->assertNotFalse($themePos, 'global default theme must be linked');
-        $this->assertGreaterThan($editorPos, $themePos, 'active theme must load AFTER editor.css');
-        $this->assertMatchesRegularExpression('/themes\/nerdline\/css\/theme\.css\?v=\d+/', $html, 'cache-buster on theme link');
+        // no user / default theme = plain master.css: NO theme link
+        $html = $this->renderLayout();
+        $this->assertStringNotContainsString('/assets/themes/', $html);
         $this->assertStringContainsString('<meta name="theme-color" content="#16a34a">', $html);
+
+        // a user who selected the nerdline theme gets it AFTER editor.css
+        $user = new \Core\User('u1', 'alice', 'user', null, 'nerdline');
+        $htmlNerd = (new View($this->base))->render('templates/layout.php', [
+            'title' => 'T',
+            'user' => $user,
+            'csrf' => $this->freshCsrf(),
+            'content' => '<p>x</p>',
+        ]);
+        $editorPos = strpos($htmlNerd, '/assets/css/editor.css');
+        $themePos = strpos($htmlNerd, '/assets/themes/nerdline/css/theme.css');
+        $this->assertNotFalse($editorPos);
+        $this->assertNotFalse($themePos, 'selected theme must be linked');
+        $this->assertGreaterThan($editorPos, $themePos, 'active theme must load AFTER editor.css');
+        $this->assertMatchesRegularExpression('/themes\/nerdline\/css\/theme\.css\?v=\d+/', $htmlNerd, 'cache-buster on theme link');
+    }
+
+    private function freshCsrf(): Csrf
+    {
+        $path = sys_get_temp_dir() . '/cb_theme_' . uniqid() . '.sqlite';
+        $db = new Database($path);
+        (new Migrator($db))->migrate('core', CoreMigrations::migrations());
+        return new Csrf($db, new \Core\Auth($db));
     }
 
     public function testNoTemplateContainsInlineStyleOrScript(): void

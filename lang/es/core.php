@@ -66,9 +66,9 @@ return [
     'update_available' => 'Actualización disponible - recargar',
     'reload_now' => 'Recargar ahora',
     'theme_label' => 'Tema',
-    'theme_default' => 'Predeterminado (solo master.css)',
     'profile_theme' => 'Tema',
     'profile_theme_submit' => 'Guardar tema',
     'profile_theme_invalid' => 'El tema seleccionado no está disponible.',
     'profile_theme_changed' => 'Tema actualizado.',
+    'profile_theme_none' => 'No hay temas instalados: suelta carpetas de tema en public/assets/themes/ y aparecerán aquí.',
 ];

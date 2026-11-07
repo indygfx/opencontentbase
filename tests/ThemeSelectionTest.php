@@ -59,9 +59,9 @@ final class ThemeSelectionTest extends TestCase
         }
     }
 
-    private function controller(): AuthController
+    private function controller(?\Core\ThemeRegistry $themes = null): AuthController
     {
-        return new AuthController($this->auth, new View($this->base), new Csrf($this->db, $this->auth), Translator::instance());
+        return new AuthController($this->auth, new View($this->base), new Csrf($this->db, $this->auth), Translator::instance(), null, $themes);
     }
 
     public function testSetThemePersistsAndValidates(): void
@@ -76,38 +76,65 @@ final class ThemeSelectionTest extends TestCase
         $this->assertSame('nerdline', (string)$this->db->one('SELECT theme FROM users WHERE id = ?', ['u1'])['theme']);
     }
 
-    public function testProfileRendersThemeDropdownWithNerdline(): void
+    public function testProfileRendersThemeDropdownWithNerdlineAndNoDefaultEntry(): void
     {
         $body = $this->controller()->showProfile($this->user)->body();
         $this->assertStringContainsString('id="theme"', $body);
         $this->assertStringContainsString('action="/profile/theme"', $body);
-        $this->assertStringContainsString('value="default"', $body);
         $this->assertStringContainsString('value="nerdline"', $body);
         $this->assertStringContainsString('Nerdline', $body);
         $this->assertStringContainsString('nerdline media solutions', $body);
+        // the 'only master.css' pseudo-entry must be gone - real themes only
+        $this->assertStringNotContainsString('value="default"', $body);
     }
 
-    public function testChangeThemePostPersistsAndRejectsInvalid(): void
+    public function testProfileShowsNoThemesMessageInsteadOfDropdownWhenEmpty(): void
     {
-        $_POST = ['theme' => 'default'];
+        $emptyBase = sys_get_temp_dir() . '/cb_empty_themes_' . uniqid();
+        mkdir($emptyBase . '/public/assets/themes', 0775, true);
+        $emptyRegistry = new \Core\ThemeRegistry($emptyBase);
+        $this->assertSame([], $emptyRegistry->scan());
+        $body = $this->controller($emptyRegistry)->showProfile($this->user)->body();
+        $this->assertStringNotContainsString('id="theme"', $body, 'no dropdown without themes');
+        $this->assertStringContainsString('No themes installed', $body, 'muted info message instead');
+    }
+
+    public function testChangeThemePostPersistsAndRendersNewThemeImmediately(): void
+    {
+        $_POST = ['theme' => 'nerdline'];
         $response = $this->controller()->changeTheme($this->user);
         $this->assertSame(200, $response->status());
-        $this->assertSame('default', (string)$this->db->one('SELECT theme FROM users WHERE id = ?', ['u1'])['theme']);
+        $this->assertSame('nerdline', (string)$this->db->one('SELECT theme FROM users WHERE id = ?', ['u1'])['theme']);
+        // the POST response itself must already render the new theme (user refreshed)
+        $this->assertStringContainsString('/assets/themes/nerdline/css/theme.css', $response->body());
 
         $_POST = ['theme' => '../evil'];
         $response = $this->controller()->changeTheme($this->user);
         $this->assertSame(422, $response->status());
-        $this->assertSame('default', (string)$this->db->one('SELECT theme FROM users WHERE id = ?', ['u1'])['theme']);
+        $this->assertSame('nerdline', (string)$this->db->one('SELECT theme FROM users WHERE id = ?', ['u1'])['theme']);
         $this->assertStringContainsString('The selected theme is not available.', $response->body());
     }
 
     public function testLayoutLoadsThemeAfterEditorCssAndOverridesLast(): void
     {
         $view = new View($this->base);
-        // nerdline user (the default)
-        $html = $view->render('templates/layout.php', [
+        // default user (master.css only): no theme link at all
+        $htmlDefault = $view->render('templates/layout.php', [
             'title' => 'T',
             'user' => $this->user,
+            'csrf' => new Csrf($this->db, $this->auth),
+            'content' => '<p>x</p>',
+        ]);
+        $this->assertStringNotContainsString('/assets/themes/', $htmlDefault);
+        $this->assertStringContainsString('/assets/css/master.css', $htmlDefault);
+        $this->assertStringNotContainsString('/assets/overrides/', $htmlDefault, 'no override dir present in the repo');
+
+        // user with theme=nerdline: theme link AFTER editor.css, with cache-buster
+        $this->db->run("UPDATE users SET theme = 'nerdline' WHERE id = 'u1'");
+        $userNerd = User::fromRow($this->db->one('SELECT id, username, role, language, theme FROM users WHERE id = ?', ['u1']));
+        $html = $view->render('templates/layout.php', [
+            'title' => 'T',
+            'user' => $userNerd,
             'csrf' => new Csrf($this->db, $this->auth),
             'content' => '<p>x</p>',
         ]);
@@ -119,26 +146,13 @@ final class ThemeSelectionTest extends TestCase
         $this->assertGreaterThan($editor, $theme, 'theme must load AFTER editor.css');
         $this->assertMatchesRegularExpression('/themes\/nerdline\/css\/theme\.css\?v=\d+/', $html, 'cache-buster required (SW caches /assets/ cache-first)');
         $this->assertStringContainsString('<meta name="theme-color" content="#16a34a">', $html);
-        $this->assertStringNotContainsString('/assets/overrides/', $html, 'no override dir present in the repo');
-
-        // 'default' user: no theme link at all
-        $this->db->run("UPDATE users SET theme = 'default' WHERE id = 'u1'");
-        $userDefault = User::fromRow($this->db->one('SELECT id, username, role, language, theme FROM users WHERE id = ?', ['u1']));
-        $htmlDefault = $view->render('templates/layout.php', [
-            'title' => 'T',
-            'user' => $userDefault,
-            'csrf' => new Csrf($this->db, $this->auth),
-            'content' => '<p>x</p>',
-        ]);
-        $this->assertStringNotContainsString('/assets/themes/', $htmlDefault);
-        $this->assertStringContainsString('/assets/css/master.css', $htmlDefault);
     }
 
     public function testThemeKeysExistInAllLanguages(): void
     {
         foreach (['en', 'de', 'es', 'fr'] as $code) {
             $src = (string)file_get_contents($this->base . '/lang/' . $code . '/core.php');
-            foreach (['theme_label', 'theme_default', 'profile_theme', 'profile_theme_submit', 'profile_theme_invalid', 'profile_theme_changed'] as $key) {
+            foreach (['theme_label', 'profile_theme_none', 'profile_theme', 'profile_theme_submit', 'profile_theme_invalid', 'profile_theme_changed'] as $key) {
                 $this->assertStringContainsString("'" . $key . "'", $src, $code . '/core.php missing ' . $key);
             }
         }

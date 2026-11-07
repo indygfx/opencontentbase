@@ -60,10 +60,10 @@ final class User
         return $this->language;
     }
 
-    /** Active theme slug; falls back to the global default (Nerdline). */
+    /** Active theme slug; empty/null means no theme (master.css only). */
     public function theme(): string
     {
-        return $this->theme !== null && $this->theme !== '' ? $this->theme : ThemeRegistry::DEFAULT_THEME;
+        return $this->theme !== null && $this->theme !== '' ? $this->theme : ThemeRegistry::NO_THEME;
     }
 
     public function isAdmin(): bool

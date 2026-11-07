@@ -66,9 +66,9 @@ return [
     'update_available' => 'Update available - reload',
     'reload_now' => 'Reload now',
     'theme_label' => 'Theme',
-    'theme_default' => 'Default (master.css only)',
     'profile_theme' => 'Theme',
     'profile_theme_submit' => 'Save theme',
     'profile_theme_invalid' => 'The selected theme is not available.',
     'profile_theme_changed' => 'Theme updated.',
+    'profile_theme_none' => 'No themes installed - drop theme folders into public/assets/themes/ and they appear here.',
 ];

@@ -70,9 +70,9 @@ final class ThemeRegistryTest extends TestCase
         $this->assertNull($this->registry->meta('nope'));
     }
 
-    public function testActiveThemeDefaultsToNerdline(): void
+    public function testActiveThemeDefaultsToNoThemeMasterCssOnly(): void
     {
-        $this->assertSame('nerdline', $this->registry->activeTheme(null));
+        $this->assertSame('default', $this->registry->activeTheme(null), 'default is plain master.css (NO_THEME)');
         $user = new User('u1', 'alice', 'user', null, 'default');
         $this->assertSame('default', $this->registry->activeTheme($user));
         $nerd = new User('u2', 'bob', 'user', null, 'nerdline');
@@ -80,7 +80,7 @@ final class ThemeRegistryTest extends TestCase
         $this->assertSame('#16a34a', $this->registry->activeThemeColor(null));
     }
 
-    public function testMigrationDefaultsUsersThemeToNerdline(): void
+    public function testMigrationDefaultsUsersThemeToMasterCssOnly(): void
     {
         $path = sys_get_temp_dir() . '/cb_theme_' . uniqid() . '.sqlite';
         $db = new Database($path);
@@ -90,9 +90,9 @@ final class ThemeRegistryTest extends TestCase
             ['u1', 'alice', password_hash('x1234567', PASSWORD_BCRYPT), 'user']
         );
         $row = $db->one('SELECT theme FROM users WHERE id = ?', ['u1']);
-        $this->assertSame('nerdline', (string)$row['theme'], 'existing/new users start with the Nerdline master theme');
+        $this->assertSame('default', (string)$row['theme'], 'default stays master.css only');
         $user = User::fromRow($db->one('SELECT id, username, role, language, theme FROM users WHERE id = ?', ['u1']));
-        $this->assertSame('nerdline', $user->theme());
+        $this->assertSame('default', $user->theme());
     }
 
     public function testNerdlineThemeCssIsVariablesOnly(): void

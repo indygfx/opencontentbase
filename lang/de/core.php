@@ -66,9 +66,9 @@ return [
     'update_available' => 'Update verfügbar - neu laden',
     'reload_now' => 'Jetzt neu laden',
     'theme_label' => 'Theme',
-    'theme_default' => 'Standard (nur master.css)',
     'profile_theme' => 'Theme',
     'profile_theme_submit' => 'Theme speichern',
     'profile_theme_invalid' => 'Das gewählte Theme ist nicht verfügbar.',
     'profile_theme_changed' => 'Theme aktualisiert.',
+    'profile_theme_none' => 'Keine Themes installiert - Theme-Ordner nach public/assets/themes/ legen und sie erscheinen hier.',
 ];

@@ -11,7 +11,8 @@ final class AuthController
         private View $view,
         private Csrf $csrf,
         private ?Translator $translator = null,
-        private ?LoginThrottler $throttler = null
+        private ?LoginThrottler $throttler = null,
+        private ?ThemeRegistry $themes = null
     ) {
     }
 
@@ -23,7 +24,7 @@ final class AuthController
 
     private function themeRegistry(): ThemeRegistry
     {
-        return new ThemeRegistry(dirname(__DIR__, 2));
+        return $this->themes ?? new ThemeRegistry(dirname(__DIR__, 2));
     }
 
     /** @return list<array<string, mixed>> */
@@ -176,12 +177,15 @@ final class AuthController
         }
         $theme = trim((string)($_POST['theme'] ?? ''));
         $ok = $this->auth->setTheme($user, $theme);
+        if ($ok) {
+            $user = $this->auth->refreshUser($user); // render with the fresh theme immediately
+        }
         $content = $this->view->render('templates/profile.php', [
             'user' => $user,
             'csrf' => $this->csrf,
             'availableLanguages' => $this->availableLanguages(),
             'availableThemes' => $this->availableThemes(),
-            'activeTheme' => $ok ? $theme : $this->themeRegistry()->activeTheme($user),
+            'activeTheme' => $this->themeRegistry()->activeTheme($user),
             'error' => $ok ? null : t('core', 'profile_theme_invalid'),
             'success' => $ok ? t('core', 'profile_theme_changed') : null,
         ]);

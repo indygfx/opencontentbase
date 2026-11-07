@@ -150,11 +150,12 @@ optional theme `js/theme.js`, then optional override `js/theme.js`.
   `js/theme.js` (first-party trusted code, same trust level as app.js).
   `Core\ThemeRegistry` scans the live folder, so deployment-only themes appear
   automatically; slugs are strictly validated (no path traversal).
-- **Shipped master theme**: **Nerdline** (green brand variant by nerdline media
-  solutions) lives at `public/assets/themes/nerdline/` and is the **global
-  default** (`users.theme` defaults to `'nerdline'`); `'default'` stays
-  selectable and means master.css only (the original blue). The theme is
-  picked per user from the dropdown on `/profile` (next to the language).
+- **Shipped example theme**: **Nerdline** (green brand variant by nerdline media
+  solutions) lives at `public/assets/themes/nerdline/`. The **default stays
+  plain master.css** (`users.theme` defaults to `'default'` = no theme); the
+  theme is picked per user from the dropdown on `/profile` (next to the
+  language), which lists only installed theme folders - when none are
+  installed, the Theme section shows an info message instead of a dropdown.
 - **Themes are deployment artifacts, not git content**: `.gitignore` excludes
   `public/assets/themes/*` except `nerdline`, and `public/assets/overrides/`
   entirely - additional themes are dropped on the server, and a power user's

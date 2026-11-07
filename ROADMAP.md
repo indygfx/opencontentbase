@@ -69,9 +69,14 @@ redefined inside the 480 px block.
 developer, theme_color, background_color, icons optional) + `css/theme.css`
 (variables only, test-enforced) + optional `js/theme.js`. `Core\ThemeRegistry`
 scans the live folder and validates slugs strictly (no path traversal).
-Nerdline ships at `themes/nerdline/` and is the GLOBAL DEFAULT (`users.theme`
-defaults to `'nerdline'`; `'default'` = blue master.css only, selectable per
-user on `/profile` next to the language). Themes are deployment artifacts and
+Nerdline ships at `themes/nerdline/` as a selectable example theme; the
+DEFAULT stays plain master.css (`users.theme` defaults to `'default'` =
+no theme; v9 normalizes databases that v8 briefly defaulted to 'nerdline').
+The `/profile` dropdown (next to the language) lists only installed theme
+folders and shows an info message instead when none exist. Bugfix on top:
+`Auth::user()`/`login()` never selected the `theme` column, so saved theme
+changes were never read back - both SELECTs now include it and the POST
+response re-reads the user (`Auth::refreshUser`). Themes are deployment artifacts and
 gitignored (`/public/assets/themes/*` except nerdline); the gitignored
 `public/assets/overrides/` dir (css/js) is loaded last and always wins, so
 users never edit tracked files and updates never touch their overrides.

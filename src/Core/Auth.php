@@ -16,7 +16,7 @@ final class Auth
     public function login(string $username, string $password): ?User
     {
         $row = $this->db->one(
-            'SELECT id, username, password, role, language FROM users WHERE username = ?',
+            'SELECT id, username, password, role, language, theme FROM users WHERE username = ?',
             [$username]
         );
         if ($row === null || !password_verify($password, (string)$row['password'])) {
@@ -64,7 +64,7 @@ final class Auth
             return null;
         }
         $row = $this->db->one(
-            'SELECT u.id, u.username, u.role, u.language
+            'SELECT u.id, u.username, u.role, u.language, u.theme
                FROM sessions s
                JOIN users u ON u.id = s.user_id
               WHERE s.token_hash = ?
@@ -112,6 +112,16 @@ final class Auth
         }
         $this->db->run('UPDATE users SET theme = ? WHERE id = ?', [$theme, $user->id()]);
         return true;
+    }
+
+    /** Re-reads the user row (e.g. after a profile change) so the fresh values apply immediately. */
+    public function refreshUser(User $user): User
+    {
+        $row = $this->db->one(
+            'SELECT id, username, role, language, theme FROM users WHERE id = ?',
+            [$user->id()]
+        );
+        return $row === null ? $user : User::fromRow($row);
     }
 
     public function currentCsrfToken(): ?string

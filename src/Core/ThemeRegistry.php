@@ -23,10 +23,7 @@ namespace Core;
  */
 final class ThemeRegistry
 {
-    /** Global default theme (shipped master theme). */
-    public const DEFAULT_THEME = 'nerdline';
-
-    /** Explicit "no theme" choice: master.css + editor.css only. */
+    /** The default is NO theme: plain master.css + editor.css (blue). */
     public const NO_THEME = 'default';
 
     public function __construct(private string $basePath)
@@ -161,14 +158,11 @@ final class ThemeRegistry
         return is_file($abs) ? $abs : null;
     }
 
-    /** The user's active theme; falls back to the global default. */
+    /** The user's active theme; empty means NO_THEME (master.css only). */
     public function activeTheme(?User $user): string
     {
         $theme = $user?->theme();
-        if ($theme === null || $theme === '' || $theme === self::NO_THEME) {
-            return $theme === self::NO_THEME ? self::NO_THEME : self::DEFAULT_THEME;
-        }
-        return $theme;
+        return ($theme === null || $theme === '') ? self::NO_THEME : $theme;
     }
 
     /** theme_color meta of the active theme (for the <meta name="theme-color">). */
