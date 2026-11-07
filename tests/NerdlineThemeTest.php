@@ -107,9 +107,10 @@ final class NerdlineThemeTest extends TestCase
         $this->assertMatchesRegularExpression('/\.topbar nav a \{[^}]*color: var\(--topbar-ink\);/', $css);
         $this->assertStringContainsString('main a { color: var(--link); }', $css);
         $this->assertMatchesRegularExpression('/button, \.button \{[^}]*color: var\(--button-ink\);[^}]*padding: var\(--button-padding\);[^}]*width: var\(--button-width\);/', $css);
-        // phone rule routes the full-width button behavior through the variable
+        // prompt 23: mobile buttons are width:auto again - the 480px block must
+        // NOT override --button-width (default auto), the 44px target stays in base
         $phone = substr($css, (int)strpos($css, '@media (max-width: 480px)'));
-        $this->assertStringContainsString(':root { --button-width: 100%; }', $phone);
+        $this->assertStringNotContainsString('--button-width', $phone);
     }
 
     public function testThemeColorPairsMeetWcagAa(): void

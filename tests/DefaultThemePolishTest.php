@@ -103,7 +103,7 @@ final class DefaultThemePolishTest extends TestCase
         $this->assertStringContainsString('main button, main .button { margin-block: 16px; }', $css);
         $this->assertStringContainsString('.topbar button, form.inline button, .table-scroll button, .story-slider-nav button, .story-menu-btn, .editor-toolbar button { margin-block: 0; }', $css, 'chrome contexts keep compact spacing');
         $this->assertMatchesRegularExpression('/main button \+ button[^}]*margin-inline-start: 0\.5rem;/', $css, 'side-by-side buttons keep a horizontal gap');
-        $this->assertMatchesRegularExpression('/button, \.button \{[^}]*min-height: 44px;[^}]*width: var\(--button-width\);/', $css, '44px target kept, width via variable');
+        $this->assertMatchesRegularExpression('/button, \.button \{[^}]*width: var\(--button-width\);[^}]*min-height: 44px;/', $css, '44px target kept, width via variable');
         $phone = $this->mediaBlock($css, 480);
         $this->assertStringNotContainsString('--button-width', $phone, 'mobile: buttons are width:auto again (prompt 23)');
     }

@@ -181,10 +181,10 @@ final class MobileFirstTest extends TestCase
         );
         $body = $controller->show($this->admin, 'p1')->body();
         $this->assertStringContainsString('<div class="table-scroll"><table>', $body);
-        // F4: dashboard actions are grouped; secondary actions carry a labeled group
-        $this->assertStringContainsString('class="dashboard-actions"', $body);
-        $this->assertStringContainsString('class="actions-secondary"', $body);
-        $this->assertStringContainsString('class="actions-secondary-label">More actions<', $body);
+        // prompt 23: the dashboard's graph/export/setup actions moved into the
+        // story header menu (covered by DefaultThemePolishTest); the table is
+        // still wrapped
+        $this->assertStringNotContainsString('dashboard-actions', $body);
         $users = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
         $usersBody = $users->index($this->admin)->body();
         $this->assertStringContainsString('<div class="table-scroll"><table>', $usersBody);
