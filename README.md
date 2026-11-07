@@ -122,51 +122,47 @@ public/index.php   Front controller
 
 ## Theming
 
-All styling lives in one external master stylesheet,
-`public/assets/css/master.css`, loaded by the layout via `<link>`; all
-page-level JavaScript glue (Cmd/Ctrl+S save, auto-slug preview, genre word
-targets) lives in `public/assets/js/app.js`, loaded via `<script src>` in the
-layout footer. No template contains inline `<style>` or inline `<script>`
-blocks anymore (the Tiptap editor bundle `editor.js` and `story-slider.js`
-stay separate files).
+All styling lives in external stylesheets loaded by the layout; no template
+contains inline `<style>`/`<script>` blocks (the Tiptap JS bundle `editor.js`
+and `story-slider.js` stay separate files).
 
-- **Custom properties**: a `:root` block at the top of `master.css` holds all
-  colors and shared values, grouped into base (background, ink, muted, line,
-  accent, surfaces, error/success, badge/notice, diff added/removed,
-  progress, slider), the seven stance groups, the avatar palette and the
-  semantic extras (typography + editor colors, added in the child-theme
-  readiness fix): `--font-body`, `--font-mono`, `--code-bg`, `--highlight`,
-  `--accent-soft`, `--shadow`, `--avatar-ink`.
-- **Stance groups**: one variable per group per color context -
-  `--rel-<group>-stroke` (graph edges), `--rel-<group>-fill` (edge labels),
-  `--rel-<group>-bg` (legend swatches) for `love`, `bond`, `esteem`,
-  `hostility`, `rivalry`, `fear`, `neutral`. The `.rel-<group>` classes use
-  only these variables. `tests/ThemeExtractionTest.php` mirrors
-  `Stances::groups()` and fails when a group has no variables/classes.
-- **Child-theme slot**: `public/assets/css/theme.css` is loaded right after
-  `master.css` (render-time `file_exists` check, so the cascade lets the
-  child `:root` win). **It ships as the "Nerdline" theme** (green brand variant
-  by nerdline media solutions) and contains ONLY a `:root` block - **rule:
-  child themes override variables, never classes**. Nerdline overrides:
-  `--accent`, `--link`, `--topbar-bg`, `--topbar-ink`, `--button-ink`,
-  `--button-padding` (`0 20px`), `--button-width` (`auto`), the slider vars
-  (`--slider-from`/`--slider-to` = `#C8E6C9`, plus matching text/dot colors),
-  and the editor vars `--code-bg`, `--highlight`, `--accent-soft` (green-tinted).
-  The structural variables introduced for this (`--topbar-bg`, `--topbar-ink`,
-  `--link`, `--button-ink`, `--button-padding`, `--button-width`, plus
-  `--font-body`, `--font-mono`, `--code-bg`, `--highlight`, `--accent-soft`,
-  `--shadow`, `--avatar-ink` from the readiness fix) all default to the
-  previous hardcoded values, so the default theme stays pixel-identical.
-  Contrast was checked per WCAG AA (see `tests/NerdlineThemeTest.php`).
-  A child theme that changes graph or diff colors must keep graph/diff
-  readability (contrast) intact.
-- **Fully themed, editor included**: `editor.css` is our own hand-maintained
-  editor stylesheet (toolbar, dropdowns, prose) and contains **no color or
-  font literals outside `:root`** - it only references the shared variables,
-  so a variables-only child theme restyles the editor too. Enforced by
-  `tests/ThemeExtractionTest.php` (`testNoColorOrFontLiteralsOutsideRootBlock`,
-  `testEditorCssUsesOnlySharedVariables`). The Tiptap JS bundle (`editor.js`)
-  stays separate and unthemed, as before.
+**Load order** (`templates/layout.php`): `master.css` -> `editor.css` ->
+active theme `themes/<slug>/css/theme.css` -> user override
+`overrides/css/theme.css` (all theme/override links carry a `?v=filemtime`
+cache-buster, because the service worker caches `/assets/` cache-first).
+Same for JS at the end of `<body>`: app.js, editor.js, story-slider.js, then
+optional theme `js/theme.js`, then optional override `js/theme.js`.
+
+- **Master theme**: `public/assets/css/master.css` holds all rules and every
+  color/font in a `:root` variable block (base colors, stance groups, slider,
+  diff, progress, avatar palette, fonts, `--topbar-bg`/`--topbar-ink`/`--link`/
+  `--button-ink`/`--button-padding`/`--button-width`, `--code-bg`,
+  `--highlight`, `--accent-soft`, `--shadow`, `--avatar-ink`). `editor.css`
+  is our hand-maintained editor stylesheet and contains **no literals outside
+  `:root`** - it only references the shared variables. Enforced by
+  `tests/ThemeExtractionTest.php` (no color/font literals outside `:root` in
+  either file).
+- **Theme registry**: themes are plain static folders under
+  `public/assets/themes/<slug>/` with a machine-readable `theme.json`
+  (`name`, `version` required; optional `developer`, `theme_color`,
+  `background_color`, `icons`), `css/theme.css` (variables only - the rule
+  "override variables, never classes" is test-enforced) and optional
+  `js/theme.js` (first-party trusted code, same trust level as app.js).
+  `Core\ThemeRegistry` scans the live folder, so deployment-only themes appear
+  automatically; slugs are strictly validated (no path traversal).
+- **Shipped master theme**: **Nerdline** (green brand variant by nerdline media
+  solutions) lives at `public/assets/themes/nerdline/` and is the **global
+  default** (`users.theme` defaults to `'nerdline'`); `'default'` stays
+  selectable and means master.css only (the original blue). The theme is
+  picked per user from the dropdown on `/profile` (next to the language).
+- **Themes are deployment artifacts, not git content**: `.gitignore` excludes
+  `public/assets/themes/*` except `nerdline`, and `public/assets/overrides/`
+  entirely - additional themes are dropped on the server, and a power user's
+  own override (css/js) always loads last and wins, so users never edit
+  tracked core files and updates never touch their theme.
+- **PWA note**: `manifest.webmanifest` is static (green, matching Nerdline);
+  the `<meta name="theme-color">` follows the active theme's `theme_color`.
+  A dynamic per-theme manifest from `theme.json` is a documented follow-up.
 
 ## Mobile-first
 

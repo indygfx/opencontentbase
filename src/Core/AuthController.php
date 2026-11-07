@@ -21,6 +21,17 @@ final class AuthController
         return $this->translator?->availableLanguages() ?? [Translator::FALLBACK];
     }
 
+    private function themeRegistry(): ThemeRegistry
+    {
+        return new ThemeRegistry(dirname(__DIR__, 2));
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function availableThemes(): array
+    {
+        return $this->themeRegistry()->scan();
+    }
+
     public function showLogin(): Response
     {
         $success = null;
@@ -102,6 +113,8 @@ final class AuthController
                 'user' => $user,
                 'csrf' => $this->csrf,
                 'availableLanguages' => $this->availableLanguages(),
+                'availableThemes' => $this->availableThemes(),
+                'activeTheme' => $this->themeRegistry()->activeTheme($user),
                 'error' => null,
                 'success' => null,
             ]),
@@ -143,8 +156,34 @@ final class AuthController
             'user' => $user,
             'csrf' => $this->csrf,
             'availableLanguages' => $this->availableLanguages(),
+            'availableThemes' => $this->availableThemes(),
+            'activeTheme' => $this->themeRegistry()->activeTheme($user),
             'error' => $ok ? null : t('core', 'profile_language_invalid'),
             'success' => $ok ? t('core', 'profile_language_changed') : null,
+        ]);
+        return Response::html($this->view->render('templates/layout.php', [
+            'title' => t('core', 'profile_title'),
+            'user' => $user,
+            'csrf' => $this->csrf,
+            'content' => $content,
+        ]), $ok ? 200 : 422);
+    }
+
+    public function changeTheme(?User $user): Response
+    {
+        if ($user === null) {
+            return Response::redirect('/login');
+        }
+        $theme = trim((string)($_POST['theme'] ?? ''));
+        $ok = $this->auth->setTheme($user, $theme);
+        $content = $this->view->render('templates/profile.php', [
+            'user' => $user,
+            'csrf' => $this->csrf,
+            'availableLanguages' => $this->availableLanguages(),
+            'availableThemes' => $this->availableThemes(),
+            'activeTheme' => $ok ? $theme : $this->themeRegistry()->activeTheme($user),
+            'error' => $ok ? null : t('core', 'profile_theme_invalid'),
+            'success' => $ok ? t('core', 'profile_theme_changed') : null,
         ]);
         return Response::html($this->view->render('templates/layout.php', [
             'title' => t('core', 'profile_title'),

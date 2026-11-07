@@ -65,4 +65,10 @@ return [
     'login_throttled' => 'Zu viele fehlgeschlagene Versuche. Bitte in {seconds} Sekunden erneut versuchen.',
     'update_available' => 'Update verfügbar - neu laden',
     'reload_now' => 'Jetzt neu laden',
+    'theme_label' => 'Theme',
+    'theme_default' => 'Standard (nur master.css)',
+    'profile_theme' => 'Theme',
+    'profile_theme_submit' => 'Theme speichern',
+    'profile_theme_invalid' => 'Das gewählte Theme ist nicht verfügbar.',
+    'profile_theme_changed' => 'Theme aktualisiert.',
 ];

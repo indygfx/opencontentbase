@@ -48,3 +48,29 @@ function t(string $domain, string $key, array $params = []): string
     }
     return $translator->t($domain, $key, $params);
 }
+
+/**
+ * Resolves the active theme assets for the layout: the per-user theme from
+ * public/assets/themes/<slug>/ (web + absolute path for the ?v=filemtime
+ * cache-buster) plus the gitignored user-override dir public/assets/overrides/
+ * (always loaded last, wins the cascade). 'default' theme = master.css only.
+ *
+ * @return array{themeCss: ?string, themeCssAbs: ?string, themeJs: ?string, themeJsAbs: ?string, themeColor: string, overridesCss: ?string, overridesCssAbs: ?string, overridesJs: ?string, overridesJsAbs: ?string}
+ */
+function theme_assets(?\Core\User $user = null): array
+{
+    $registry = new \Core\ThemeRegistry(dirname(__DIR__, 2));
+    $slug = $registry->activeTheme($user);
+    $isNone = $slug === \Core\ThemeRegistry::NO_THEME;
+    return [
+        'themeCss' => $isNone ? null : $registry->cssPath($slug),
+        'themeCssAbs' => $isNone ? null : $registry->cssAbs($slug),
+        'themeJs' => $isNone ? null : $registry->jsPath($slug),
+        'themeJsAbs' => $isNone ? null : $registry->jsAbs($slug),
+        'themeColor' => $registry->activeThemeColor($user),
+        'overridesCss' => $registry->overrideCssPath(),
+        'overridesCssAbs' => $registry->overrideCssAbs(),
+        'overridesJs' => $registry->overrideJsPath(),
+        'overridesJsAbs' => $registry->overrideJsAbs(),
+    ];
+}

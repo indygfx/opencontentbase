@@ -1,3 +1,4 @@
+<?php $ta = theme_assets($user ?? null); ?>
 <!DOCTYPE html>
 <html lang="<?= e(Core\Translator::instance()?->lang() ?? Core\Translator::FALLBACK) ?>">
 <head>
@@ -5,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e($title ?? 'ContentBase') ?></title>
     <link rel="stylesheet" href="/assets/css/master.css">
-    <?php if (file_exists(dirname(__DIR__) . '/public/assets/css/theme.css')): ?>
-    <link rel="stylesheet" href="/assets/css/theme.css">
-    <?php endif; ?>
     <link rel="stylesheet" href="/assets/css/editor.css">
+    <?php if ($ta['themeCss'] !== null): ?>
+    <link rel="stylesheet" href="<?= e($ta['themeCss']) ?>?v=<?= (int)filemtime($ta['themeCssAbs']) ?>">
+    <?php endif; ?>
+    <?php if ($ta['overridesCss'] !== null): ?>
+    <link rel="stylesheet" href="<?= e($ta['overridesCss']) ?>?v=<?= (int)filemtime($ta['overridesCssAbs']) ?>">
+    <?php endif; ?>
     <link rel="manifest" href="/manifest.webmanifest">
-    <meta name="theme-color" content="#16a34a">
+    <meta name="theme-color" content="<?= e($ta['themeColor']) ?>">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 </head>
 <body data-update-available="<?= e(t('core', 'update_available')) ?>" data-reload-now="<?= e(t('core', 'reload_now')) ?>">
@@ -38,5 +42,7 @@
 <?= $content ?>
 </main>
 <script src="/assets/js/app.js" defer></script><script src="/assets/js/editor.js" defer></script><script src="/assets/js/story-slider.js" defer></script>
+<?php if ($ta['themeJs'] !== null): ?><script src="<?= e($ta['themeJs']) ?>?v=<?= (int)filemtime($ta['themeJsAbs']) ?>" defer></script><?php endif; ?>
+<?php if ($ta['overridesJs'] !== null): ?><script src="<?= e($ta['overridesJs']) ?>?v=<?= (int)filemtime($ta['overridesJsAbs']) ?>" defer></script><?php endif; ?>
 </body>
 </html>

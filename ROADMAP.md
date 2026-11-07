@@ -56,14 +56,30 @@ values identical, so the default theme is pixel-identical); enforced by
 restyles the complete app including the editor and typography.
 
 **Done:** first child theme "Nerdline" (green brand variant by nerdline media
-solutions) shipped as `public/assets/css/theme.css` - variables only, accepted
-by `tests/NerdlineThemeTest.php` (single `:root` block, key values, WCAG AA
-contrast >= 4.5:1 on all theme pairs, pixel-identical default theme). Dogfooding
-notes: content links were ink-colored and only the topbar nav links used the
-accent, so links got their own `--link` (default = ink) while the topbar nav
-uses `--topbar-ink` (default = old accent); phone-width buttons are routed
-through `--button-width` redefined inside the 480 px block. Remaining gap:
-none known - the theme file needed no selectors or rules.
+solutions) - variables only, accepted by `tests/NerdlineThemeTest.php` (single
+`:root` block, key values, WCAG AA contrast >= 4.5:1 on all theme pairs,
+pixel-identical default theme). Dogfooding notes: content links were
+ink-colored and only the topbar nav links used the accent, so links got their
+own `--link` (default = ink) while the topbar nav uses `--topbar-ink` (default
+= old accent); phone-width buttons are routed through `--button-width`
+redefined inside the 480 px block.
+
+**Done:** multi-theme system (prompt 22) - themes are static folders under
+`public/assets/themes/<slug>/` with a `theme.json` (name/version required;
+developer, theme_color, background_color, icons optional) + `css/theme.css`
+(variables only, test-enforced) + optional `js/theme.js`. `Core\ThemeRegistry`
+scans the live folder and validates slugs strictly (no path traversal).
+Nerdline ships at `themes/nerdline/` and is the GLOBAL DEFAULT (`users.theme`
+defaults to `'nerdline'`; `'default'` = blue master.css only, selectable per
+user on `/profile` next to the language). Themes are deployment artifacts and
+gitignored (`/public/assets/themes/*` except nerdline); the gitignored
+`public/assets/overrides/` dir (css/js) is loaded last and always wins, so
+users never edit tracked files and updates never touch their overrides.
+Layout load order: master.css -> editor.css -> active theme -> overrides (with
+`?v=filemtime` cache-busters because the SW caches `/assets/` cache-first);
+`theme-color` meta follows the active theme. Tests: `ThemeRegistryTest`,
+`ThemeSelectionTest`, updated `ThemeExtractionTest`/`NerdlineThemeTest`.
+Follow-up: dynamic per-theme manifest/icons from `theme.json`.
 
 **Done:** mobile-first audit (step 2) - findings in
 [docs/mobile-audit.md](docs/mobile-audit.md).

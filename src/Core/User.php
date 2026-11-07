@@ -20,7 +20,8 @@ final class User
         private readonly string $id,
         private readonly string $username,
         private readonly string $role,
-        private readonly ?string $language = null
+        private readonly ?string $language = null,
+        private readonly ?string $theme = null
     ) {
         if (!isset(self::HIERARCHY[$role])) {
             throw new \InvalidArgumentException("Unknown role: {$role}");
@@ -34,7 +35,8 @@ final class User
             (string)$row['id'],
             (string)$row['username'],
             (string)$row['role'],
-            isset($row['language']) ? (string)$row['language'] : null
+            isset($row['language']) ? (string)$row['language'] : null,
+            isset($row['theme']) ? (string)$row['theme'] : null
         );
     }
 
@@ -56,6 +58,12 @@ final class User
     public function language(): ?string
     {
         return $this->language;
+    }
+
+    /** Active theme slug; falls back to the global default (Nerdline). */
+    public function theme(): string
+    {
+        return $this->theme !== null && $this->theme !== '' ? $this->theme : ThemeRegistry::DEFAULT_THEME;
     }
 
     public function isAdmin(): bool

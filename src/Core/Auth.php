@@ -100,6 +100,20 @@ final class Auth
         return true;
     }
 
+    /**
+     * Persists the per-account theme. 'default' means master.css only; every
+     * other value must be an installed, strictly validated theme slug.
+     */
+    public function setTheme(User $user, string $theme): bool
+    {
+        $registry = new ThemeRegistry(dirname(__DIR__, 2));
+        if ($theme !== ThemeRegistry::NO_THEME && !$registry->isValidSlug($theme)) {
+            return false;
+        }
+        $this->db->run('UPDATE users SET theme = ? WHERE id = ?', [$theme, $user->id()]);
+        return true;
+    }
+
     public function currentCsrfToken(): ?string
     {
         $token = $_COOKIE[self::COOKIE] ?? '';

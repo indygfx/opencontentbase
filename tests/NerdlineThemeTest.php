@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The shipped child theme "Nerdline" (nerdline media solutions): it overrides
- * ONLY :root variables in public/assets/css/theme.css - no selectors, no rules.
+ * ONLY :root variables in public/assets/themes/nerdline/css/theme.css - no selectors, no rules.
  * This doubles as the acceptance test for the theming system: master.css
  * provides the new structural variables with defaults equal to the previous
  * hardcoded values, so the default theme stays pixel-identical, and the theme
@@ -25,7 +25,7 @@ final class NerdlineThemeTest extends TestCase
 
     private function themeCss(): string
     {
-        return (string)file_get_contents($this->base . '/public/assets/css/theme.css');
+        return (string)file_get_contents($this->base . '/public/assets/themes/nerdline/css/theme.css');
     }
 
     private function masterCss(): string

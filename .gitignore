@@ -6,3 +6,9 @@ composer.lock
 node_modules/
 snapshot*
 .snapshotignore
+
+# Themes are deployment artifacts - never commit them.
+# Only the Nerdline master theme ships with the app.
+/public/assets/themes/*
+!/public/assets/themes/nerdline/
+/public/assets/overrides/

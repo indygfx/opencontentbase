@@ -62,18 +62,20 @@ final class ThemeExtractionTest extends TestCase
         $this->assertSame(0, preg_match('/<script(?![^>]*\bsrc=)[^>]*>/', $html));
     }
 
-    public function testNerdlineChildThemeIsShippedAndLinkedAfterMasterCss(): void
+    public function testLayoutLoadsGlobalDefaultThemeAfterEditorCss(): void
     {
-        $path = $this->base . '/public/assets/css/theme.css';
-        $this->assertFileExists($path, 'the Nerdline child theme ships as theme.css');
-        $this->assertStringContainsString('/* Nerdline theme', (string)file_get_contents($path));
-        $html = $this->renderLayout();
-        // loaded right AFTER master.css, so its :root overrides win the cascade
-        $masterPos = strpos($html, '/assets/css/master.css');
-        $themePos = strpos($html, '/assets/css/theme.css');
-        $this->assertNotFalse($masterPos);
-        $this->assertNotFalse($themePos);
-        $this->assertGreaterThan($masterPos, $themePos, 'theme.css must load after master.css');
+        // the legacy single-file slot is gone; themes live in themes/<slug>/
+        $this->assertFileDoesNotExist($this->base . '/public/assets/css/theme.css');
+        $this->assertFileExists($this->base . '/public/assets/themes/nerdline/css/theme.css');
+        $this->assertFileExists($this->base . '/public/assets/themes/nerdline/theme.json');
+        $html = $this->renderLayout(); // no user -> global default 'nerdline'
+        $editorPos = strpos($html, '/assets/css/editor.css');
+        $themePos = strpos($html, '/assets/themes/nerdline/css/theme.css');
+        $this->assertNotFalse($editorPos);
+        $this->assertNotFalse($themePos, 'global default theme must be linked');
+        $this->assertGreaterThan($editorPos, $themePos, 'active theme must load AFTER editor.css');
+        $this->assertMatchesRegularExpression('/themes\/nerdline\/css\/theme\.css\?v=\d+/', $html, 'cache-buster on theme link');
+        $this->assertStringContainsString('<meta name="theme-color" content="#16a34a">', $html);
     }
 
     public function testNoTemplateContainsInlineStyleOrScript(): void

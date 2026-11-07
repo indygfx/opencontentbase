@@ -17,6 +17,20 @@
         </select>
         <button type="submit"><?= e(t('core', 'profile_language_submit')) ?></button>
     </form>
+    <h2><?= e(t('core', 'profile_theme')) ?></h2>
+    <form method="post" action="/profile/theme">
+        <?= $csrf->field() ?>
+        <label for="theme"><?= e(t('core', 'theme_label')) ?></label>
+        <select id="theme" name="theme">
+            <option value="default" <?= ($activeTheme ?? 'nerdline') === 'default' ? 'selected' : '' ?>><?= e(t('core', 'theme_default')) ?></option>
+            <?php foreach (($availableThemes ?? []) as $th): ?>
+                <option value="<?= e($th['slug']) ?>" <?= ($activeTheme ?? 'nerdline') === $th['slug'] ? 'selected' : '' ?>>
+                    <?= e($th['name']) ?><?= $th['developer'] !== '' ? ' - ' . e($th['developer']) : '' ?> (v<?= e($th['version']) ?>)
+                </option>
+            <?php endforeach; ?>
+        </select>
+        <button type="submit"><?= e(t('core', 'profile_theme_submit')) ?></button>
+    </form>
         <h2><?= e(t('core', 'profile_change_password')) ?></h2>
     <?php if (!empty($error)): ?>
         <p class="error"><?= e($error) ?></p>

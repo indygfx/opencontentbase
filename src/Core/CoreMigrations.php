@@ -107,6 +107,12 @@ final class CoreMigrations
                 $db->run('CREATE INDEX idx_login_attempts_username ON login_attempts(username, created_at)');
                 $db->run('CREATE INDEX idx_login_attempts_ip ON login_attempts(ip, created_at)');
             },
+            // v8: per-account theme; the column default makes the shipped
+            // 'nerdline' master theme the global default for existing and new
+            // users ('default' stays the explicit master.css-only choice)
+            function (Database $db): void {
+                $db->run("ALTER TABLE users ADD COLUMN theme TEXT NOT NULL DEFAULT 'nerdline'");
+            },
 ];
     }
 }
