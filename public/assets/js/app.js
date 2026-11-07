@@ -197,3 +197,49 @@
         showUpdateToast();
     });
 })();
+
+/* Generic dropdown menus (story header actions): a [data-dropdown] button
+   toggles its sibling .story-menu (aria-haspopup/aria-expanded); outside click
+   and ESC close every open menu. On mobile the menu is a fixed bottom sheet
+   (master.css 768px block). The editor bundle's own menus are untouched. */
+(function () {
+    'use strict';
+
+    function menuOf(btn) {
+        return btn.parentElement ? btn.parentElement.querySelector('.story-menu') : null;
+    }
+
+    function closeAll(except) {
+        document.querySelectorAll('[data-dropdown]').forEach(function (btn) {
+            if (btn === except) {
+                return;
+            }
+            btn.setAttribute('aria-expanded', 'false');
+            var menu = menuOf(btn);
+            if (menu !== null) {
+                menu.hidden = true;
+            }
+        });
+    }
+
+    document.querySelectorAll('[data-dropdown]').forEach(function (btn) {
+        btn.addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            var menu = menuOf(btn);
+            if (menu === null) {
+                return;
+            }
+            var willOpen = menu.hidden;
+            closeAll(btn);
+            menu.hidden = !willOpen;
+            btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        });
+    });
+
+    document.addEventListener('click', function () { closeAll(null); });
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape') {
+            closeAll(null);
+        }
+    });
+})();

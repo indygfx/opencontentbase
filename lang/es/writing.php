@@ -281,4 +281,5 @@ return [
     'shared_by' => 'Compartido por {name}',
     'shared_with_manage' => 'Compartido con {names} ({count}) - gestionar el uso compartido',
     'more_members' => '+{n} más',
+    'story_actions' => 'Acciones de la historia',
 ];

@@ -26,8 +26,8 @@
             <button type="submit"><?= (($character['image_path'] ?? null) !== null && (string)$character['image_path'] !== '') ? e(t('writing', 'replace_image')) : e(t('writing', 'upload_image')) ?></button>
         </form>
         <p>
-            <a href="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
-            <a href="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/revisions"><?= e(t('writing', 'history')) ?></a>
+            <a class="button" href="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <a class="button" href="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/revisions"><?= e(t('writing', 'history')) ?></a>
             <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/characters/<?= e($character['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_character')) ?>">
                 <?= $csrf->field() ?>
                 <button type="submit"><?= e(t('core', 'users_delete')) ?></button>

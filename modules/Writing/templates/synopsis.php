@@ -19,7 +19,7 @@
     <?php endif; ?>
     <?php if ($canEdit): ?>
         <p>
-            <a href="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
+            <a class="button" href="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/edit"><?= e(t('writing', 'edit')) ?></a>
             <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/synopses/<?= e($synopsis['slug']) ?>/delete" data-confirm="<?= e(t('writing', 'confirm_delete_outline')) ?>">
                 <?= $csrf->field() ?>
                 <button type="submit"><?= e(t('core', 'users_delete')) ?></button>

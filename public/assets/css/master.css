@@ -104,8 +104,19 @@ table { width: 100%; border-collapse: collapse; background: var(--surface); }
 th, td { text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--line); }
 label { display: block; margin-bottom: 1rem; font-weight: 600; }
 input, textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); border-radius: 4px; font: inherit; }
+/* Native selects match the button language: 44px target, same radius/border,
+   custom chevron drawn with pure CSS gradients (no image files, no JS). */
+select { min-height: 44px; padding: 0.5rem 2.25rem 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 4px; background-color: var(--surface); color: var(--ink); font: inherit; appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 1.1rem) 50%, calc(100% - 0.85rem) 50%; background-size: 0.35rem 0.35rem; background-repeat: no-repeat; }
 textarea { font-family: var(--font-mono); }
 button, .button { background: var(--accent); color: var(--button-ink); border: none; padding: var(--button-padding); width: var(--button-width); min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
+/* Vertical rhythm for action buttons in main content; chrome contexts
+   (topbar, inline forms, table cells, slider dots, editor toolbar, the
+   story menu button) keep their compact spacing. */
+main button, main .button { margin-block: 16px; }
+.topbar button, form.inline button, .table-scroll button, .story-slider-nav button, .story-menu-btn, .editor-toolbar button { margin-block: 0; }
+/* Buttons side by side keep a horizontal gap (vertical margin must not break rows). */
+main button + button, main button + .button, main .button + button, main .button + .button { margin-inline-start: 0.5rem; }
+main .button + form.inline, main button + form.inline { margin-inline-start: 0.5rem; }
 form.inline { display: inline; margin: 0; }
 .actions-secondary-label { display: none; }
 .error { color: var(--error); }
@@ -200,6 +211,14 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
 .success { color: var(--success); }
 /* PWA update toast (app.js): fixed bottom-center notice with a reload button */
 .app-toast { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; align-items: center; gap: 0.75rem; }
+/* Story header on the project dashboard: title left, actions menu right. */
+.story-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.story-header h1 { margin-bottom: 0.5rem; }
+.story-menu-wrap { position: relative; flex: 0 0 auto; }
+.story-menu-btn { min-width: 44px; font-size: 1.1rem; line-height: 1; }
+.story-menu { position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 30; min-width: 15rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; box-shadow: var(--shadow); padding: 0.25rem; }
+.story-menu__entry { display: flex; align-items: center; min-height: 44px; padding: 0.5rem 0.75rem; border-radius: 4px; color: var(--ink); text-decoration: none; font-size: 1rem; }
+.story-menu__entry:hover { background: var(--code-bg); }
 .story-slider { background: linear-gradient(135deg, var(--slider-from), var(--slider-to)); border-radius: 6px; padding: 2.25rem 2rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
 .story-slides { position: relative; min-height: 9rem; }
 .story-slide { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; }
@@ -243,12 +262,12 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
     .actions-secondary { border-top: 1px solid var(--line); margin-top: 0.75rem; padding-top: 0.75rem; }
     .actions-secondary-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 0.5rem; }
     .dashboard-actions .button { width: 100%; }
+    /* story header menu opens as a fixed bottom sheet on mobile, same as the editor dropdowns */
+    .story-menu { position: fixed; left: 0.5rem; right: 0.5rem; top: auto; bottom: 0.5rem; max-height: 60vh; overflow-y: auto; }
 }
 @media (max-width: 480px) {
     .topbar { flex-direction: column; align-items: flex-start; }
     .topbar nav { width: 100%; }
     .topbar nav a { flex: 1 1 auto; text-align: center; }
-    :root { --button-width: 100%; }
-    form.inline button, .topbar button { width: auto; }
     .narrow { margin: 1.5rem auto; }
 }

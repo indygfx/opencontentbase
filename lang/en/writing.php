@@ -281,4 +281,5 @@ return [
     'shared_by' => 'Shared by {name}',
     'shared_with_manage' => 'Shared with {names} ({count}) - manage sharing',
     'more_members' => '+{n} more',
+    'story_actions' => 'Story actions',
 ];

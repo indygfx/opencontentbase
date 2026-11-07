@@ -281,4 +281,5 @@ return [
     'shared_by' => 'Partagé par {name}',
     'shared_with_manage' => 'Partagé avec {names} ({count}) - gérer le partage',
     'more_members' => '+{n} de plus',
+    'story_actions' => 'Actions de l’histoire',
 ];

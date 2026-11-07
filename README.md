@@ -4,6 +4,30 @@ ContentBase is a modular content platform that deliberately favors lightness: PH
 
 Content is written in Markdown (CommonMark with GFM), with security taking priority: raw HTML is escaped, unsafe links are neutralized. Internal references use the `[[type:slug]]` syntax and are resolved through the module registry; unresolvable links render as broken-link markers.
  
+## UI polish (default theme)
+
+- **Slideshow** (`story-slider.js`): auto-advance interval is the named
+  constant `SLIDE_INTERVAL_MS` (16 s, deliberately slow), pauses on
+  `pointerenter`/`pointerleave` (Pointer Events, so touch behaves too) and is
+  disabled entirely under `prefers-reduced-motion: reduce` (dots still work).
+- **Buttons**: action buttons in main content get `margin-block: 16px`
+  (vertical rhythm); chrome contexts (topbar, inline forms, table cells,
+  slider dots, editor toolbar, the story menu button) keep compact spacing,
+  and side-by-side buttons keep a `0.5rem` horizontal gap. Mobile buttons are
+  `width: auto` again (the 44 px min touch target stays). Width/padding/ink
+  are theme variables (`--button-width`, `--button-padding`, `--button-ink`).
+- **Story header menu**: the project dashboard has a header with the story
+  title and a menu button (`aria-label` = translated `story_actions`); its
+  dropdown holds exactly the three actions graph / Markdown export / novel
+  setup (setup for the owner only). Interaction: `aria-haspopup` +
+  `aria-expanded`, close on outside click and ESC (app.js); on mobile it opens
+  as a fixed bottom sheet like the editor dropdowns.
+- **Selects/dropdowns**: native selects get 44 px min-height, button-matching
+  radius/border and a pure-CSS chevron (`appearance: none` + gradient, no image
+  files); dropdown menus use `--surface`/`--line`/`--shadow` with 44 px entries.
+- **Detail-page actions** (edit/history on chapters, synopses, characters,
+  backgrounds, pages) render as `.button`.
+
 ## Editor
 
 All Markdown fields (chapter prose, outline fields, chapter synopsis summaries, page/character/background bodies) use a single-surface WYSIWYG-style editor built on Tiptap/ProseMirror (like the Nextcloud Text editor): formatting renders subtly in place – bold shows bold, headings show as headings – with no separate preview pane. Markdown remains the storage format.

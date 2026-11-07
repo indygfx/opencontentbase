@@ -382,7 +382,7 @@ final class WritingController
     private function findProject(string $id): ?array
     {
         return $this->db->one(
-            "SELECT p.id, p.owner_id, p.title, p.idea, p.blurb, p.synopsis, p.synopsis_long, p.cover, p.created_at,
+            "SELECT p.id, p.owner_id, p.title, p.idea, p.blurb, p.synopsis, p.synopsis_long, p.cover, p.genre, p.created_at,
                     u.username AS owner_name
              FROM projects p JOIN users u ON u.id = p.owner_id WHERE p.id = ?",
             [$id]

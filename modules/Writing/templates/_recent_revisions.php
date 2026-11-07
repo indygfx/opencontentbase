@@ -19,6 +19,6 @@
                 </li>
             <?php endforeach; ?>
         </ul>
-        <p><a href="<?= e($recentBase) ?>/revisions"><?= e(t('writing', 'history')) ?></a></p>
+        <p><a class="button" href="<?= e($recentBase) ?>/revisions"><?= e(t('writing', 'history')) ?></a></p>
     </details>
 <?php endif; ?>

@@ -45,22 +45,25 @@ function progressBar(string $section, array $entry, string $label): string
 ?>
 <section class="card">
     <p class="muted"><a href="/writing">&larr; <?= e(t('writing', 'all_stories')) ?></a></p>
-    <h1><?= e($project['title']) ?></h1>
+    <div class="story-header">
+        <h1><?= e($project['title']) ?></h1>
+        <div class="story-menu-wrap">
+            <button type="button" class="story-menu-btn" data-dropdown aria-haspopup="true" aria-expanded="false" aria-label="<?= e(t('writing', 'story_actions')) ?>">&#9776;</button>
+            <div class="story-menu" hidden>
+                <a class="story-menu__entry" href="/writing/<?= e($project['id']) ?>/graph"><?= e(t('writing', 'graph_open')) ?></a>
+                <a class="story-menu__entry" href="/writing/<?= e($project['id']) ?>/export"><?= e(t('writing', 'export_story')) ?></a>
+                <?php if ($isOwner): ?>
+                <a class="story-menu__entry" href="/writing/<?= e($project['id']) ?>/setup"><?= e(t('writing', 'novel_setup')) ?></a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
     <?php if ((string)($project['cover'] ?? '') !== ''): ?>
         <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="<?= e(t('writing', 'cover_alt', ['title' => (string)$project['title']])) ?>"></p>
     <?php endif; ?>
     <div class="progress progress--overall" data-section="overall">
         <div class="progress-track"><div class="progress-bar<?= $overall >= 1.0 ? ' is-done' : ' is-partial' ?>" style="width: <?= (int)round($overall * 100) ?>%"></div></div>
         <span class="progress-label"><?= number_format($overall * 100) ?>% <?= e(t('writing', 'overall')) ?></span>
-    </div>
-    <div class="dashboard-actions">
-    <?php if ($isOwner): ?>
-        <p><a class="button" href="/writing/<?= e($project['id']) ?>/setup"><?= e(t('writing', 'novel_setup')) ?></a></p>
-    <?php endif; ?>
-        <div class="actions-secondary">
-            <span class="actions-secondary-label"><?= e(t('writing', 'more_actions')) ?></span>
-            <p><a class="button" href="/writing/<?= e($project['id']) ?>/export"><?= e(t('writing', 'export_story')) ?></a></p>
-        </div>
     </div>
     <?php if (!empty($importSuccess)): ?>
         <p class="success"><?= e($importSuccess) ?></p>
@@ -150,7 +153,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?php endif; ?>
     <p><a class="button" href="/writing/<?= e($project['id']) ?>/characters/new"><?= e(t('writing', 'new_character')) ?></a></p>
 
-    <h2><?= e(t('writing', 'relationship_web')) ?> <a class="button" href="/writing/<?= e($project['id']) ?>/graph"><?= e(t('writing', 'graph_open')) ?></a></h2>
+    <h2><?= e(t('writing', 'relationship_web')) ?></h2>
     <?= progressBar('relations', $progress['relations'], $progress['relations']['actual'] . ' / ' . $progress['relations']['target'] . ' ' . t('writing', 'relations')) ?>
     <p class="muted"><?= e(t('writing', 'relationship_web_hint')) ?></p>
     <?php if ($relations !== []): ?>

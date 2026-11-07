@@ -111,6 +111,15 @@ the bar below 768 px), F16 (long words wrap via `overflow-wrap: break-word` -
 base rule). F9 (editor toolbar compact) is covered by the collapse-pattern
 entry above. **Open (cosmetic only):** file-upload cosmetics on the setup page.
 
+**Done:** default-theme polish round 1 (prompt 23) - slideshow pacing
+(`SLIDE_INTERVAL_MS` 16 s + hover pause + reduced-motion opt-out), button
+vertical rhythm (`margin-block: 16px`, chrome exceptions, horizontal gaps,
+mobile `width: auto` with the 44 px target kept), story header actions menu
+(graph/export/setup, bottom sheet on mobile), genre preselection bug fixed
+(`findProject` now selects `p.genre`), unified select styling (44 px, pure-CSS
+chevron), detail-page edit/history actions as `.button`. Further polish rounds
+may follow.
+
 ### 1. Theme extraction (next step)
 
 Goal: no inline CSS/JS anymore; a master/default theme as the base, custom

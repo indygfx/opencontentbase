@@ -269,14 +269,15 @@ final class MobileFirstTest extends TestCase
 
     public function testToolbarToggleIsNeverFullWidthEvenBelow480(): void
     {
-        // master.css routes the phone full-width button behavior through a
-        // variable: the base rule is `width: var(--button-width)` and the 480px
-        // block redefines `:root { --button-width: 100%; }`. The element selector
-        // (specificity 0-0-1) still loses to editor.css's `.editor-toolbar-toggle
-        // { width: auto }` (class selector, 0-1-0) in every block.
+        // master.css routes button width through --button-width (default auto);
+        // since prompt 23 the 480px block no longer forces 100% - the 44px target
+        // stays in the base rule. The element selector (0-0-1) still loses to
+        // editor.css's `.editor-toolbar-toggle { width: auto }` (class, 0-1-0).
         $master = (string)file_get_contents($this->base . '/public/assets/css/master.css');
-        $this->assertMatchesRegularExpression('/button, \.button \{[^}]*width: var\(--button-width\);/s', $master);
-        $this->assertStringContainsString(':root { --button-width: 100%; }', $this->mediaBlock($master, 480));
+        // 44px touch target stays in the base rule; width routes through --button-width (default auto)
+        $this->assertMatchesRegularExpression('/button, \.button \{[^}]*width: var\(--button-width\);[^}]*min-height: 44px;/s', $master);
+        // prompt 23: mobile buttons are width:auto again - the 480px block must NOT override the width
+        $this->assertStringNotContainsString('--button-width', $this->mediaBlock($master, 480));
         $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
         $block768 = $this->mediaBlock($css, 768);
         $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*width: auto;/s', $block768);

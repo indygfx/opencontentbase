@@ -281,4 +281,5 @@ return [
     'shared_by' => 'Geteilt von {name}',
     'shared_with_manage' => 'Geteilt mit {names} ({count}) - Freigabe verwalten',
     'more_members' => '+{n} weitere',
+    'story_actions' => 'Story-Aktionen',
 ];
