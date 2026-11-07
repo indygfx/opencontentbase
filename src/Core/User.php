@@ -21,7 +21,8 @@ final class User
         private readonly string $username,
         private readonly string $role,
         private readonly ?string $language = null,
-        private readonly ?string $theme = null
+        private readonly ?string $theme = null,
+        private readonly ?string $avatar = null
     ) {
         if (!isset(self::HIERARCHY[$role])) {
             throw new \InvalidArgumentException("Unknown role: {$role}");
@@ -36,7 +37,8 @@ final class User
             (string)$row['username'],
             (string)$row['role'],
             isset($row['language']) ? (string)$row['language'] : null,
-            isset($row['theme']) ? (string)$row['theme'] : null
+            isset($row['theme']) ? (string)$row['theme'] : null,
+            isset($row['avatar']) ? (string)$row['avatar'] : null
         );
     }
 
@@ -58,6 +60,12 @@ final class User
     public function language(): ?string
     {
         return $this->language;
+    }
+
+    /** Uploaded avatar file name (data/avatars/), null = initials fallback. */
+    public function avatar(): ?string
+    {
+        return $this->avatar !== null && $this->avatar !== '' ? $this->avatar : null;
     }
 
     /** Active theme slug; empty/null means no theme (master.css only). */

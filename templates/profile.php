@@ -51,4 +51,18 @@
         <input id="password_confirm" type="password" name="password_confirm" required minlength="8" autocomplete="new-password">
         <button type="submit"><?= e(t('core', 'profile_change_password_submit')) ?></button>
     </form>
+    <h2><?= e(t('core', 'profile_avatar')) ?></h2>
+    <p><?= avatar_tag($user->username(), $user->id(), $user->avatar()) ?></p>
+    <form method="post" action="/profile/avatar" enctype="multipart/form-data">
+        <?= $csrf->field() ?>
+        <label for="avatar"><?= e(t('core', 'avatar_upload')) ?> <small class="muted"><?= e(t('core', 'avatar_hint')) ?></small></label>
+        <input type="file" id="avatar" name="avatar" accept="image/jpeg,image/png,image/webp,image/gif" required>
+        <button type="submit"><?= e(t('core', 'avatar_upload')) ?></button>
+    </form>
+    <?php if ($user->avatar() !== null): ?>
+    <form class="inline" method="post" action="/profile/avatar/delete">
+        <?= $csrf->field() ?>
+        <button type="submit"><?= e(t('core', 'avatar_remove')) ?></button>
+    </form>
+    <?php endif; ?>
 </section>

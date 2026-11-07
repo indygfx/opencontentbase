@@ -6,6 +6,7 @@ namespace Writing;
 use Core\Database;
 use Core\ModuleInterface;
 use Core\Router;
+use Core\ImageStore;
 
 final class WritingModule implements ModuleInterface
 {

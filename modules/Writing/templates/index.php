@@ -65,16 +65,9 @@
                     <td>
                         <a href="/writing/<?= e($p['id']) ?>"><?= e($p['title']) ?></a>
                         <?php if ((int)$p['shared'] === 1): ?>
-                            <span class="shared-by"><span class="avatar avatar-tone-<?= \Writing\Avatar::tone((string)$p['owner_name']) ?>" aria-hidden="true"><?= e(\Writing\Avatar::initials((string)$p['owner_name'])) ?></span><?= e(t('writing', 'shared_by', ['name' => (string)$p['owner_name']])) ?></span>
+                            <span class="shared-by"><?= avatar_tag((string)$p['owner_name'], (string)$p['owner_id'], $p['owner_avatar'] ?? null) ?><?= e(t('writing', 'shared_by', ['name' => (string)$p['owner_name']])) ?></span>
                         <?php elseif ($shownMembers !== []): ?>
-                            <a class="avatar-stack share-stack" href="/writing/<?= e($p['id']) ?>/setup" title="<?= e($memberNames) ?>" aria-label="<?= e(t('writing', 'shared_with_manage', ['names' => $memberNames, 'count' => (string)count($projectMembers)])) ?>">
-                                <?php foreach ($shownMembers as $m): ?>
-                                    <span class="avatar avatar-tone-<?= \Writing\Avatar::tone($m['username']) ?>" aria-hidden="true"><?= e(\Writing\Avatar::initials($m['username'])) ?></span>
-                                <?php endforeach; ?>
-                                <?php if ($hiddenCount > 0): ?>
-                                    <span class="avatar avatar-more" title="<?= e(t('writing', 'more_members', ['n' => (string)$hiddenCount])) ?>">+<?= $hiddenCount ?></span>
-                                <?php endif; ?>
-                            </a>
+                            <?php $stackMembers = $projectMembers; $stackHref = '/writing/' . $p['id'] . '/setup'; include __DIR__ . '/_avatar_stack.php'; ?>
                         <?php endif; ?>
                     </td>
                     <td><?= e($p['owner_name']) ?></td>

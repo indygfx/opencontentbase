@@ -148,6 +148,9 @@ a.avatar-stack:hover .avatar, a.avatar-stack:focus-visible .avatar { border-colo
 .avatar-tone-5 { background: var(--avatar-5); }
 .avatar-tone-6 { background: var(--avatar-6); }
 .avatar-more { background: var(--muted); }
+img.avatar, .avatar-img { object-fit: cover; }
+.story-header h1 { min-width: 0; }
+.story-header .avatar-stack { flex: 0 0 auto; margin-block: 0.35rem; }
 .shared-by { margin-left: 0.5rem; color: var(--muted); font-size: 0.85rem; }
 .shared-by .avatar { margin: 0 0.35rem 0 0; vertical-align: middle; }
 .cover-preview { max-width: 22rem; max-height: 22rem; border: 1px solid var(--line); border-radius: 6px; display: block; }

@@ -42,7 +42,7 @@ final class ProjectAccess
     public function visibleProjects(User $user): array
     {
         $rows = $this->db->all(
-            "SELECT p.id, p.title, p.owner_id, u.username AS owner_name, p.created_at,
+            "SELECT p.id, p.title, p.owner_id, u.username AS owner_name, u.avatar AS owner_avatar, p.created_at,
                     CASE WHEN p.owner_id = ? THEN 0 ELSE 1 END AS shared
              FROM projects p
              JOIN users u ON u.id = p.owner_id
@@ -58,7 +58,7 @@ final class ProjectAccess
     public function members(string $projectId): array
     {
         return $this->db->all(
-            'SELECT m.user_id, u.username, m.role
+            'SELECT m.user_id, u.username, u.avatar, m.role
              FROM project_members m
              JOIN users u ON u.id = m.user_id
              WHERE m.project_id = ?
@@ -82,7 +82,7 @@ final class ProjectAccess
         }
         $placeholders = implode(',', array_fill(0, count($projectIds), '?'));
         $rows = $this->db->all(
-            "SELECT m.project_id, m.user_id, u.username, m.role
+            "SELECT m.project_id, m.user_id, u.username, u.avatar, m.role
              FROM project_members m
              JOIN users u ON u.id = m.user_id
              WHERE m.project_id IN ($placeholders)
@@ -94,6 +94,7 @@ final class ProjectAccess
             $byProject[(string)$row['project_id']][] = [
                 'user_id' => (string)$row['user_id'],
                 'username' => (string)$row['username'],
+                'avatar' => isset($row['avatar']) ? (string)$row['avatar'] : null,
                 'role' => (string)$row['role'],
             ];
         }

@@ -74,3 +74,14 @@ function theme_assets(?\Core\User $user = null): array
         'overridesJsAbs' => $registry->overrideJsAbs(),
     ];
 }
+
+/**
+ * Single-source avatar element for templates: uploaded image when the user
+ * has one (users.avatar), initials circle otherwise. Used by the writing
+ * overview stack, the setup sharing block, the story header stack and the
+ * profile preview.
+ */
+function avatar_tag(string $username, string $userId, ?string $avatarName): string
+{
+    return \Core\Avatar::render($username, $userId, $avatarName, dirname(__DIR__, 2));
+}

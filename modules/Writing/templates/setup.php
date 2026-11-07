@@ -77,7 +77,7 @@
             <tr><th></th><th><?= e(t('core', 'profile_username')) ?></th><th><?= e(t('core', 'users_role')) ?></th><th></th></tr>
             <?php foreach ($members as $m): ?>
                 <tr>
-                    <td><span class="avatar avatar-tone-<?= \Writing\Avatar::tone($m['username']) ?>" aria-hidden="true"><?= e(\Writing\Avatar::initials($m['username'])) ?></span></td>
+                    <td><?= avatar_tag($m['username'], $m['user_id'], $m['avatar'] ?? null) ?></td>
                     <td><?= e($m['username']) ?></td>
                     <td><?= e($m['role']) ?></td>
                     <td>

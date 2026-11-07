@@ -10,6 +10,7 @@ use Core\Database;
 use Core\Response;
 use Core\User;
 use Core\View;
+use Core\ImageStore;
 
 final class WritingController
 {

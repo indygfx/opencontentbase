@@ -118,6 +118,10 @@ final class CoreMigrations
             function (Database $db): void {
                 $db->run("UPDATE users SET theme = 'default' WHERE theme = 'nerdline'");
             },
+            // v10: per-user avatar image (file name under data/avatars/); NULL = initials fallback
+            function (Database $db): void {
+                $db->run('ALTER TABLE users ADD COLUMN avatar TEXT NULL');
+            },
 ];
     }
 }

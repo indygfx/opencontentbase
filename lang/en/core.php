@@ -71,4 +71,13 @@ return [
     'profile_theme_invalid' => 'The selected theme is not available.',
     'profile_theme_changed' => 'Theme updated.',
     'profile_theme_none' => 'No themes installed - drop theme folders into public/assets/themes/ and they appear here.',
+    'profile_avatar' => 'Avatar',
+    'avatar_upload' => 'Upload avatar',
+    'avatar_remove' => 'Remove avatar',
+    'avatar_hint' => 'JPG, PNG, WebP or GIF, max 5 MB. Without an image your initials are shown.',
+    'avatar_changed' => 'Avatar updated.',
+    'avatar_removed' => 'Avatar removed - your initials are shown again.',
+    'profile_avatar_no_file' => 'Please choose an image file.',
+    'profile_avatar_too_big' => 'The image is too large (max 5 MB).',
+    'profile_avatar_invalid' => 'Unsupported image type - use JPG, PNG, WebP or GIF.',
 ];

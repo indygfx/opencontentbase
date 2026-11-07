@@ -16,7 +16,7 @@ final class Auth
     public function login(string $username, string $password): ?User
     {
         $row = $this->db->one(
-            'SELECT id, username, password, role, language, theme FROM users WHERE username = ?',
+            'SELECT id, username, password, role, language, theme, avatar FROM users WHERE username = ?',
             [$username]
         );
         if ($row === null || !password_verify($password, (string)$row['password'])) {
@@ -64,7 +64,7 @@ final class Auth
             return null;
         }
         $row = $this->db->one(
-            'SELECT u.id, u.username, u.role, u.language, u.theme
+            'SELECT u.id, u.username, u.role, u.language, u.theme, u.avatar
                FROM sessions s
                JOIN users u ON u.id = s.user_id
               WHERE s.token_hash = ?
@@ -118,10 +118,26 @@ final class Auth
     public function refreshUser(User $user): User
     {
         $row = $this->db->one(
-            'SELECT id, username, role, language, theme FROM users WHERE id = ?',
+            'SELECT id, username, role, language, theme, avatar FROM users WHERE id = ?',
             [$user->id()]
         );
         return $row === null ? $user : User::fromRow($row);
+    }
+
+    /** Persists the avatar file name (bare name under data/avatars/); null clears it. */
+    public function setAvatar(User $user, ?string $name): void
+    {
+        $this->db->run('UPDATE users SET avatar = ? WHERE id = ?', [$name, $user->id()]);
+    }
+
+    /** Avatar file name of any user, or null. */
+    public function avatarOf(string $userId): ?string
+    {
+        $row = $this->db->one('SELECT avatar FROM users WHERE id = ?', [$userId]);
+        if ($row === null || $row['avatar'] === null || $row['avatar'] === '') {
+            return null;
+        }
+        return (string)$row['avatar'];
     }
 
     public function currentCsrfToken(): ?string

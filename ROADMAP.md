@@ -120,6 +120,15 @@ mobile `width: auto` with the 44 px target kept), story header actions menu
 chevron), detail-page edit/history actions as `.button`. Further polish rounds
 may follow.
 
+**Done:** prompt 24 - story header shows the sharing avatar stack next to the
+title (same partial/mechanics as the overview; links to setup for the owner,
+no stack without members) and users can upload their own avatar on `/profile`
+(same ImageStore validation/storage as character portraits, `data/avatars/`,
+`GET /avatars/{user}`, migration v10 `users.avatar`); single-source rendering
+via `Core\Avatar::render`/`avatar_tag()` - image with cache-buster when set,
+initials circle otherwise - in overview stack, setup block, header stack and
+profile preview.
+
 ### 1. Theme extraction (next step)
 
 Goal: no inline CSS/JS anymore; a master/default theme as the base, custom

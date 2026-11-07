@@ -4,6 +4,18 @@ ContentBase is a modular content platform that deliberately favors lightness: PH
 
 Content is written in Markdown (CommonMark with GFM), with security taking priority: raw HTML is escaped, unsafe links are neutralized. Internal references use the `[[type:slug]]` syntax and are resolved through the module registry; unresolvable links render as broken-link markers.
  
+## Profile: avatar upload
+
+Every user can upload their own avatar on `/profile` (self-service only):
+JPG/PNG/WebP/GIF, max 5 MB - the same validation and storage mechanism as the
+character portraits (`Core\ImageStore`, files under `data/avatars/`, served
+via the access-checked route `GET /avatars/{user}` with a `?v=filemtime`
+cache-buster). Removing the avatar sets the column back to NULL and the
+generated initials circle returns. Rendering is single-source
+(`Core\Avatar::render` via the `avatar_tag()` template helper): image when set,
+initials circle otherwise - everywhere avatars appear (writing overview stack,
+setup sharing block, story header stack, profile preview).
+
 ## UI polish (default theme)
 
 - **Slideshow** (`story-slider.js`): auto-advance interval is the named

@@ -146,7 +146,7 @@ final class App
     private function registerCoreRoutes(): void
     {
         $throttler = new LoginThrottler($this->db);
-        $controller = new AuthController($this->auth, $this->view, $this->csrf, Translator::instance(), $throttler);
+        $controller = new AuthController($this->auth, $this->view, $this->csrf, Translator::instance(), $throttler, null, $this->basePath);
         $setup = new SetupController($this->db, $this->view, $this->csrf);
         $this->router->get('/setup', fn ($params, $user) => $setup->show());
         $this->router->post('/setup', fn ($params, $user) => $setup->create());
@@ -157,6 +157,9 @@ final class App
         $this->router->post('/profile/password', fn ($params, $user) => $controller->changePassword($user));
         $this->router->post('/profile/language', fn ($params, $user) => $controller->changeLanguage($user), ['user']);
         $this->router->post('/profile/theme', fn ($params, $user) => $controller->changeTheme($user), ['user']);
+        $this->router->post('/profile/avatar', fn ($params, $user) => $controller->uploadAvatar($user), ['user']);
+        $this->router->post('/profile/avatar/delete', fn ($params, $user) => $controller->removeAvatar($user), ['user']);
+        $this->router->get('/avatars/{user}', fn ($params, $user) => $controller->avatarImage($user, $params['user']), ['user']);
 
         $admin = new UserAdminController($this->db, $this->auth, $this->view, $this->csrf);
         $this->router->get('/users', fn ($params, $user) => $admin->index($user), ['admin']);

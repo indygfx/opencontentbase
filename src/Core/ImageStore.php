@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Writing;
+namespace Core;
 
 /**
  * Single storage helper for uploaded images (story covers and character

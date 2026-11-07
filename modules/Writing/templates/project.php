@@ -47,6 +47,9 @@ function progressBar(string $section, array $entry, string $label): string
     <p class="muted"><a href="/writing">&larr; <?= e(t('writing', 'all_stories')) ?></a></p>
     <div class="story-header">
         <h1><?= e($project['title']) ?></h1>
+        <?php if (($members ?? []) !== []): ?>
+            <?php $stackMembers = $members; $stackHref = $isOwner ? '/writing/' . $project['id'] . '/setup' : null; include __DIR__ . '/_avatar_stack.php'; ?>
+        <?php endif; ?>
         <div class="story-menu-wrap">
             <button type="button" class="story-menu-btn" data-dropdown aria-haspopup="true" aria-expanded="false" aria-label="<?= e(t('writing', 'story_actions')) ?>">&#9776;</button>
             <div class="story-menu" hidden>
