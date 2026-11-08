@@ -50,14 +50,20 @@ class Avatar
      * $avatarName is the users.avatar column value (bare file name), $userId
      * is used for the serving URL, $basePath for locating the stored file.
      */
-    public static function render(string $username, string $userId, ?string $avatarName, string $basePath): string
+    /**
+     * $decorative = true renders a purely decorative avatar (alt="" +
+     * aria-hidden on the image; the initials circle is always aria-hidden) -
+     * used next to a visible username where the text carries the information.
+     */
+    public static function render(string $username, string $userId, ?string $avatarName, string $basePath, bool $decorative = false): string
     {
         if ($avatarName !== null && $avatarName !== '') {
             $store = new ImageStore(self::$basePathOverride ?? $basePath);
             $abs = $store->path('avatars', $avatarName);
             if ($abs !== null) {
                 $src = '/avatars/' . rawurlencode($userId) . '?v=' . (int)filemtime($abs);
-                return '<img class="avatar avatar-img" src="' . e($src) . '" alt="' . e($username) . '" loading="lazy">';
+                $alt = $decorative ? ' alt="" aria-hidden="true"' : ' alt="' . e($username) . '"';
+                return '<img class="avatar avatar-img" src="' . e($src) . '"' . $alt . ' loading="lazy">';
             }
         }
         return '<span class="avatar avatar-tone-' . self::tone($username) . '" aria-hidden="true">'

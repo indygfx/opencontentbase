@@ -14,7 +14,10 @@ cache-buster). Removing the avatar sets the column back to NULL and the
 generated initials circle returns. Rendering is single-source
 (`Core\Avatar::render` via the `avatar_tag()` template helper): image when set,
 initials circle otherwise - everywhere avatars appear (writing overview stack,
-setup sharing block, story header stack, profile preview).
+setup sharing block, story header stack, profile preview). In the topbar
+the logged-in user's avatar sits next to the username/profile link (decorative:
+`alt=""`/`aria-hidden`, 28 px, hidden below 480 px so the wrapped topbar is not
+squeezed); guests see no avatar.
 
 ## UI polish (default theme)
 

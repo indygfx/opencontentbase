@@ -81,7 +81,7 @@ function theme_assets(?\Core\User $user = null): array
  * overview stack, the setup sharing block, the story header stack and the
  * profile preview.
  */
-function avatar_tag(string $username, string $userId, ?string $avatarName): string
+function avatar_tag(string $username, string $userId, ?string $avatarName, bool $decorative = false): string
 {
-    return \Core\Avatar::render($username, $userId, $avatarName, dirname(__DIR__, 2));
+    return \Core\Avatar::render($username, $userId, $avatarName, dirname(__DIR__, 2), $decorative);
 }

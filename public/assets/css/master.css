@@ -96,6 +96,7 @@ body { font-family: var(--font-body); color: var(--ink); margin: 0; background: 
 .brand { font-weight: 700; text-decoration: none; color: var(--ink); }
 .topbar nav { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
 .topbar nav a { color: var(--topbar-ink); text-decoration: none; display: inline-block; min-height: 44px; padding: 0.65rem 0.25rem; box-sizing: border-box; }
+.topbar-user { display: inline-flex; align-items: center; gap: 0.4rem; }
 main { max-width: 52rem; margin: 1.5rem auto; padding: 0 1rem; }
 main a { color: var(--link); }
 h1, h2 { margin-top: 0; }
@@ -274,5 +275,8 @@ img.avatar, .avatar-img { object-fit: cover; }
     .topbar { flex-direction: column; align-items: flex-start; }
     .topbar nav { width: 100%; }
     .topbar nav a { flex: 1 1 auto; text-align: center; }
+    /* the decorative topbar avatar is hidden on phones so the wrapped topbar
+       keeps its 44px targets and never overflows (prompt 25) */
+    .topbar-user .avatar { display: none; }
     .narrow { margin: 1.5rem auto; }
 }

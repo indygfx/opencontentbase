@@ -28,7 +28,7 @@
                 <a href="/users"><?= e(t('core', 'nav_users')) ?></a>
             <?php endif; ?>
             <a href="/writing"><?= e(t('core', 'nav_writing')) ?></a>
-            <a href="/profile"><?= e($user->username()) ?></a>
+            <a href="/profile" class="topbar-user"><?= avatar_tag($user->username(), $user->id(), $user->avatar(), true) ?> <?= e($user->username()) ?></a>
             <form class="inline" method="post" action="/logout">
                 <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
                 <button type="submit"><?= e(t('core', 'nav_sign_out')) ?></button>
