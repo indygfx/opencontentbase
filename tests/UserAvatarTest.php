@@ -218,7 +218,9 @@ final class UserAvatarTest extends TestCase
         $this->assertStringContainsString('href="/writing/p1/setup"', $body);
         $this->assertStringContainsString('aria-label="Shared with m1, m2, m3, m4 (4) - manage sharing"', $body);
         $this->assertStringContainsString('>+1</span>', $body, '+N counter for the 4th member');
-        $this->assertSame(3, substr_count($body, 'avatar-tone-') + substr_count($body, 'avatar-img'), 'capped at 3 circles');
+        // capped at 3 circles inside the story header (the topbar avatar lives in <header>)
+        $header = substr($body, (int)strpos($body, 'class="story-header"'), (int)strpos($body, 'story-menu-wrap') - (int)strpos($body, 'class="story-header"'));
+        $this->assertSame(3, substr_count($header, 'avatar-tone-') + substr_count($header, 'avatar-img'), 'capped at 3 circles');
     }
 
     /**

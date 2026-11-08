@@ -104,7 +104,9 @@ final class WritingSharingOverviewTest extends TestCase
         $this->assertSame(1, substr_count($body, 'avatar-more'));
         $this->assertStringContainsString('>+2</span>', $body);
         // 3 stack avatars + 1 shared-by avatar (p3) = 4 tone circles
-        $this->assertSame(4, substr_count($body, 'avatar avatar-tone-'));
+        // (scoped to <main>: the topbar avatar from prompt 25 lives in <header>)
+        $main = substr($body, (int)strpos($body, '<main'));
+        $this->assertSame(4, substr_count($main, 'avatar avatar-tone-'));
         // tooltip carries all five names, aria-label the translated manage-sharing phrase + count
         $this->assertStringContainsString('title="m1, m2, m3, m4, m5"', $body);
         $this->assertStringContainsString('aria-label="Shared with m1, m2, m3, m4, m5 (5) - manage sharing"', $body);
@@ -159,7 +161,8 @@ final class WritingSharingOverviewTest extends TestCase
         $body = $response->body();
         // the Sharing block resolves the +N counter on touch: ALL 5 members listed with avatars
         $this->assertStringContainsString('>Sharing<', $body);
-        $this->assertSame(5, substr_count($body, 'avatar avatar-tone-'));
+        $main = substr($body, (int)strpos($body, '<main'));
+        $this->assertSame(5, substr_count($main, 'avatar avatar-tone-'), 'main only; topbar avatar is in <header>');
         foreach (['m1', 'm2', 'm3', 'm4', 'm5'] as $m) {
             $this->assertStringContainsString('<td>' . $m . '</td>', $body);
         }
