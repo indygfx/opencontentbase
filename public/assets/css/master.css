@@ -108,7 +108,8 @@ input, textarea { width: 100%; padding: 0.5rem; border: 1px solid var(--line); b
    custom chevron drawn with pure CSS gradients (no image files, no JS). */
 select { min-height: 44px; padding: 0.5rem 2.25rem 0.5rem 0.75rem; border: 1px solid var(--line); border-radius: 4px; background-color: var(--surface); color: var(--ink); font: inherit; appearance: none; -webkit-appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 1.1rem) 50%, calc(100% - 0.85rem) 50%; background-size: 0.35rem 0.35rem; background-repeat: no-repeat; }
 textarea { font-family: var(--font-mono); }
-button, .button { background: var(--accent); color: var(--button-ink); border: none; padding: var(--button-padding); width: var(--button-width); min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; font: inherit; }
+button, .button { background: var(--accent); color: var(--button-ink); border: none; padding: var(--button-padding); width: var(--button-width); min-height: 44px; box-sizing: border-box; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; text-align: center; font: inherit; }
+/* inline-flex + align/justify center: labels are centered horizontally AND vertically app-wide (button and a.button alike), also when the button grows past min-height with a two-line label; text-align is the wrapped-text fallback */
 /* Vertical rhythm for action buttons in main content; chrome contexts
    (topbar, inline forms, table cells, slider dots, editor toolbar, the
    story menu button) keep their compact spacing. */

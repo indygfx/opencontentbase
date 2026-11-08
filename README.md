@@ -25,7 +25,8 @@ setup sharing block, story header stack, profile preview).
   The active slide is in normal flow at all viewports, so long excerpts grow
   the slider box instead of overflowing it, and the dot navigation sits in its
   own row below the text (never overlapping it).
-- **Buttons**: action buttons in main content get `margin-block: 16px`
+- **Buttons**: labels are centered horizontally and vertically app-wide (`display: inline-flex; align-items: center; justify-content: center; text-align: center` on `button, .button` - works for `<button>` and `<a class="button">` alike, incl. two-line labels past the 44 px min-height).
+  Action buttons in main content get `margin-block: 16px`
   (vertical rhythm); chrome contexts (topbar, inline forms, table cells,
   slider dots, editor toolbar, the story menu button) keep compact spacing,
   and side-by-side buttons keep a `0.5rem` horizontal gap. Mobile buttons are
