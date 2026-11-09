@@ -249,7 +249,7 @@ final class MobileFirstTest extends TestCase
         $this->assertSame(1, substr_count($css, '@media (max-width: 768px)'), 'editor.css must have exactly one 768px block');
         $block = $this->mediaBlock($css, 768);
         // F8 collapse pattern: toolbar wraps, collapsed shows only the first row
-        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: wrap;[^}]*overflow-x: hidden;/s', $block);
+        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*flex-wrap: wrap;[^}]*overflow-x: visible;/s', $block);
         $this->assertMatchesRegularExpression('/\.editor-toolbar\.is-collapsed \{[^}]*max-height: 44px;[^}]*overflow: hidden;[^}]*padding-right: 3\.4rem;/s', $block);
         // F8: chevron toggle anchored on the toolbar's right edge, 44px target, never full-width
         $this->assertMatchesRegularExpression('/\.editor-toolbar-toggle \{[^}]*position: absolute;[^}]*right: 0\.25rem;[^}]*width: auto;[^}]*min-width: 44px;[^}]*min-height: 44px;/s', $block);
@@ -266,8 +266,9 @@ final class MobileFirstTest extends TestCase
         // F8: dense separator, counter inline at the end
         $this->assertMatchesRegularExpression('/\.editor-toolbar-sep \{[^}]*margin: 0;/s', $block);
         $this->assertMatchesRegularExpression('/\.editor-counter \{[^}]*margin-left: 0;[^}]*flex: 0 0 auto;/s', $block);
-        // F8: dropdowns become fixed bottom sheets
-        $this->assertMatchesRegularExpression('/\.editor-menu__dropdown\.is-open \{[^}]*position: fixed;[^}]*bottom: 0\.5rem;[^}]*max-height: 60vh;[^}]*overflow-y: auto;/s', $block);
+        // dropdowns open as absolute popovers anchored at the menu (top), scrollable;
+        // app.js expands a collapsed toolbar while one is open (see collapse test)
+        $this->assertMatchesRegularExpression('/\.editor-menu__dropdown\.is-open \{[^}]*position: absolute;[^}]*top: 0\.5rem;[^}]*bottom: auto;[^}]*max-height: 60vh;[^}]*overflow-y: auto;/s', $block);
         // F8: menu entries full width and 44px
         $this->assertMatchesRegularExpression('/\.editor-menu__entry \{[^}]*width: 100%;[^}]*min-height: 44px;[^}]*font-size: 1rem;/s', $block);
     }
