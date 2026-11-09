@@ -12,5 +12,6 @@
         <label for="bundle"><?= e(t('writing', 'import_label')) ?></label>
         <input type="file" id="bundle" name="bundle" accept=".zip,application/zip" required>
         <button type="submit"><?= e(t('writing', 'import_submit')) ?></button>
+        <a class="button button-secondary" href="/writing"><?= e(t('core', 'cancel')) ?></a>
     </form>
 </section>

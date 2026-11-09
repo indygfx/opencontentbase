@@ -10,5 +10,6 @@
         <label for="text"><?= e($label) ?> <small class="muted"><?= e(t('writing', 'markdown_hint')) ?></small></label>
         <textarea id="text" name="text" rows="14" data-editor="tiptap"><?= e($text) ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
+        <a class="button button-secondary" href="<?= '/writing/' . e($project['id']) ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
 </section>

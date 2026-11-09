@@ -80,4 +80,5 @@ return [
     'profile_avatar_no_file' => 'Please choose an image file.',
     'profile_avatar_too_big' => 'The image is too large (max 5 MB).',
     'profile_avatar_invalid' => 'Unsupported image type - use JPG, PNG, WebP or GIF.',
+    'cancel' => 'Cancel',
 ];

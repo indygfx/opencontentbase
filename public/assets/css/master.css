@@ -118,6 +118,9 @@ main button, main .button { margin-block: 16px; }
 .topbar button, form.inline button, .table-scroll button, .story-slider-nav button, .story-menu-btn, .editor-toolbar button { margin-block: 0; }
 /* Buttons side by side keep a horizontal gap (vertical margin must not break rows). */
 main button + button, main button + .button, main .button + button, main .button + .button { margin-inline-start: 0.5rem; }
+/* quiet/secondary button variant (e.g. Cancel next to a primary Save) */
+.button-secondary { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.button-secondary:hover { background: var(--code-bg); }
 main .button + form.inline, main button + form.inline { margin-inline-start: 0.5rem; }
 form.inline { display: inline; margin: 0; }
 .actions-secondary-label { display: none; }
@@ -245,6 +248,14 @@ img.avatar, .avatar-img { object-fit: cover; }
 /* Mobile overrides (F2): desktop stays the base; everything below only
    applies at tablet (<=768px) and phone (<=480px) widths. */
 @media (max-width: 768px) {
+    /* prompt 27: edit mode goes edge-to-edge on mobile - scoped to the
+       body.editing marker so read views stay pixel-identical. The writing/
+       editor surface stays full-bleed; every other form control keeps 16px. */
+    body.editing main { padding: 0; margin: 1rem auto; }
+    body.editing .card, body.editing .content { padding: 0; }
+    body.editing .card label { display: block; margin: 0 16px; }
+    body.editing .card input, body.editing .card select, body.editing .card textarea { margin: 0 16px; width: calc(100% - 32px); box-sizing: border-box; }
+    body.editing .card form button[type="submit"] { margin-inline-start: 16px; }
     main { padding: 0 0.75rem; margin: 1rem auto; }
     .card, .content { padding: 1rem; }
     .topbar { padding: 0.5rem 0.75rem; }

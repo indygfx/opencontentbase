@@ -120,6 +120,10 @@ mobile `width: auto` with the 44 px target kept), story header actions menu
 chevron), detail-page edit/history actions as `.button`. Further polish rounds
 may follow.
 
+**Done:** prompt 27 - edit-mode polish: Cancel button (quiet `.button-secondary`
+GET link) in every edit view, `body.editing` marker on edit views only, mobile
+full-bleed scoped to the marker (16px inner spacing for all controls except the
+writing surface), SW VERSION bumped in the same commit.
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

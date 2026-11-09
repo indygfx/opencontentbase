@@ -17,7 +17,7 @@
     <meta name="theme-color" content="<?= e($ta['themeColor']) ?>">
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 </head>
-<body data-update-available="<?= e(t('core', 'update_available')) ?>" data-reload-now="<?= e(t('core', 'reload_now')) ?>">
+<body<?= ($bodyClass ?? '') !== '' ? ' class="' . e($bodyClass) . '"' : '' ?> data-update-available="<?= e(t('core', 'update_available')) ?>" data-reload-now="<?= e(t('core', 'reload_now')) ?>">
 <header class="topbar">
     <a class="brand" href="/"><?= e(t('core', 'brand')) ?></a>
     <nav>

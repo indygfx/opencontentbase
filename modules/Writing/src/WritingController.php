@@ -511,12 +511,15 @@ final class WritingController
     {
         $data['user'] = $user;
         $data['csrf'] = $this->csrf;
+        // prompt 27: edit-mode marker for the layout body class - only edit/new/setup/import forms
+        $bodyClass = preg_match('#(edit\.php|setup\.php|relationship_form\.php|import\.php)$#', $innerTemplate) === 1 ? 'editing' : '';
         $content = $this->view->render($innerTemplate, $data);
         return Response::html($this->view->render('templates/layout.php', [
             'title' => (string)($data['title'] ?? 'Writing'),
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $content,
+            'bodyClass' => $bodyClass,
         ]), $status);
     }
 

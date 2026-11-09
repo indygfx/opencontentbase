@@ -12,6 +12,7 @@
         <label for="title"><?= e(t('pages', 'title_label')) ?></label>
         <input id="title" name="title" required minlength="2" maxlength="200" value="<?= e($project['title']) ?>">
         <button type="submit"><?= e(t('writing', 'save_title')) ?></button>
+        <a class="button button-secondary" href="<?= '/writing/' . e($project['id']) ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
 
     <h2><?= e(t('writing', 'album_cover')) ?></h2>
@@ -53,6 +54,7 @@
         <label for="target_backgrounds"><?= e(t('writing', 'backgrounds_header')) ?> <small class="muted"><?= e(t('writing', 'backgrounds_target_hint')) ?></small></label>
         <input type="number" id="target_backgrounds" name="target_backgrounds" min="1" max="100" value="<?= (int)$targets['target_backgrounds'] ?>" required>
         <button type="submit"><?= e(t('writing', 'save_targets')) ?></button>
+        <a class="button button-secondary" href="<?= '/writing/' . e($project['id']) ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
     <h2><?= e(t('writing', 'share_story')) ?></h2>
     <?php if ($shareTargets !== []): ?>

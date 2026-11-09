@@ -15,5 +15,6 @@
         <label for="summary"><?= e(t('writing', 'summary')) ?> <small class="muted"><?= e(t('writing', 'summary_hint')) ?></small></label>
         <textarea id="summary" name="summary" rows="6" data-editor="tiptap" data-editor-placeholder="<?= e(t('writing', 'summary_placeholder')) ?>" placeholder="<?= e(t('writing', 'summary_placeholder')) ?>"><?= e($synopsis['summary_text'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
+        <a class="button button-secondary" href="<?= $isEdit ? '/writing/' . e($projectId) . '/synopses/' . e($synopsis['slug']) : '/writing/' . e($projectId) ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
 </section>

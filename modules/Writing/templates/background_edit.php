@@ -15,5 +15,6 @@
         <label for="body"><?= e(t('writing', 'body_background_label')) ?></label>
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($background['body'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
+        <a class="button button-secondary" href="<?= $background !== null ? '/writing/' . e($projectId) . '/backgrounds/' . e($background['slug']) : '/writing/' . e($projectId) ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
 </section>

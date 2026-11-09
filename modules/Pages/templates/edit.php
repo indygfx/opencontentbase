@@ -15,6 +15,7 @@
         <label for="body"><?= e(t('pages', 'body_label')) ?></label>
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($formBody ?? ($page['body'] ?? '')) ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
+        <a class="button button-secondary" href="<?= $page !== null ? '/pages/' . e($page['slug']) : '/pages' ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
     <?php if ($page !== null): ?>
         <form class="inline" method="post" action="/pages/<?= e($page['slug']) ?>/delete" data-confirm="<?= e(t('pages', 'delete_page')) ?>?">

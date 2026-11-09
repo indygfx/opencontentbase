@@ -28,5 +28,6 @@
         <label for="body"><?= e(t('writing', 'body_chapter_label')) ?></label>
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($chapter['body'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
+        <a class="button button-secondary" href="<?= $isEdit ? '/writing/' . e($projectId) . '/chapters/' . e($chapter['slug']) : '/writing/' . e($projectId) ?>"><?= e(t('core', 'cancel')) ?></a>
     </form>
 </section>

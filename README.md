@@ -44,6 +44,16 @@ squeezed); guests see no avatar.
 - **Selects/dropdowns**: native selects get 44 px min-height, button-matching
   radius/border and a pure-CSS chevron (`appearance: none` + gradient, no image
   files); dropdown menus use `--surface`/`--line`/`--shadow` with 44 px entries.
+- **Edit views** (prompt 27): every edit form (chapter/synopsis/character/
+  background/outline/relationship, novel setup, story import, page edit/new)
+  has a **Cancel** button next to Save - a quiet secondary variant
+  (`.button-secondary`), a plain GET link to the canonical back target (entity
+  detail page, index, or project dashboard). Edit views render with the body
+  class `editing`; on mobile (<=768px) they go edge-to-edge
+  (`body.editing .card/.content/main` padding 0), while labels, inputs, selects
+  and textareas keep 16px inner margins and the Save button gets
+  `margin-left: 16px` - only the writing/editor surface is truly full-bleed.
+  Read views are pixel-identical (all rules scoped to `body.editing`).
 - **Detail-page actions** (edit/history on chapters, synopses, characters,
   backgrounds, pages) render as `.button`.
 

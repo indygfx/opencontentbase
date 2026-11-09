@@ -78,6 +78,7 @@ final class StoryImportController
             'user' => $user,
             'csrf' => $this->csrf,
             'content' => $content,
+            'bodyClass' => 'editing', // import form is an edit view (prompt 27)
         ]), $status);
     }
 }

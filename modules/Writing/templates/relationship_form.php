@@ -39,6 +39,7 @@
             <label for="description"><?= e(t('writing', 'conflict_description')) ?> <small class="muted"><?= e(t('writing', 'optional')) ?></small></label>
             <input id="description" name="description" maxlength="500" value="<?= e($relation['description'] ?? '') ?>" placeholder="<?= e(t('writing', 'conflict_placeholder')) ?>">
             <button type="submit"><?= e(t('pages', 'save')) ?></button>
+        <a class="button button-secondary" href="<?= '/writing/' . e($projectId) ?>"><?= e(t('core', 'cancel')) ?></a>
         </form>
     <?php endif; ?>
 </section>
