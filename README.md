@@ -54,6 +54,15 @@ squeezed); guests see no avatar.
   and textareas keep 16px inner margins and the Save button gets
   `margin-left: 16px` - only the writing/editor surface is truly full-bleed.
   Read views are pixel-identical (all rules scoped to `body.editing`).
+  Consistency rule: in edit views on mobile, all elements keep 16px horizontal
+  spacing except the writing surface (full-bleed by design).
+- **Editing-comfort typography** (prompt 27b, `editor.css` base rules, desktop
+  AND mobile): the prose surface uses `line-height: 1.8` and `font-size: 120%`
+  with `min-height: 9rem` (empty chapters don't collapse) and `outline: none`
+  (the visible caret is the focus indicator; focus outlines on all other
+  interactive elements are untouched). This is a deliberate difference: the
+  editor renders larger than the 100% reading view. Prose h1-h3 keep their
+  absolute rem sizes.
 - **Detail-page actions** (edit/history on chapters, synopses, characters,
   backgrounds, pages) render as `.button`.
 

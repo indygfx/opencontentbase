@@ -197,7 +197,44 @@ final class EditViewsTest extends TestCase
     public function testSwVersionBumpedInSameChange(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertMatchesRegularExpression("/const VERSION = 'v[3-9]'/", $sw, 'VERSION must be bumped past the cached v1/v2');
+        $this->assertMatchesRegularExpression("/const VERSION = 'v[4-9]'/", $sw, 'prompt 27b bumps master.css+editor.css -> v4+');
+    }
+
+    public function testPrompt27bSpacingRulesScopedToEditingInMobileBlockOnly(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/master.css');
+        $base = substr($css, 0, (int)strpos($css, '@media'));
+        $block = $this->mediaBlock($css, 768);
+        // the flagged element groups carry margin-inline: 16px, scoped + mobile-only
+        $rule = 'body.editing .card > h1, body.editing .card > h2, body.editing .card > .muted,'
+            . ' body.editing .card > .error, body.editing .card > .success,'
+            . ' body.editing .card > .outline-box, body.editing .card > .table-scroll';
+        $this->assertStringContainsString($rule, $block);
+        $this->assertMatchesRegularExpression('/margin-inline: 16px;/', $block);
+        $this->assertStringNotContainsString('body.editing', $base, 'no editing rules outside the mobile block');
+        // writing surface stays full-bleed: no margin rule on .editor-wrap
+        $this->assertStringNotContainsString('.editor-wrap {', $block, 'editor surface must not get margins');
+        // un-scoped base rules unchanged
+        $this->assertStringContainsString('.card { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 1.5rem; }', $base);
+        $this->assertStringContainsString('.outline-box { background: var(--bg);', $base);
+    }
+
+    public function testEditorProseComfortTypographyInBaseRulesNotMediaScoped(): void
+    {
+        $css = (string)file_get_contents($this->base . '/public/assets/css/editor.css');
+        $base = substr($css, 0, (int)strpos($css, '@media'));
+        $this->assertMatchesRegularExpression(
+            '/\.editor-prose \{[^}]*outline: none;[^}]*min-height: 9rem;[^}]*line-height: 1\.8;[^}]*font-size: 120%;[^}]*\}/s',
+            $base,
+            'prose comfort typography in base rules (desktop AND mobile)'
+        );
+        // toolbar chrome untouched: base toolbar rule still sticky, no new margin rule
+        $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*position: sticky;[^}]*top: 0;/s', $base);
+" . substr($css, (int)strpos($css, '@media')) === '' ? '' : '');
+        $toolbarBase = substr($base, (int)strpos($base, '.editor-toolbar {'), 200);
+        $this->assertStringNotContainsString('margin', $toolbarBase, 'no new margin on toolbar chrome');
+        // whitelist still green
+        $this->assertSame(0, (int)preg_match('/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/', $css));
     }
 
     public function testCancelKeyInAllLanguages(): void

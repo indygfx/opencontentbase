@@ -124,7 +124,13 @@ may follow.
 GET link) in every edit view, `body.editing` marker on edit views only, mobile
 full-bleed scoped to the marker (16px inner spacing for all controls except the
 writing surface), SW VERSION bumped in the same commit.
-**Done:** prompt 24 - story header shows the sharing avatar stack next to the
+
+**Done:** prompt 27b - edit-mode mobile spacing: all flagged elements (h1/h2,
+breadcrumb .muted, .error/.success notices, .outline-box, the setup .table-scroll)
+keep margin-inline 16px under body.editing in the 768px block (writing surface
+stays full-bleed; no width calc needed for block elements); editor comfort
+typography in editor.css base (.editor-prose: line-height 1.8, font-size 120%,
+min-height 9rem, outline none - caret is the focus indicator); SW VERSION v4.**Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`
 (same ImageStore validation/storage as character portraits, `data/avatars/`,

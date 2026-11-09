@@ -70,10 +70,17 @@
     min-height: 10rem;
 }
 
+/* Prompt 27b: editing-comfort typography (deliberate: the editor renders
+   larger than the 100% reading view). outline: none is standard for the prose
+   surface - the visible caret IS the focus indicator; focus outlines on all
+   other interactive elements (buttons, links, fields, toolbar) stay untouched.
+   min-height keeps empty chapters from collapsing. Headings/lists/quotes
+   inherit line-height/font-size (prose h1-h3 keep their absolute rem sizes). */
 .editor-prose {
     outline: none;
     min-height: 9rem;
-    line-height: 1.6;
+    line-height: 1.8;
+    font-size: 120%;
 }
 
 .editor-prose p.is-editor-empty:first-child::before {

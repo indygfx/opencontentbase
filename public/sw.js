@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v3'; // prompt 27 changes master.css - bump in the same commit
+const VERSION = 'v4'; // prompt 27b changes master.css + editor.css - bump in the same commit // prompt 27 changes master.css - bump in the same commit
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';

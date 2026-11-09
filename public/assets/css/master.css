@@ -256,6 +256,17 @@ img.avatar, .avatar-img { object-fit: cover; }
     body.editing .card label { display: block; margin: 0 16px; }
     body.editing .card input, body.editing .card select, body.editing .card textarea { margin: 0 16px; width: calc(100% - 32px); box-sizing: border-box; }
     body.editing .card form button[type="submit"] { margin-inline-start: 16px; }
+    /* prompt 27b: every other element in an edit view keeps 16px horizontal
+       spacing on mobile (direct children of the card, so <small class="muted">
+       hints INSIDE labels are not double-indented). Block elements with
+       width:auto shrink automatically - no width calc needed, no double
+       reduction with box-sizing. The writing surface (.editor-wrap) stays
+       full-bleed by design. */
+    body.editing .card > h1, body.editing .card > h2, body.editing .card > .muted,
+    body.editing .card > .error, body.editing .card > .success,
+    body.editing .card > .outline-box, body.editing .card > .table-scroll {
+        margin-inline: 16px;
+    }
     main { padding: 0 0.75rem; margin: 1rem auto; }
     .card, .content { padding: 1rem; }
     .topbar { padding: 0.5rem 0.75rem; }
