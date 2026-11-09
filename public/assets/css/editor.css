@@ -282,8 +282,8 @@
         position: fixed;
         left: 0.5rem;
         right: 0.5rem;
-        top: auto;
-        bottom: 0.5rem;
+        top: 0.5rem;
+        bottom: auto;
         max-height: 60vh;
         overflow-y: auto;
     }
