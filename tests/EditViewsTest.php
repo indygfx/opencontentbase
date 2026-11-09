@@ -230,7 +230,6 @@ final class EditViewsTest extends TestCase
         );
         // toolbar chrome untouched: base toolbar rule still sticky, no new margin rule
         $this->assertMatchesRegularExpression('/\.editor-toolbar \{[^}]*position: sticky;[^}]*top: 0;/s', $base);
-" . substr($css, (int)strpos($css, '@media')) === '' ? '' : '');
         $toolbarBase = substr($base, (int)strpos($base, '.editor-toolbar {'), 200);
         $this->assertStringNotContainsString('margin', $toolbarBase, 'no new margin on toolbar chrome');
         // whitelist still green
