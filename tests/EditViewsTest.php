@@ -206,11 +206,12 @@ final class EditViewsTest extends TestCase
         $base = substr($css, 0, (int)strpos($css, '@media'));
         $block = $this->mediaBlock($css, 768);
         // the flagged element groups carry margin-inline: 16px, scoped + mobile-only
-        $rule = 'body.editing .card > h1, body.editing .card > h2, body.editing .card > .muted,'
-            . ' body.editing .card > .error, body.editing .card > .success,'
-            . ' body.editing .card > .outline-box, body.editing .card > .table-scroll';
-        $this->assertStringContainsString($rule, $block);
-        $this->assertMatchesRegularExpression('/margin-inline: 16px;/', $block);
+        foreach (['body.editing .card > h1', 'body.editing .card > h2', 'body.editing .card > .muted',
+                  'body.editing .card > .error', 'body.editing .card > .success',
+                  'body.editing .card > .outline-box', 'body.editing .card > .table-scroll'] as $sel) {
+            $this->assertStringContainsString($sel, $block, 'mobile block: ' . $sel);
+        }
+        $this->assertMatchesRegularExpression('/body\.editing \.card > h1[^}]*margin-inline: 16px;/s', $block);
         $this->assertStringNotContainsString('body.editing', $base, 'no editing rules outside the mobile block');
         // writing surface stays full-bleed: no margin rule on .editor-wrap
         $this->assertStringNotContainsString('.editor-wrap {', $block, 'editor surface must not get margins');
