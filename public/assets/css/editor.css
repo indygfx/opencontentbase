@@ -224,7 +224,7 @@
 @media (max-width: 768px) {
     .editor-toolbar {
         flex-wrap: wrap;
-        overflow-x: hidden;
+        overflow-x: visible;
     }
     .editor-toolbar.is-collapsed {
         max-height: 44px;
@@ -279,7 +279,7 @@
         flex: 0 0 auto;
     }
     .editor-menu__dropdown.is-open {
-        position: fixed;
+        position: absolute;
         left: 0.5rem;
         right: 0.5rem;
         top: 0.5rem;
