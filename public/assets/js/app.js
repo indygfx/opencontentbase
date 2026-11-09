@@ -91,6 +91,40 @@
             toggle.textContent = collapsed ? CHEVRON_DOWN : CHEVRON_UP;
         });
         bar.appendChild(toggle);
+
+        // Dropdown/collapse interplay: while the toolbar is collapsed
+        // (is-collapsed = max-height 44px + overflow hidden) an open dropdown
+        // would be clipped. So opening a dropdown expands the toolbar, closing
+        // it re-collapses - but only when the stored choice is 'collapsed';
+        // a toolbar the user expanded manually stays expanded.
+        function syncDropdownCollapse() {
+            if (!mq.matches) {
+                return;
+            }
+            var open = bar.querySelector('.editor-menu__dropdown.is-open') !== null;
+            var storedCollapsed = bar.dataset.collapsed !== '0';
+            if (open && bar.classList.contains('is-collapsed')) {
+                bar.classList.remove('is-collapsed');
+                toggle.setAttribute('aria-expanded', 'true');
+                toggle.textContent = CHEVRON_UP;
+            } else if (!open && storedCollapsed && !bar.classList.contains('is-collapsed')) {
+                bar.classList.add('is-collapsed');
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.textContent = CHEVRON_DOWN;
+            }
+        }
+        if (typeof MutationObserver === 'function') {
+            var mo = new MutationObserver(function (muts) {
+                for (var i = 0; i < muts.length; i++) {
+                    var t = muts[i].target;
+                    if (t.classList && t.classList.contains('editor-menu__dropdown')) {
+                        syncDropdownCollapse();
+                        return;
+                    }
+                }
+            });
+            mo.observe(bar, { attributes: true, attributeFilter: ['class'], subtree: true });
+        }
     }
 
     function update(bar) {

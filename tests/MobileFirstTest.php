@@ -323,6 +323,14 @@ final class MobileFirstTest extends TestCase
         // it, so resize/breakpoint changes never re-collapse an expanded toolbar
         $this->assertStringContainsString("bar.dataset.collapsed = collapsed ? '1' : '0'", $js);
         $this->assertStringContainsString("bar.classList.toggle('is-collapsed', collapsed)", $js);
+        // dropdown/collapse interplay: opening a dropdown expands the collapsed
+        // toolbar, closing it re-collapses (only when the stored choice is collapsed)
+        $this->assertStringContainsString('MutationObserver', $js);
+        $this->assertStringContainsString("attributeFilter: ['class']", $js);
+        $this->assertStringContainsString(".editor-menu__dropdown.is-open", $js);
+        $this->assertStringContainsString("bar.classList.remove('is-collapsed')", $js);
+        $this->assertStringContainsString("bar.classList.add('is-collapsed')", $js);
+        $this->assertStringContainsString("bar.dataset.collapsed !== '0'", $js);
         // runs on breakpoint change, resize, DOMContentLoaded and load
         $this->assertStringContainsString("mq.addEventListener('change'", $js);
         $this->assertStringContainsString("window.addEventListener('resize'", $js);
