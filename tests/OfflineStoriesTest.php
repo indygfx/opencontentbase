@@ -142,7 +142,7 @@ final class OfflineStoriesTest extends TestCase
     public function testSwJsHasStoryCacheMessageHandlersAndV5(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v5'", $sw);
+        $this->assertStringContainsString("const VERSION = 'v6'", $sw, 'prompt 29 bumped to v6');
         $this->assertStringContainsString("const STORY_CACHE = 'offline-stories-v1';", $sw);
         $this->assertStringContainsString("data.type === 'PRECACHE_STORY'", $sw);
         $this->assertStringContainsString("data.type === 'REMOVE_STORY'", $sw);
@@ -158,7 +158,7 @@ final class OfflineStoriesTest extends TestCase
         $this->assertStringContainsString("caches.match(OFFLINE_URL)", $sw);
     }
 
-    public function testAppJsOfflineToggleLogic(): void
+    public function testAppJsOfflineFlowLogic(): void
     {
         $js = (string)file_get_contents($this->base . '/public/assets/js/app.js');
         $this->assertStringContainsString("var INDEX_KEY = 'offline-stories';", $js);
@@ -167,17 +167,21 @@ final class OfflineStoriesTest extends TestCase
         $this->assertStringContainsString('PRECACHE_STORY', $js);
         $this->assertStringContainsString('REMOVE_STORY', $js);
         $this->assertStringContainsString('navigator.serviceWorker.controller === null', $js, 'hidden without controller (HTTP dev)');
-        $this->assertStringContainsString('btn.disabled = on', $js, 'busy state');
+        $this->assertStringContainsString('input.disabled = true', $js, 'busy state on the switch');
         $this->assertStringContainsString('localStorage.setItem(INDEX_KEY', $js);
         $this->assertStringContainsString('app-toast', $js);
     }
 
-    public function testProjectDashboardRendersHiddenToggleButton(): void
+    public function testProjectDashboardRendersHiddenOfflineSwitchInMenu(): void
     {
+        // prompt 29: the per-story toggle moved from a dashboard button into the
+        // story header dropdown as a switch (see PwaStage2bTest for the render)
         $src = (string)file_get_contents($this->base . '/modules/Writing/templates/project.php');
-        $this->assertStringContainsString('class="button offline-toggle" hidden', $src);
+        $this->assertStringNotContainsString('offline-toggle', $src, 'old dashboard button removed');
+        $this->assertStringContainsString('story-menu__switch" hidden', $src);
+        $this->assertStringContainsString('role="switch"', $src);
         $this->assertStringContainsString('data-project=', $src);
-        $this->assertStringContainsString("offline_make_available", $src);
+        $this->assertStringContainsString('offline_story_toggle', $src);
     }
 
     public function testOfflineHtmlIsTheOfflineLibrary(): void

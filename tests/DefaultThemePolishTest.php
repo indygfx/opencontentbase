@@ -158,7 +158,8 @@ final class DefaultThemePolishTest extends TestCase
         $this->assertSame(1, substr_count($body, '/writing/p1/graph"'));
         $this->assertSame(1, substr_count($body, '/writing/p1/export"'));
         $this->assertSame(1, substr_count($body, '/writing/p1/setup"'));
-        $this->assertSame(3, substr_count($body, 'story-menu__entry'));
+        $this->assertSame(3, substr_count($body, '<a class="story-menu__entry"'), 'exactly the three action links');
+        $this->assertSame(1, substr_count($body, 'story-menu__switch'), 'plus the offline switch row (prompt 29)');
         // old dashboard locations are gone
         $this->assertStringNotContainsString('dashboard-actions', $body);
         $this->assertStringNotContainsString('actions-secondary', $body);
