@@ -282,4 +282,10 @@ return [
     'shared_with_manage' => 'Partagé avec {names} ({count}) - gérer le partage',
     'more_members' => '+{n} de plus',
     'story_actions' => 'Actions de l’histoire',
+    'offline_make_available' => 'Rendre disponible hors ligne',
+    'offline_remove' => 'Supprimer la copie hors ligne',
+    'offline_success' => 'L’histoire est disponible hors ligne.',
+    'offline_failed' => 'Certaines pages n’ont pas pu être mises en cache - l’histoire peut être incomplète hors ligne.',
+    'offline_busy' => 'Mise en cache…',
+    'offline_library_title' => 'Disponible hors ligne',
 ];

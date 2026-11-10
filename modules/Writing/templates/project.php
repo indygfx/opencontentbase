@@ -61,6 +61,12 @@ function progressBar(string $section, array $entry, string $label): string
             </div>
         </div>
     </div>
+    <p><button type="button" class="button offline-toggle" hidden
+        data-project="<?= e($project['id']) ?>"
+        data-label-remove="<?= e(t('writing', 'offline_remove')) ?>"
+        data-label-busy="<?= e(t('writing', 'offline_busy')) ?>"
+        data-msg-success="<?= e(t('writing', 'offline_success')) ?>"
+        data-msg-failed="<?= e(t('writing', 'offline_failed')) ?>"><?= e(t('writing', 'offline_make_available')) ?></button></p>
     <?php if ((string)($project['cover'] ?? '') !== ''): ?>
         <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="<?= e(t('writing', 'cover_alt', ['title' => (string)$project['title']])) ?>"></p>
     <?php endif; ?>

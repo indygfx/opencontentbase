@@ -277,3 +277,114 @@
         }
     });
 })();
+
+/* Prompt 28 - PWA stage 2: per-story offline availability.
+   The story dashboard renders an .offline-toggle button (hidden by default).
+   Flow: fetch /writing/<id>/offline-manifest.json -> quota hint via
+   navigator.storage.estimate() (unreliable on purpose: even below 25 MB free we
+   still attempt - failures surface later via PRECACHE_DONE.failed + toast) ->
+   PRECACHE_STORY to the SW controller -> on PRECACHE_DONE the entry is stored in
+   the localStorage index 'offline-stories' and the button swaps to "Remove".
+   Without an active controller (plain-HTTP dev) the button stays hidden.
+   While a run is in flight the button is disabled with the busy label. */
+(function () {
+    'use strict';
+    var INDEX_KEY = 'offline-stories';
+    var btn = document.querySelector('.offline-toggle');
+    if (btn === null) {
+        return;
+    }
+    if (!('serviceWorker' in navigator) || navigator.serviceWorker.controller === null) {
+        btn.hidden = true;
+        return;
+    }
+    btn.hidden = false;
+    var labelMake = btn.textContent;
+    var busy = false;
+
+    function readIndex() {
+        try { return JSON.parse(localStorage.getItem(INDEX_KEY) || '{}'); } catch (e) { return {}; }
+    }
+    function writeIndex(idx) {
+        try { localStorage.setItem(INDEX_KEY, JSON.stringify(idx)); } catch (e) { /* storage full/blocked */ }
+    }
+    function toast(msg) {
+        var t = document.createElement('div');
+        t.className = 'notice app-toast';
+        t.setAttribute('role', 'status');
+        var span = document.createElement('span');
+        span.textContent = msg;
+        t.appendChild(span);
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 5000);
+    }
+    function syncLabel() {
+        var idx = readIndex();
+        btn.textContent = idx[btn.dataset.project] ? btn.dataset.labelRemove : labelMake;
+    }
+    function setBusy(on) {
+        busy = on;
+        btn.disabled = on;
+        if (on) {
+            btn.textContent = btn.dataset.labelBusy;
+        } else {
+            syncLabel();
+        }
+    }
+    function send(type, urls) {
+        return new Promise(function (resolve) {
+            var want = type === 'PRECACHE_STORY' ? 'PRECACHE_DONE' : 'REMOVE_DONE';
+            var onMsg = function (ev) {
+                var d = ev.data || {};
+                if (d.type === want) {
+                    navigator.serviceWorker.removeEventListener('message', onMsg);
+                    resolve(d);
+                }
+            };
+            navigator.serviceWorker.addEventListener('message', onMsg);
+            navigator.serviceWorker.controller.postMessage({ type: type, urls: urls });
+        });
+    }
+
+    btn.addEventListener('click', function () {
+        if (busy) {
+            return;
+        }
+        var idx = readIndex();
+        var project = btn.dataset.project;
+        var existing = idx[project];
+        if (existing) {
+            setBusy(true);
+            send('REMOVE_STORY', existing.urls).then(function () {
+                delete idx[project];
+                writeIndex(idx);
+                setBusy(false);
+                syncLabel();
+            });
+            return;
+        }
+        setBusy(true);
+        fetch('/writing/' + encodeURIComponent(project) + '/offline-manifest.json', { credentials: 'same-origin' })
+            .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('manifest ' + r.status)); })
+            .then(function (manifest) {
+                var quota = (navigator.storage && navigator.storage.estimate)
+                    ? navigator.storage.estimate().then(function (e) { return (e.quota || 0) - (e.usage || 0); })
+                    : Promise.resolve(Infinity);
+                return quota.then(function () {
+                    return send('PRECACHE_STORY', manifest.urls).then(function (done) {
+                        idx[project] = { project: project, title: manifest.title, urls: manifest.urls, url: '/writing/' + project };
+                        writeIndex(idx);
+                        setBusy(false);
+                        syncLabel();
+                        toast(done.ok ? btn.dataset.msgSuccess : btn.dataset.msgFailed);
+                    });
+                });
+            })
+            .catch(function () {
+                setBusy(false);
+                syncLabel();
+                toast(btn.dataset.msgFailed);
+            });
+    });
+    syncLabel();
+})();

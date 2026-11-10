@@ -111,6 +111,7 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/relations/{rid}/edit', 'handler' => fn ($params, $user) => $rel->edit($user, $params['id'], $params['rid']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/relations/{rid}', 'handler' => fn ($params, $user) => $rel->update($user, $params['id'], $params['rid']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/graph', 'handler' => fn ($params, $user) => $this->graph->show($user, $params['id']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/offline-manifest.json', 'handler' => fn ($params, $user) => $c->offlineManifest($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/import', 'handler' => fn ($params, $user) => $this->import->show($user), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/import', 'handler' => fn ($params, $user) => $this->import->import($user), 'roles' => ['user']],
         ];

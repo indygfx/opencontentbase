@@ -497,6 +497,48 @@ final class WritingController
         return $cover === '' ? '' : '/writing/' . rawurlencode($projectId) . '/cover';
     }
 
+    /**
+     * GET /writing/{id}/offline-manifest.json - URL list for the per-story
+     * offline precache (PWA stage 2). Auth-guarded like every project page.
+     * Projects have no slug column: the id IS the public identifier in all
+     * routes, so "project" carries the id. URLs = read pages of the story
+     * (dashboard, graph, all chapter/synopsis/character/background pages)
+     * plus the media those pages reference (character portraits, cover,
+     * avatars of owner + members). Static assets are covered by the SW's
+     * asset cache and deliberately not listed.
+     */
+    public function offlineManifest(User $user, string $id): Response
+    {
+        $project = $this->findProject($id);
+        if ($project === null || !$this->access->canAccess($user, $id)) {
+            return $this->notFound($user);
+        }
+        $base = '/writing/' . rawurlencode($id);
+        $urls = [$base, $base . '/graph'];
+        $tables = ['chapters' => 'chapters', 'synopses' => 'chapter_synopses', 'characters' => 'characters', 'backgrounds' => 'backgrounds'];
+        foreach ($tables as $urlType => $table) {
+            foreach ($this->db->all("SELECT slug FROM {$table} WHERE project_id = ? ORDER BY slug", [$id]) as $row) {
+                $urls[] = $base . '/' . $urlType . '/' . rawurlencode((string)$row['slug']);
+            }
+        }
+        foreach ($this->db->all("SELECT slug, image_path FROM characters WHERE project_id = ? AND image_path IS NOT NULL AND image_path <> '' ORDER BY slug", [$id]) as $row) {
+            $urls[] = $base . '/characters/' . rawurlencode((string)$row['slug']) . '/image';
+        }
+        if ((string)($project['cover'] ?? '') !== '') {
+            $urls[] = $base . '/cover';
+        }
+        $urls[] = '/avatars/' . rawurlencode((string)$project['owner_id']);
+        foreach ($this->access->members($id) as $m) {
+            $urls[] = '/avatars/' . rawurlencode((string)$m['user_id']);
+        }
+        $urls = array_values(array_unique($urls));
+        return new Response(
+            (string)json_encode(['project' => $id, 'title' => (string)$project['title'], 'urls' => $urls]),
+            200,
+            ['Content-Type' => 'application/json; charset=utf-8']
+        );
+    }
+
     private function deleteCoverFile(string $id): void
     {
         $row = $this->db->one('SELECT cover FROM projects WHERE id = ?', [$id]);

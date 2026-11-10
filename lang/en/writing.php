@@ -282,4 +282,10 @@ return [
     'shared_with_manage' => 'Shared with {names} ({count}) - manage sharing',
     'more_members' => '+{n} more',
     'story_actions' => 'Story actions',
+    'offline_make_available' => 'Make available offline',
+    'offline_remove' => 'Remove offline copy',
+    'offline_success' => 'Story is available offline.',
+    'offline_failed' => 'Some pages could not be cached - the story may be incomplete offline.',
+    'offline_busy' => 'Caching…',
+    'offline_library_title' => 'Available offline',
 ];

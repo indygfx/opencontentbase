@@ -15,10 +15,14 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v4'; // prompt 27b changes master.css + editor.css - bump in the same commit // prompt 27 changes master.css - bump in the same commit
+const VERSION = 'v5'; // prompt 28 (PWA stage 2: per-story offline precache) changes sw.js/app.js/offline.html
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';
+// PWA stage 2: dedicated cache for per-story offline copies. It survives
+// VERSION bumps on activate (kept explicitly below) so single stories can be
+// removed without touching the static/page caches.
+const STORY_CACHE = 'offline-stories-v1';
 const ASSET_PREFIX = '/assets/';
 const WRITING_PREFIX = '/writing';
 
@@ -37,7 +41,7 @@ self.addEventListener('activate', function (event) {
         caches.keys()
             .then(function (keys) {
                 return Promise.all(keys.map(function (key) {
-                    if (key !== STATIC_CACHE && key !== PAGE_CACHE) {
+                    if (key !== STATIC_CACHE && key !== PAGE_CACHE && key !== STORY_CACHE) {
                         return caches.delete(key);
                     }
                 }));
@@ -49,6 +53,44 @@ self.addEventListener('activate', function (event) {
 function isPublicReadingPage(path) {
     return path === '/' || path.indexOf('/pages') === 0 || path.indexOf('/blog') === 0;
 }
+
+// PWA stage 2 messages from the page (navigator.serviceWorker.controller):
+// PRECACHE_STORY { urls } fetches every URL (GET, credentials, cache:'reload')
+// into the story cache and replies PRECACHE_DONE { ok, failed: [...] } via
+// event.source; failures are non-fatal and reported. REMOVE_STORY deletes the
+// URLs again and replies REMOVE_DONE.
+self.addEventListener('message', function (event) {
+    var data = event.data || {};
+    if (data.type === 'PRECACHE_STORY') {
+        event.waitUntil(
+            caches.open(STORY_CACHE).then(function (cache) {
+                var failed = [];
+                return Promise.all((data.urls || []).map(function (u) {
+                    return fetch(u, { method: 'GET', credentials: 'include', cache: 'reload' })
+                        .then(function (resp) {
+                            if (resp.ok) {
+                                return cache.put(u, resp);
+                            }
+                            failed.push(u);
+                        })
+                        .catch(function () { failed.push(u); });
+                })).then(function () {
+                    event.source.postMessage({ type: 'PRECACHE_DONE', ok: failed.length === 0, failed: failed });
+                });
+            })
+        );
+        return;
+    }
+    if (data.type === 'REMOVE_STORY') {
+        event.waitUntil(
+            caches.open(STORY_CACHE).then(function (cache) {
+                return Promise.all((data.urls || []).map(function (u) { return cache.delete(u); }));
+            }).then(function () {
+                event.source.postMessage({ type: 'REMOVE_DONE' });
+            })
+        );
+    }
+});
 
 self.addEventListener('fetch', function (event) {
     var req = event.request;
@@ -92,11 +134,28 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    // Writing module: network-only, never cache HTML or API responses.
-    if (path.indexOf(WRITING_PREFIX) === 0) {
+    // Writing module + avatars: pages precached per story (stage 2) behave like
+    // other cached read pages - stale-while-revalidate (serve the cached copy,
+    // refresh it in the background on the next online visit). Everything else
+    // under /writing stays network-only, never cached; on failure the offline
+    // page is served. /writing itself stays network-only - the offline entry
+    // point is the offline library page, not the index.
+    if (path.indexOf(WRITING_PREFIX) === 0 || path.indexOf('/avatars/') === 0) {
         event.respondWith(
-            fetch(req).catch(function () {
-                return caches.match(OFFLINE_URL);
+            caches.open(STORY_CACHE).then(function (cache) {
+                return cache.match(req).then(function (hit) {
+                    if (hit) {
+                        fetch(req).then(function (resp) {
+                            if (resp.ok) {
+                                cache.put(req, resp.clone());
+                            }
+                        }).catch(function () { /* offline: keep serving the cached copy */ });
+                        return hit;
+                    }
+                    return fetch(req).catch(function () {
+                        return caches.match(OFFLINE_URL);
+                    });
+                });
             })
         );
         return;

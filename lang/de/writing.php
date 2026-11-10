@@ -282,4 +282,10 @@ return [
     'shared_with_manage' => 'Geteilt mit {names} ({count}) - Freigabe verwalten',
     'more_members' => '+{n} weitere',
     'story_actions' => 'Story-Aktionen',
+    'offline_make_available' => 'Offline verfügbar machen',
+    'offline_remove' => 'Offline-Kopie entfernen',
+    'offline_success' => 'Story ist offline verfügbar.',
+    'offline_failed' => 'Einige Seiten konnten nicht zwischengespeichert werden - offline evtl. unvollständig.',
+    'offline_busy' => 'Wird zwischengespeichert…',
+    'offline_library_title' => 'Offline verfügbar',
 ];

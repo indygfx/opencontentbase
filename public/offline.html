@@ -26,6 +26,13 @@
                 data-label-es="Reintentar" data-label-fr="Réessayer">Retry</button>
         </p>
     </section>
+    <section class="card narrow" id="offline-library" hidden>
+        <h2 data-lang="en">Available offline</h2>
+        <h2 data-lang="de" hidden>Offline verfügbar</h2>
+        <h2 data-lang="es" hidden>Disponible sin conexión</h2>
+        <h2 data-lang="fr" hidden>Disponible hors ligne</h2>
+        <ul id="offline-library-list"></ul>
+    </section>
 </main>
 <script>
 // The service worker cannot run PHP or read the session, so the static
@@ -43,6 +50,49 @@
     var btn = document.getElementById('offline-retry');
     btn.textContent = btn.getAttribute('data-label-' + lang) || btn.getAttribute('data-label-en');
     btn.addEventListener('click', function () { window.location.reload(); });
+
+    // PWA stage 2: the offline library - stories the user precached live in the
+    // localStorage index 'offline-stories' ({ project: { title, urls, url } }).
+    // Empty index -> the section stays hidden (no visual noise). Links lead to
+    // the cached project dashboard; if the browser evicted the cache entry, the
+    // link simply lands back on this offline page (accepted, self-heals online).
+    var removeLabel = { en: 'Remove', de: 'Entfernen', es: 'Eliminar', fr: 'Supprimer' };
+    var section = document.getElementById('offline-library');
+    var list = document.getElementById('offline-library-list');
+    function renderLibrary() {
+        var idx = {};
+        try { idx = JSON.parse(localStorage.getItem('offline-stories') || '{}'); } catch (e) { /* corrupt index */ }
+        var keys = Object.keys(idx);
+        if (keys.length === 0) {
+            section.hidden = true;
+            return;
+        }
+        section.hidden = false;
+        list.textContent = '';
+        var hasController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+        keys.forEach(function (k) {
+            var entry = idx[k] || {};
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = entry.url || ('/writing/' + encodeURIComponent(k));
+            a.textContent = entry.title || k;
+            li.appendChild(a);
+            if (hasController) {
+                var rm = document.createElement('button');
+                rm.type = 'button';
+                rm.textContent = removeLabel[lang] || removeLabel.en;
+                rm.addEventListener('click', function () {
+                    navigator.serviceWorker.controller.postMessage({ type: 'REMOVE_STORY', urls: entry.urls || [] });
+                    delete idx[k];
+                    try { localStorage.setItem('offline-stories', JSON.stringify(idx)); } catch (e) {}
+                    renderLibrary();
+                });
+                li.appendChild(rm);
+            }
+            list.appendChild(li);
+        });
+    }
+    renderLibrary();
 })();
 </script>
 </body>

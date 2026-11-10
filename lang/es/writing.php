@@ -282,4 +282,10 @@ return [
     'shared_with_manage' => 'Compartido con {names} ({count}) - gestionar el uso compartido',
     'more_members' => '+{n} más',
     'story_actions' => 'Acciones de la historia',
+    'offline_make_available' => 'Disponible sin conexión',
+    'offline_remove' => 'Eliminar copia sin conexión',
+    'offline_success' => 'La historia está disponible sin conexión.',
+    'offline_failed' => 'Algunas páginas no se pudieron almacenar en caché: la historia puede quedar incompleta sin conexión.',
+    'offline_busy' => 'Almacenando…',
+    'offline_library_title' => 'Disponible sin conexión',
 ];

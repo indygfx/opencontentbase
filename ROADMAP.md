@@ -130,7 +130,16 @@ breadcrumb .muted, .error/.success notices, .outline-box, the setup .table-scrol
 keep margin-inline 16px under body.editing in the 768px block (writing surface
 stays full-bleed; no width calc needed for block elements); editor comfort
 typography in editor.css base (.editor-prose: line-height 1.8, font-size 120%,
-min-height 9rem, outline none - caret is the focus indicator); SW VERSION v4.**Done:** prompt 24 - story header shows the sharing avatar stack next to the
+min-height 9rem, outline none - caret is the focus indicator); SW VERSION v4.
+
+**Done:** prompt 28 - PWA stage 2 (stories offline): per-story on-demand
+precache via `GET /writing/{id}/offline-manifest.json` (auth-guarded; read
+pages + portraits/cover/avatars), SW cache `offline-stories-v1` with
+PRECACHE_STORY/REMOVE_STORY messages, SWR serving for cached story pages,
+dashboard toggle button (localStorage index `offline-stories`, quota hint,
+busy state, toasts), offline.html as the offline library. SW VERSION v5.
+
+**Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`
 (same ImageStore validation/storage as character portraits, `data/avatars/`,

@@ -267,6 +267,38 @@ above 768 px.
   long words wrap via `overflow-wrap: break-word` on `main`, `.card`, `.notice`
   and `.badge`.
 
+## PWA stage 2: stories available offline (on-demand precache per story)
+
+- The story dashboard has a **Make available offline** button (hidden when no
+  service worker controls the page, e.g. plain-HTTP dev). It fetches
+  `GET /writing/{id}/offline-manifest.json` (auth-guarded like all project
+  pages; JSON with `project`, `title`, `urls`), checks `navigator.storage.estimate()`
+  only as a hint (attempts anyway below 25 MB free - failures surface via the
+  toast), then messages the SW (`PRECACHE_STORY`) and stores the entry in the
+  localStorage index `offline-stories`. The button swaps to **Remove offline
+  copy** (`REMOVE_STORY`).
+- The manifest lists the story's READ pages (dashboard, graph, all
+  chapter/synopsis/character/background pages) plus the media those pages
+  reference (character portraits, cover, owner/member avatars). Static assets
+  are covered by the SW asset cache and not listed. Projects have no slug
+  column - the id is the identifier.
+- The SW keeps precached stories in the dedicated cache `offline-stories-v1`
+  (survives VERSION bumps; single stories removable). Cached pages are served
+  stale-while-revalidate: online they refresh themselves on the next visit
+  (that IS the invalidation mechanism), offline they are served from the cache.
+  Everything else under `/writing` stays network-only; `/writing` itself is
+  network-only - the offline entry point is the fallback page.
+- `offline.html` is the **offline library**: it renders the localStorage index
+  (title links to the cached dashboard, optional per-story remove). Empty index
+  -> section hidden. If the browser evicted a cache entry, the link lands back
+  on the offline page (accepted; self-heals on the next online visit).
+- SW `VERSION` bumped with every asset change (currently v5).
+
+**Manual checklist (device):** make a story available -> airplane mode -> open
+app -> offline library lists the story -> open chapter and graph offline ->
+restore network -> visit a chapter (SWR updates the cache) -> remove the offline
+copy -> library empty. Test on iOS Safari, Android Chrome, installed PWA.
+
 ## PWA icons (code-generated)
 
 The app icons are **drawn in code** - no binary source file, no internet access:
