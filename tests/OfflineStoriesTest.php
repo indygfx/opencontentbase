@@ -60,9 +60,9 @@ final class OfflineStoriesTest extends TestCase
         // fixture story: project + chapter + synopsis + character (with portrait) + background + cover + member
         $this->db->run("INSERT INTO projects (id, owner_id, title, cover) VALUES ('p1', 'a1', 'My novel', 'p1.png')");
         $this->db->run("INSERT INTO project_members (project_id, user_id, role) VALUES ('p1', 'm1', 'member')");
-        $this->db->run("INSERT INTO chapters (id, project_id, slug) VALUES ('c1', 'p1', 'prolog')");
-        $this->db->run("INSERT INTO chapters (id, project_id, slug) VALUES ('c2', 'p1', 'drachenhord')");
         $this->db->run("INSERT INTO chapter_synopses (id, project_id, slug, title) VALUES ('s1', 'p1', 'outline', 'Outline')");
+        $this->db->run("INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES ('c1', 'p1', 's1', 'prolog')");
+        $this->db->run("INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES ('c2', 'p1', 's1', 'drachenhord')");
         $this->db->run("INSERT INTO characters (id, project_id, slug, title, image_path) VALUES ('ch1', 'p1', 'liestre', 'Liestre', 'ch1.png')");
         $this->db->run("INSERT INTO backgrounds (id, project_id, slug, title) VALUES ('b1', 'p1', 'karma', 'KarmaCorp')");
     }
