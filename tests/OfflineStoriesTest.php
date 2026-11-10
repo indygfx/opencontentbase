@@ -64,8 +64,8 @@ final class OfflineStoriesTest extends TestCase
         $this->db->run("INSERT INTO chapter_synopses (id, project_id, slug, title) VALUES ('s2', 'p1', 'outline-2', 'Outline 2')");
         $this->db->run("INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES ('c1', 'p1', 's1', 'prolog')");
         $this->db->run("INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES ('c2', 'p1', 's2', 'drachenhord')");
-        $this->db->run("INSERT INTO characters (id, project_id, slug, title, image_path) VALUES ('ch1', 'p1', 'liestre', 'Liestre', 'ch1.png')");
-        $this->db->run("INSERT INTO backgrounds (id, project_id, slug, title) VALUES ('b1', 'p1', 'karma', 'KarmaCorp')");
+        $this->db->run("INSERT INTO characters (id, project_id, slug, image_path) VALUES ('ch1', 'p1', 'liestre', 'ch1.png')");
+        $this->db->run("INSERT INTO backgrounds (id, project_id, slug) VALUES ('b1', 'p1', 'karma')");
     }
 
     protected function tearDown(): void
