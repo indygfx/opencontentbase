@@ -267,37 +267,42 @@ above 768 px.
   long words wrap via `overflow-wrap: break-word` on `main`, `.card`, `.notice`
   and `.badge`.
 
-## PWA stage 2: stories available offline (on-demand precache per story)
+## PWA stage 2b: offline writing dashboard + per-story switch
 
-- The story dashboard has a **Make available offline** button (hidden when no
-  service worker controls the page, e.g. plain-HTTP dev). It fetches
-  `GET /writing/{id}/offline-manifest.json` (auth-guarded like all project
-  pages; JSON with `project`, `title`, `urls`), checks `navigator.storage.estimate()`
-  only as a hint (attempts anyway below 25 MB free - failures surface via the
-  toast), then messages the SW (`PRECACHE_STORY`) and stores the entry in the
-  localStorage index `offline-stories`. The button swaps to **Remove offline
-  copy** (`REMOVE_STORY`).
-- The manifest lists the story's READ pages (dashboard, graph, all
-  chapter/synopsis/character/background pages) plus the media those pages
-  reference (character portraits, cover, owner/member avatars). Static assets
-  are covered by the SW asset cache and not listed. Projects have no slug
-  column - the id is the identifier.
-- The SW keeps precached stories in the dedicated cache `offline-stories-v1`
-  (survives VERSION bumps; single stories removable). Cached pages are served
-  stale-while-revalidate: online they refresh themselves on the next visit
-  (that IS the invalidation mechanism), offline they are served from the cache.
-  Everything else under `/writing` stays network-only; `/writing` itself is
-  network-only - the offline entry point is the fallback page.
-- `offline.html` is the **offline library**: it renders the localStorage index
-  (title links to the cached dashboard, optional per-story remove). Empty index
-  -> section hidden. If the browser evicted a cache entry, the link lands back
-  on the offline page (accepted; self-heals on the next online visit).
-- SW `VERSION` bumped with every asset change (currently v5).
+**Offline entry point is now the real writing dashboard** (`/writing`), not the
+fallback page:
 
-**Manual checklist (device):** make a story available -> airplane mode -> open
-app -> offline library lists the story -> open chapter and graph offline ->
-restore network -> visit a chapter (SWR updates the cache) -> remove the offline
-copy -> library empty. Test on iOS Safari, Android Chrome, installed PWA.
+- SW strategy: `/writing` is **network-first** (always fresh online) with the
+  cached copy as offline fallback; the copy lives in the story cache
+  (`offline-stories-v1`, survives VERSION bumps). All other `/writing/*` pages
+  stay network-only unless individually precached per story (SWR on cache hit).
+- `app.js` **auto-warms** on SW-controller ready: precaches `['/writing']` plus
+  every `img[src^="/avatars/"]` URL found in the DOM. A **60-minute timer**
+  re-warms the dashboard and re-precaches index stories whose `ts` is older than
+  **12 h** (one story is refreshed at most every 12 h, regardless of the timer).
+  Silent on success; error toast on failure.
+- **Avatars** (`/avatars/*`) are **SWR** into the story cache - safe because the
+  URLs carry `?v=filemtime` cache-busters - so avatars render in the offline
+  dashboard and on precached story pages.
+- CSRF note: the cached dashboard HTML contains a CSRF token snapshot; a stale
+  token only matters for POSTs, which require the network anyway (accepted).
+- Per-story offline is a **switch in the story header dropdown** (below "Novel
+  Setup"): checkbox `role="switch"`, custom CSS from variables only; toggling
+  runs manifest fetch -> `PRECACHE_STORY`/`REMOVE_STORY` -> localStorage index
+  `offline-stories` (+ `ts`); busy = disabled, failure reverts + toast; clicking
+  it does not close the menu. Hidden without an SW controller (HTTP dev).
+- Offline dashboard UX: while `!navigator.onLine`, `body.is-offline` is set and
+  project rows NOT in the offline index get `.is-online-only` (links disabled,
+  "Online only" hint via CSS); rows in the index stay fully usable. Reverts on
+  `online`. Purely client-side.
+- `offline.html` stays as the last-resort fallback with the offline library.
+- SW `VERSION` bumped with every asset change (currently v6).
+
+**Manual checklist (device):** airplane mode -> app opens on the dashboard with
+stories listed and avatars visible; offline stories openable, non-offline rows
+muted with hint -> toggle a story offline via the dropdown switch -> open it
+offline -> back online -> rows revert, silent refresh runs (check switch state /
+DevTools cache). iOS Safari + Android Chrome + installed PWA.
 
 ## PWA icons (code-generated)
 

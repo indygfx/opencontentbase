@@ -288,4 +288,6 @@ return [
     'offline_failed' => 'Einige Seiten konnten nicht zwischengespeichert werden - offline evtl. unvollständig.',
     'offline_busy' => 'Wird zwischengespeichert…',
     'offline_library_title' => 'Offline verfügbar',
+    'offline_story_toggle' => 'Geschichte offline',
+    'offline_online_only' => 'Nur online',
 ];

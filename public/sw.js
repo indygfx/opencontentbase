@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v5'; // prompt 28 (PWA stage 2: per-story offline precache) changes sw.js/app.js/offline.html
+const VERSION = 'v6'; // prompt 29 (stage 2b: offline dashboard, avatar SWR, story-menu switch)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';
@@ -134,13 +134,54 @@ self.addEventListener('fetch', function (event) {
         return;
     }
 
-    // Writing module + avatars: pages precached per story (stage 2) behave like
-    // other cached read pages - stale-while-revalidate (serve the cached copy,
-    // refresh it in the background on the next online visit). Everything else
-    // under /writing stays network-only, never cached; on failure the offline
-    // page is served. /writing itself stays network-only - the offline entry
-    // point is the offline library page, not the index.
-    if (path.indexOf(WRITING_PREFIX) === 0 || path.indexOf('/avatars/') === 0) {
+    // PWA stage 2b: the writing DASHBOARD is the primary offline entry point -
+    // network-first (always fresh online), cached copy as offline fallback.
+    // It lives in the story cache so it survives VERSION bumps; app.js auto-warms
+    // it on boot. Note: the cached HTML contains a CSRF token snapshot, but POSTs
+    // need the network anyway (accepted behavior, see README).
+    if (path === '/writing') {
+        event.respondWith(
+            caches.open(STORY_CACHE).then(function (cache) {
+                return fetch(req).then(function (resp) {
+                    if (resp.ok) {
+                        cache.put(req, resp.clone());
+                    }
+                    return resp;
+                }).catch(function () {
+                    return cache.match(req).then(function (hit) {
+                        return hit || caches.match(OFFLINE_URL);
+                    });
+                });
+            })
+        );
+        return;
+    }
+
+    // Avatars: stale-while-revalidate into the story cache. Safe because avatar
+    // URLs carry ?v=filemtime cache-busters (content-addressed).
+    if (path.indexOf('/avatars/') === 0) {
+        event.respondWith(
+            caches.open(STORY_CACHE).then(function (cache) {
+                return cache.match(req).then(function (hit) {
+                    var network = fetch(req).then(function (resp) {
+                        if (resp.ok) {
+                            cache.put(req, resp.clone());
+                        }
+                        return resp;
+                    }).catch(function () { return hit; });
+                    return hit || network;
+                }).then(function (resp) {
+                    return resp || caches.match(OFFLINE_URL);
+                });
+            })
+        );
+        return;
+    }
+
+    // Other writing pages: per-story precache (stage 2) behaves like other cached
+    // read pages - SWR on a cache hit. Everything else under /writing stays
+    // network-only, never cached; on failure the offline page is served.
+    if (path.indexOf(WRITING_PREFIX) === 0) {
         event.respondWith(
             caches.open(STORY_CACHE).then(function (cache) {
                 return cache.match(req).then(function (hit) {

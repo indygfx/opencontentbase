@@ -288,4 +288,6 @@ return [
     'offline_failed' => 'Certaines pages n’ont pas pu être mises en cache - l’histoire peut être incomplète hors ligne.',
     'offline_busy' => 'Mise en cache…',
     'offline_library_title' => 'Disponible hors ligne',
+    'offline_story_toggle' => 'Histoire hors ligne',
+    'offline_online_only' => 'En ligne uniquement',
 ];

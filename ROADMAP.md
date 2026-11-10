@@ -139,6 +139,15 @@ PRECACHE_STORY/REMOVE_STORY messages, SWR serving for cached story pages,
 dashboard toggle button (localStorage index `offline-stories`, quota hint,
 busy state, toasts), offline.html as the offline library. SW VERSION v5.
 
+**Done:** prompt 29 - PWA stage 2b: writing dashboard is the offline entry point
+(SW network-first for /writing with story-cache fallback, auto-warm of the
+dashboard + rendered avatars on controller ready, 60-min timer with 12-h
+per-story refresh throttle), /avatars/* SWR (?v=filemtime cache-busters),
+per-story offline moved from a dashboard button to a switch in the story header
+dropdown (localStorage index + ts, busy state, no menu close), offline dashboard
+rows muted with an 'online only' hint while offline (body.is-offline). SW
+VERSION v6.
+
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

@@ -61,7 +61,7 @@
                     $memberNames = implode(', ', array_map(static fn (array $m): string => $m['username'], $projectMembers));
                 }
                 ?>
-                <tr>
+                <tr data-project-id="<?= e($p['id']) ?>">
                     <td>
                         <a href="/writing/<?= e($p['id']) ?>"><?= e($p['title']) ?></a>
                         <?php if ((int)$p['shared'] === 1): ?>
@@ -72,7 +72,7 @@
                     </td>
                     <td><?= e($p['owner_name']) ?></td>
                     <td class="muted"><?= e((string)$p['created_at']) ?></td>
-                    <td><a href="/writing/<?= e($p['id']) ?>"><?= e(t('writing', 'open')) ?></a></td>
+                    <td data-offline-hint="<?= e(t('writing', 'offline_online_only')) ?>"><a href="/writing/<?= e($p['id']) ?>"><?= e(t('writing', 'open')) ?></a></td>
                 </tr>
             <?php endforeach; ?>
         </table></div>

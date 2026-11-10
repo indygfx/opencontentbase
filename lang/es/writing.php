@@ -288,4 +288,6 @@ return [
     'offline_failed' => 'Algunas páginas no se pudieron almacenar en caché: la historia puede quedar incompleta sin conexión.',
     'offline_busy' => 'Almacenando…',
     'offline_library_title' => 'Disponible sin conexión',
+    'offline_story_toggle' => 'Historia sin conexión',
+    'offline_online_only' => 'Solo en línea',
 ];

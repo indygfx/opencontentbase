@@ -58,15 +58,17 @@ function progressBar(string $section, array $entry, string $label): string
                 <?php if ($isOwner): ?>
                 <a class="story-menu__entry" href="/writing/<?= e($project['id']) ?>/setup"><?= e(t('writing', 'novel_setup')) ?></a>
                 <?php endif; ?>
+                <div class="story-menu__entry story-menu__switch" hidden
+                    data-project="<?= e($project['id']) ?>"
+                    data-msg-success="<?= e(t('writing', 'offline_success')) ?>"
+                    data-msg-failed="<?= e(t('writing', 'offline_failed')) ?>"
+                    data-label-busy="<?= e(t('writing', 'offline_busy')) ?>">
+                    <label for="offline-switch-<?= e($project['id']) ?>"><?= e(t('writing', 'offline_story_toggle')) ?></label>
+                    <input type="checkbox" role="switch" id="offline-switch-<?= e($project['id']) ?>" class="offline-switch">
+                </div>
             </div>
         </div>
     </div>
-    <p><button type="button" class="button offline-toggle" hidden
-        data-project="<?= e($project['id']) ?>"
-        data-label-remove="<?= e(t('writing', 'offline_remove')) ?>"
-        data-label-busy="<?= e(t('writing', 'offline_busy')) ?>"
-        data-msg-success="<?= e(t('writing', 'offline_success')) ?>"
-        data-msg-failed="<?= e(t('writing', 'offline_failed')) ?>"><?= e(t('writing', 'offline_make_available')) ?></button></p>
     <?php if ((string)($project['cover'] ?? '') !== ''): ?>
         <p><img class="cover-preview" src="/writing/<?= e($project['id']) ?>/cover" alt="<?= e(t('writing', 'cover_alt', ['title' => (string)$project['title']])) ?>"></p>
     <?php endif; ?>

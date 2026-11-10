@@ -278,29 +278,30 @@
     });
 })();
 
-/* Prompt 28 - PWA stage 2: per-story offline availability.
-   The story dashboard renders an .offline-toggle button (hidden by default).
-   Flow: fetch /writing/<id>/offline-manifest.json -> quota hint via
-   navigator.storage.estimate() (unreliable on purpose: even below 25 MB free we
-   still attempt - failures surface later via PRECACHE_DONE.failed + toast) ->
-   PRECACHE_STORY to the SW controller -> on PRECACHE_DONE the entry is stored in
-   the localStorage index 'offline-stories' and the button swaps to "Remove".
-   Without an active controller (plain-HTTP dev) the button stays hidden.
-   While a run is in flight the button is disabled with the busy label. */
+/* Prompt 29 - PWA stage 2b: the writing dashboard is the primary offline entry
+   point (SW: /writing is network-first with a cached fallback, auto-warmed
+   below), avatars are SWR, and the per-story offline toggle moved into the
+   story header dropdown as a switch.
+
+   - Auto-warm on SW controller ready: precache ['/writing'] + all
+     img[src^="/avatars/"] URLs found in the current DOM.
+   - Silent refresh every 60 min: re-warm the dashboard; re-precache stories
+     from the localStorage index whose last refresh (ts) is older than 12 h -
+     so one story is refreshed at most every 12 h regardless of the timer.
+   - Story switch (.story-menu__switch input[role=switch]): runs the same
+     precache/remove flow (manifest fetch -> PRECACHE_STORY/REMOVE_STORY ->
+     index update with ts). Busy = disabled; on failure the switch reverts and
+     shows the error toast. Clicking it must not close the dropdown (mousedown
+     stopPropagation) and must not navigate (preventDefault).
+   - Dashboard offline UX: while !navigator.onLine, rows whose project is NOT in
+     the index get .is-online-only (muted, links disabled, hint via CSS); body
+     gets .is-offline. Reverts on 'online'. Purely client-side.
+   - Without an SW controller (plain-HTTP dev) the switch stays hidden. */
 (function () {
     'use strict';
     var INDEX_KEY = 'offline-stories';
-    var btn = document.querySelector('.offline-toggle');
-    if (btn === null) {
-        return;
-    }
-    if (!('serviceWorker' in navigator) || navigator.serviceWorker.controller === null) {
-        btn.hidden = true;
-        return;
-    }
-    btn.hidden = false;
-    var labelMake = btn.textContent;
-    var busy = false;
+    var REFRESH_MS = 60 * 60 * 1000;      // 60 min timer
+    var STORY_TTL_MS = 12 * 60 * 60 * 1000; // per-story refresh at most every 12 h
 
     function readIndex() {
         try { return JSON.parse(localStorage.getItem(INDEX_KEY) || '{}'); } catch (e) { return {}; }
@@ -318,19 +319,6 @@
         document.body.appendChild(t);
         setTimeout(function () { t.remove(); }, 5000);
     }
-    function syncLabel() {
-        var idx = readIndex();
-        btn.textContent = idx[btn.dataset.project] ? btn.dataset.labelRemove : labelMake;
-    }
-    function setBusy(on) {
-        busy = on;
-        btn.disabled = on;
-        if (on) {
-            btn.textContent = btn.dataset.labelBusy;
-        } else {
-            syncLabel();
-        }
-    }
     function send(type, urls) {
         return new Promise(function (resolve) {
             var want = type === 'PRECACHE_STORY' ? 'PRECACHE_DONE' : 'REMOVE_DONE';
@@ -345,46 +333,143 @@
             navigator.serviceWorker.controller.postMessage({ type: type, urls: urls });
         });
     }
-
-    btn.addEventListener('click', function () {
-        if (busy) {
-            return;
+    function precacheUrls(urls) {
+        if (!navigator.serviceWorker.controller || !urls.length) {
+            return Promise.resolve({ ok: true, failed: [] });
         }
+        return send('PRECACHE_STORY', urls);
+    }
+    function avatarUrls() {
+        return Array.prototype.slice.call(document.querySelectorAll('img[src^="/avatars/"]'))
+            .map(function (img) { return img.getAttribute('src'); });
+    }
+    function warmDashboard() {
+        // auto-warm: the dashboard itself plus the avatars rendered on it
+        return precacheUrls(['/writing'].concat(avatarUrls()));
+    }
+    function refreshStaleStories() {
         var idx = readIndex();
-        var project = btn.dataset.project;
-        var existing = idx[project];
-        if (existing) {
-            setBusy(true);
-            send('REMOVE_STORY', existing.urls).then(function () {
-                delete idx[project];
-                writeIndex(idx);
-                setBusy(false);
-                syncLabel();
-            });
+        var now = Date.now();
+        var jobs = [];
+        Object.keys(idx).forEach(function (k) {
+            var entry = idx[k];
+            if (!entry || !entry.urls) { return; }
+            if (!entry.ts || now - entry.ts > STORY_TTL_MS) {
+                jobs.push(precacheUrls(entry.urls).then(function () {
+                    entry.ts = Date.now();
+                    writeIndex(idx);
+                }));
+            }
+        });
+        return Promise.all(jobs);
+    }
+
+    function initOffline() {
+        if (!('serviceWorker' in navigator)) {
             return;
         }
-        setBusy(true);
-        fetch('/writing/' + encodeURIComponent(project) + '/offline-manifest.json', { credentials: 'same-origin' })
-            .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('manifest ' + r.status)); })
-            .then(function (manifest) {
-                var quota = (navigator.storage && navigator.storage.estimate)
-                    ? navigator.storage.estimate().then(function (e) { return (e.quota || 0) - (e.usage || 0); })
-                    : Promise.resolve(Infinity);
-                return quota.then(function () {
-                    return send('PRECACHE_STORY', manifest.urls).then(function (done) {
-                        idx[project] = { project: project, title: manifest.title, urls: manifest.urls, url: '/writing/' + project };
-                        writeIndex(idx);
-                        setBusy(false);
-                        syncLabel();
-                        toast(done.ok ? btn.dataset.msgSuccess : btn.dataset.msgFailed);
+        navigator.serviceWorker.ready.then(function () {
+            if (!navigator.serviceWorker.controller) {
+                return;
+            }
+            warmDashboard();
+            setInterval(function () {
+                warmDashboard();
+                refreshStaleStories();
+            }, REFRESH_MS);
+        });
+    }
+
+    // --- story header dropdown switch ---
+    function initStorySwitch() {
+        var row = document.querySelector('.story-menu__switch');
+        if (row === null) {
+            return;
+        }
+        if (!('serviceWorker' in navigator) || navigator.serviceWorker.controller === null) {
+            row.hidden = true; // no controller (HTTP dev) -> no offline feature
+            return;
+        }
+        row.hidden = false;
+        var input = row.querySelector('input[role="switch"]');
+        var project = row.dataset.project;
+        var busy = false;
+        // the dropdown's outside-click close must not fire for clicks on the switch
+        row.addEventListener('mousedown', function (ev) { ev.stopPropagation(); });
+        row.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); });
+        function sync() { input.checked = !!readIndex()[project]; }
+        input.addEventListener('change', function () {
+            if (busy) { sync(); return; }
+            var wantOn = input.checked;
+            busy = true;
+            input.disabled = true;
+            var idx = readIndex();
+            var done = function () {
+                busy = false;
+                input.disabled = false;
+                sync();
+            };
+            if (wantOn) {
+                fetch('/writing/' + encodeURIComponent(project) + '/offline-manifest.json', { credentials: 'same-origin' })
+                    .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('manifest ' + r.status)); })
+                    .then(function (manifest) {
+                        var quota = (navigator.storage && navigator.storage.estimate)
+                            ? navigator.storage.estimate().then(function (e) { return (e.quota || 0) - (e.usage || 0); })
+                            : Promise.resolve(Infinity);
+                        return quota.then(function () {
+                            return precacheUrls(manifest.urls).then(function (res) {
+                                idx[project] = { project: project, title: manifest.title, urls: manifest.urls, url: '/writing/' + project, ts: Date.now() };
+                                writeIndex(idx);
+                                done();
+                                toast(res.ok ? row.dataset.msgSuccess : row.dataset.msgFailed);
+                            });
+                        });
+                    })
+                    .catch(function () {
+                        toast(row.dataset.msgFailed);
+                        done(); // sync() reverts the switch because the index did not change
                     });
+            } else {
+                var entry = idx[project];
+                precacheUrls([]); // no-op guard
+                send('REMOVE_STORY', entry ? entry.urls : []).then(function () {
+                    delete idx[project];
+                    writeIndex(idx);
+                    done();
                 });
-            })
-            .catch(function () {
-                setBusy(false);
-                syncLabel();
-                toast(btn.dataset.msgFailed);
+            }
+        });
+        sync();
+    }
+
+    // --- dashboard offline rows ---
+    function initDashboardOfflineState() {
+        if (window.location.pathname !== '/writing') {
+            return;
+        }
+        function apply() {
+            var offline = !navigator.onLine;
+            document.body.classList.toggle('is-offline', offline);
+            if (!offline) {
+                document.querySelectorAll('tr.is-online-only').forEach(function (tr) { tr.classList.remove('is-online-only'); });
+                return;
+            }
+            var idx = readIndex();
+            document.querySelectorAll('tr[data-project-id]').forEach(function (tr) {
+                var id = tr.getAttribute('data-project-id');
+                var cached = !!idx[id];
+                tr.classList.toggle('is-online-only', !cached);
+                tr.querySelectorAll('a').forEach(function (a) {
+                    if (!cached) { a.setAttribute('aria-disabled', 'true'); } else { a.removeAttribute('aria-disabled'); }
+                });
             });
-    });
-    syncLabel();
+        }
+        window.addEventListener('online', apply);
+        window.addEventListener('offline', apply);
+        apply();
+    }
+
+    initOffline();
+    initStorySwitch();
+    initDashboardOfflineState();
 })();

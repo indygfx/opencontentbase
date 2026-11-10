@@ -288,4 +288,6 @@ return [
     'offline_failed' => 'Some pages could not be cached - the story may be incomplete offline.',
     'offline_busy' => 'Caching…',
     'offline_library_title' => 'Available offline',
+    'offline_story_toggle' => 'Story offline',
+    'offline_online_only' => 'Online only',
 ];
