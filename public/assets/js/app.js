@@ -394,9 +394,12 @@
         var input = row.querySelector('input[role="switch"]');
         var project = row.dataset.project;
         var busy = false;
-        // the dropdown's outside-click close must not fire for clicks on the switch
+        // the dropdown's outside-click close must not fire for clicks on the
+        // switch. NOTE: no preventDefault on click here - it would cancel the
+        // checkbox's default activation, so the switch would never toggle and
+        // no 'change' event would fire (the reported bug).
         row.addEventListener('mousedown', function (ev) { ev.stopPropagation(); });
-        row.addEventListener('click', function (ev) { ev.preventDefault(); ev.stopPropagation(); });
+        row.addEventListener('click', function (ev) { ev.stopPropagation(); });
         function sync() { input.checked = !!readIndex()[project]; }
         input.addEventListener('change', function () {
             if (busy) { sync(); return; }

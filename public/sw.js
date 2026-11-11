@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v6'; // prompt 29 (stage 2b: offline dashboard, avatar SWR, story-menu switch)
+const VERSION = 'v7'; // prompt 29 fix: app.js switch click handler (no preventDefault)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';

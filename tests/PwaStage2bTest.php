@@ -93,7 +93,10 @@ final class PwaStage2bTest extends TestCase
         // switch: no menu close, no navigation, busy, revert on failure
         $this->assertStringContainsString('input[role="switch"]', $js);
         $this->assertStringContainsString('ev.stopPropagation()', $js);
-        $this->assertStringContainsString('ev.preventDefault()', $js);
+        // pinned regression guard: the switch row must NOT preventDefault on
+        // click - that cancels the checkbox's default toggle (no change event)
+        $this->assertStringContainsString("row.addEventListener('click', function (ev) { ev.stopPropagation(); });", $js);
+        $this->assertStringNotContainsString("row.addEventListener('click', function (ev) { ev.preventDefault()", $js);
         $this->assertStringContainsString('input.disabled = true', $js);
         // dashboard offline rows
         $this->assertStringContainsString("window.location.pathname !== '/writing'", $js);
