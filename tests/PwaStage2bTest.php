@@ -64,7 +64,7 @@ final class PwaStage2bTest extends TestCase
     public function testSwDashboardIsNetworkFirstAndAvatarsAreSwr(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v6'", $sw);
+        $this->assertStringContainsString("const VERSION = 'v7'", $sw);
         $this->assertStringContainsString("const STORY_CACHE = 'offline-stories-v1';", $sw);
         $this->assertStringContainsString("key !== STORY_CACHE", $sw, 'story cache survives VERSION bumps');
         // dashboard: network-first with cached fallback (into the story cache)

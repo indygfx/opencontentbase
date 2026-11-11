@@ -142,7 +142,7 @@ final class OfflineStoriesTest extends TestCase
     public function testSwJsHasStoryCacheMessageHandlersAndV5(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v6'", $sw, 'prompt 29 bumped to v6');
+        $this->assertStringContainsString("const VERSION = 'v7'", $sw, 'prompt 29 fix bumped to v7');
         $this->assertStringContainsString("const STORY_CACHE = 'offline-stories-v1';", $sw);
         $this->assertStringContainsString("data.type === 'PRECACHE_STORY'", $sw);
         $this->assertStringContainsString("data.type === 'REMOVE_STORY'", $sw);
