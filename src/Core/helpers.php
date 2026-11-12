@@ -107,7 +107,9 @@ function markdown_html(string $md): string
             \League\CommonMark\Event\DocumentParsedEvent::class,
             static function (\League\CommonMark\Event\DocumentParsedEvent $e): void {
                 foreach ($e->getDocument()->iterator() as $node) {
-                    if ($node instanceof \League\CommonMark\Extension\CommonMark\Node\Inline\Link) {
+                    if ($node instanceof \League\CommonMark\Extension\CommonMark\Node\Inline\Link
+                        && !\League\CommonMark\Util\RegexHelper::isLinkPotentiallyUnsafe($node->getUrl())) {
+                        // safe links only; unsafe schemes get no href (and no rel) from the renderer
                         $node->data->set('attributes/rel', 'noopener');
                     }
                 }
