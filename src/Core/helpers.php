@@ -102,7 +102,7 @@ function markdown_html(string $md): string
             'external_link' => [
                 'internal_hosts' => [], // every link counts as external -> rel="noopener"
                 'open_in_new_window' => false,
-                'noopener' => 'noopener',
+                'noopener' => 'all', // rel=noopener on every rendered link
             ],
         ]);
         $converter->getEnvironment()->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension());
