@@ -155,8 +155,9 @@ final class PolishSession30Test extends TestCase
         $db2 = $this->db;
         $controller = new WritingController($db2, new View($this->base), new Csrf($db2, $this->auth), new ProjectAccess($db2), new ContentRenderer($db2, new ModuleRegistry()));
         $body = $controller->index($this->admin)->body();
-        $this->assertStringContainsString('**not markdown** in slider', $body, 'slider shows escaped plain text, no <strong>');
-        $this->assertStringNotContainsString('<strong>not markdown</strong>', $body);
+        $this->assertStringContainsString('not markdown in slider', $body, 'slider excerpt is present');
+        $this->assertStringNotContainsString('**not markdown**', $body, 'slider strips markdown markers (plain())');
+        $this->assertStringNotContainsString('<strong>not markdown</strong>', $body, 'slider never renders markdown HTML');
     }
 
     // ---- Part 1 + Part 4: static assertions ----
