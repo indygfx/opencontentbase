@@ -96,7 +96,7 @@ function markdown_html(string $md): string
 {
     static $converter = null;
     if ($converter === null) {
-        $converter = new \League\CommonMark\MarkdownConverter([
+        $converter = new \League\CommonMark\GithubFlavoredMarkdownConverter([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
             'external_link' => [
