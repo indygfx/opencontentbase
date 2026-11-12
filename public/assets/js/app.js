@@ -476,3 +476,52 @@
     initStorySwitch();
     initDashboardOfflineState();
 })();
+
+/* Prompt 30 part 1: on touch devices (pointer: coarse) disable the native
+   spellcheck on the editor surface. On Android Chrome, tapping a
+   red-underlined word opens the native suggestion menu and ENDS the IME
+   session (soft keyboard closes) - the only app-side lever is the spellcheck
+   attribute. The editor bundle creates .editor-prose after page load, so we
+   observe the DOM once until it exists (one-shot MutationObserver). Desktop
+   (pointer: fine) is untouched: native spellcheck with underlines stays. */
+(function () {
+    'use strict';
+    if (!window.matchMedia('(pointer: coarse)').matches) {
+        return;
+    }
+    function apply() {
+        var prose = document.querySelector('.editor-prose');
+        if (prose !== null) {
+            prose.setAttribute('spellcheck', 'false');
+            return true;
+        }
+        return false;
+    }
+    if (apply()) {
+        return;
+    }
+    var mo = new MutationObserver(function () {
+        if (apply()) {
+            mo.disconnect();
+        }
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+})();
+
+/* Prompt 30 part 2: read-more toggles on the dashboard (idea/blurb/synopsis).
+   The full text is always in the HTML (server-rendered Markdown); the toggle
+   only flips data-collapsed + aria-expanded + label. */
+(function () {
+    'use strict';
+    document.addEventListener('click', function (ev) {
+        var btn = ev.target && ev.target.closest ? ev.target.closest('.read-more__toggle') : null;
+        if (btn === null) {
+            return;
+        }
+        var wrap = btn.closest('.read-more');
+        var collapsed = wrap.getAttribute('data-collapsed') === '1';
+        wrap.setAttribute('data-collapsed', collapsed ? '0' : '1');
+        btn.setAttribute('aria-expanded', collapsed ? 'true' : 'false');
+        btn.textContent = collapsed ? btn.dataset.less : btn.dataset.more;
+    });
+})();

@@ -148,6 +148,13 @@ dropdown (localStorage index + ts, busy state, no menu close), offline dashboard
 rows muted with an 'online only' hint while offline (body.is-offline). SW
 VERSION v6.
 
+**Done:** prompt 30 - polish session: spellcheck off on coarse pointers (app.js,
+editor bundle untouched), dashboard idea/blurb/synopsis rendered as full
+server-side Markdown (league/commonmark, escaped HTML, safe links) with
+read-more line-clamp at the personal word target, story menu unified as an
+anchored dropdown on all viewports (bottom sheet removed project-wide).
+SW VERSION v8.
+
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

@@ -119,7 +119,7 @@ final class DefaultThemePolishTest extends TestCase
         $this->assertStringContainsString('.story-menu__entry {', $css);
         $this->assertMatchesRegularExpression('/\.story-menu__entry \{[^}]*min-height: 44px;/s', $css, 'menu entries are 44px');
         $tablet = $this->mediaBlock($css, 768);
-        $this->assertMatchesRegularExpression('/\.story-menu \{[^}]*position: fixed;[^}]*bottom: 0\.5rem;[^}]*max-height: 60vh;/s', $tablet, 'mobile: story menu is a bottom sheet like the editor dropdowns');
+        $this->assertStringNotContainsString('.story-menu {', $tablet, 'prompt 30: no bottom-sheet override on mobile - the story menu stays the anchored dropdown from the base rule on all viewports');
     }
 
     public function testAppJsDropdownHandler(): void

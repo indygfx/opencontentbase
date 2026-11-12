@@ -290,4 +290,6 @@ return [
     'offline_library_title' => 'Disponible hors ligne',
     'offline_story_toggle' => 'Histoire hors ligne',
     'offline_online_only' => 'En ligne uniquement',
+    'show_more' => 'Afficher plus',
+    'show_less' => 'Afficher moins',
 ];

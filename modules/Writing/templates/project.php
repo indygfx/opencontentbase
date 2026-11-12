@@ -1,35 +1,4 @@
 <?php
-
-/**
- * @param string $text
- * @return string first sentence of a text
- */
-function firstSentence(string $text): string
-{
-    $text = trim($text);
-    if ($text === '') {
-        return '';
-    }
-    if (preg_match('/^(.*?[.!?])(?:\s|$)/us', $text, $m) === 1) {
-        return $m[1];
-    }
-    return $text;
-}
-
-/**
- * @param string $text
- * @return string text clamped to 250 words
- */
-function clampWords(string $text, int $max = 250): string
-{
-    $words = preg_split('/\s+/u', trim($text), -1, PREG_SPLIT_NO_EMPTY);
-    if ($words === false || count($words) <= $max) {
-        return trim($text);
-    }
-    return implode(' ', array_slice($words, 0, $max)) . ' …';
-}
-?>
-<?php
 /**
  * @param array{ratio: float, actual: int, target: int, done: bool} $entry
  */
@@ -87,7 +56,7 @@ function progressBar(string $section, array $entry, string $label): string
     <p class="muted"><?= $progress['idea']['done'] ? '&#10003; ' . e(t('writing', 'set')) : '&mdash; ' . e(t('writing', 'missing')) ?></p>
     <p class="muted"><?= e(t('writing', 'idea_hint')) ?></p>
     <?php if ((string)$project['idea'] !== ''): ?>
-        <p><?= e(firstSentence((string)$project['idea'])) ?></p>
+        <?= read_more_block((string)$project['idea'], 0) ?>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'not_written_yet')) ?></p>
     <?php endif; ?>
@@ -99,7 +68,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('blurb', $progress['blurb'], number_format($progress['blurb']['actual']) . ' / ' . number_format($progress['blurb']['target']) . ' ' . t('writing', 'words')) ?>
     <p class="muted"><?= e(t('writing', 'blurb_hint')) ?></p>
     <?php if ((string)$project['blurb'] !== ''): ?>
-        <p><?= e(clampWords((string)$project['blurb'])) ?></p>
+        <?= read_more_block((string)$project['blurb'], (int)$progress['blurb']['target']) ?>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'not_written_yet')) ?></p>
     <?php endif; ?>
@@ -112,7 +81,7 @@ function progressBar(string $section, array $entry, string $label): string
     <?= progressBar('synopsis', $progress['synopsis'], number_format($progress['synopsis']['actual']) . ' / ' . number_format($progress['synopsis']['target']) . ' ' . t('writing', 'words')) ?>
     <p class="muted"><?= e(t('writing', 'synopsis_long_hint')) ?></p>
     <?php if ((string)$project['synopsis_long'] !== ''): ?>
-        <p><?= e(clampWords((string)$project['synopsis_long'])) ?></p>
+        <?= read_more_block((string)$project['synopsis_long'], (int)$progress['synopsis']['target']) ?>
     <?php else: ?>
         <p class="muted"><?= e(t('writing', 'not_written_yet')) ?></p>
     <?php endif; ?>

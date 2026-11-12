@@ -290,4 +290,6 @@ return [
     'offline_library_title' => 'Available offline',
     'offline_story_toggle' => 'Story offline',
     'offline_online_only' => 'Online only',
+    'show_more' => 'Show more',
+    'show_less' => 'Show less',
 ];

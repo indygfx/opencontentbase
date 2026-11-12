@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v7'; // prompt 29 fix: app.js switch click handler (no preventDefault)
+const VERSION = 'v8'; // prompt 30 (app.js/CSS/templates: spellcheck, read-more, markdown, story menu)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';

@@ -85,3 +85,50 @@ function avatar_tag(string $username, string $userId, ?string $avatarName, bool 
 {
     return \Core\Avatar::render($username, $userId, $avatarName, dirname(__DIR__, 2), $decorative);
 }
+
+/**
+ * Render Markdown to safe HTML (league/commonmark, already a runtime dep).
+ * SECURITY: raw HTML is escaped first (html_input=escape) - user-supplied HTML
+ * never passes through; unsafe link schemes (javascript:, data:) are dropped
+ * (allow_unsafe_links=false); every link gets rel="noopener".
+ */
+function markdown_html(string $md): string
+{
+    static $converter = null;
+    if ($converter === null) {
+        $converter = new \League\CommonMark\MarkdownConverter([
+            'html_input' => 'escape',
+            'allow_unsafe_links' => false,
+        ]);
+        $converter->getEnvironment()->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension([
+            'external_link' => [
+                'internal_hosts' => [], // every link counts as external -> rel="noopener"
+                'open_in_new_window' => false,
+                'rel' => 'noopener',
+            ],
+        ]));
+    }
+    return $converter->convert($md)->getContent();
+}
+
+/**
+ * Dashboard text block: full Markdown-rendered text; when the word count exceeds
+ * the personal target from Novel Setup, the block is collapsed (CSS line-clamp)
+ * and gets a Show more/Show less toggle (aria-expanded, 44px, .button-secondary).
+ * targetWords <= 0 -> always shown in full (e.g. the idea, which has no word target).
+ */
+function read_more_block(string $md, int $targetWords): string
+{
+    $html = markdown_html($md);
+    $plain = trim(strip_tags($html));
+    $words = $plain === '' ? 0 : count(preg_split('/\s+/u', $plain, -1, PREG_SPLIT_NO_EMPTY) ?: []);
+    if ($targetWords <= 0 || $words <= $targetWords) {
+        return '<div class="md-block">' . $html . '</div>';
+    }
+    return '<div class="md-block read-more" data-collapsed="1">'
+        . '<div class="read-more__clamp">' . $html . '</div>'
+        . '<button type="button" class="button button-secondary read-more__toggle" aria-expanded="false"'
+        . ' data-more="' . e(t('writing', 'show_more')) . '" data-less="' . e(t('writing', 'show_less')) . '">'
+        . e(t('writing', 'show_more')) . '</button>'
+        . '</div>';
+}

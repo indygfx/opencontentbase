@@ -257,6 +257,19 @@ img.avatar, .avatar-img { object-fit: cover; }
 .offline-switch:checked { background: var(--accent); }
 .offline-switch:checked::after { left: 22px; }
 .offline-switch:disabled { opacity: 0.5; cursor: default; }
+/* Dashboard read-more (prompt 30 part 2): collapsed = line-clamp on the
+   rendered Markdown block; expanded = full block. Toggle is a 44px secondary button. */
+.read-more__clamp {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    overflow: hidden;
+}
+.read-more[data-collapsed="0"] .read-more__clamp {
+    display: block;
+    overflow: visible;
+}
+.read-more__toggle { margin-top: 0.5rem; min-height: 44px; }
 /* Offline dashboard rows (prompt 29): stories not in the offline index are muted
    with the "online only" hint while the browser is offline */
 body.is-offline tr.is-online-only a { opacity: 0.45; pointer-events: none; }
@@ -329,7 +342,9 @@ body.is-offline tr.is-online-only td[data-offline-hint]::after {
     .actions-secondary-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 0.5rem; }
     .dashboard-actions .button { width: 100%; }
     /* story header menu opens as a fixed bottom sheet on mobile, same as the editor dropdowns */
-    .story-menu { position: fixed; left: 0.5rem; right: 0.5rem; top: auto; bottom: 0.5rem; max-height: 60vh; overflow-y: auto; }
+    /* prompt 30 part 4: the story menu is an anchored dropdown on ALL viewports
+       (base rule: absolute, right-aligned under the button) - the fixed
+       bottom-sheet override is removed, so the bottom-sheet pattern is gone. */
 }
 @media (max-width: 480px) {
     .topbar { flex-direction: column; align-items: flex-start; }

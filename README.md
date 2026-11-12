@@ -93,6 +93,33 @@ The built bundle is committed, so a plain PHP deployment needs no Node toolchain
 
 Getting started is deliberately minimal – `composer install` and a built-in PHP server are enough. There are **no hardcoded credentials**: on a fresh install every route redirects to the first-start setup page (`/setup`) where you create the first admin account (username + password); once any user exists, `/setup` is gone for good. For scripted setups the CLI offers `php bin/user create <username> [--role=<admin|editor|user>]` with an interactive password prompt. composer.lock is intentionally not checked in, so every system keeps its own locally pinned versions. Of the roadmap, the core, the content pipeline, the pages reference module, the writing app module and the weighted relationship graph are done, as are version history with diffs (see "Version history and diffs"); the remaining roadmap item is a board.
 
+## Polish session (prompt 30)
+
+- **Mobile editor spellcheck:** on touch devices (`pointer: coarse`) `app.js`
+  sets `spellcheck="false"` on `.editor-prose` (one-shot MutationObserver, since
+  the bundle creates it after load). Reason: on Android Chrome, tapping a
+  red-underlined word opens the native suggestion menu and ends the IME session
+  (keyboard closes). Keyboard-side autocorrect while typing is unaffected.
+  Desktop keeps native spellcheck. Editor bundle untouched.
+- **Setup values are motivation, not limits:** the targets configured in Novel
+  Setup (idea/synopsis/chapter counts) are used EXCLUSIVELY to calculate and
+  display the progress bars. They are NOT storage or validation limits - texts
+  may be any length, and no validation is based on them.
+- **Dashboard full texts:** idea, short description (blurb) and long synopsis
+  are always rendered in FULL as server-side Markdown (league/commonmark,
+  `html_input=escape`, `allow_unsafe_links=false`, links get `rel="noopener"`)
+  - so the offline-cached dashboard shows formatted text too. If the word count
+  exceeds the personal target from Novel Setup, the block is collapsed via CSS
+  line-clamp (6 lines) with a 44px "Show more/Show less" toggle
+  (`aria-expanded`); at or below the target it shows fully without a toggle.
+  The idea has no word target (its progress entry is binary), so it always shows
+  in full. Exception: the story slider on the writing index deliberately stays
+  plain escaped text.
+- **Story menu:** the header dropdown is a normal anchored dropdown (absolute,
+  right-aligned under the ☰ button) on ALL viewports - the mobile fixed
+  bottom-sheet override was removed; the bottom-sheet pattern no longer exists
+  anywhere in the project (editor toolbar dropdowns are anchored popovers too).
+
 ## Architecture
 
 - **Generic content objects**: `content_objects` (UUID, `type`, `slug`) instead of a fixed `pages` table in the core; modules bring their own tables.
