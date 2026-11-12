@@ -151,7 +151,7 @@ final class PolishSession30Test extends TestCase
         $this->db->run("INSERT INTO chapter_synopses (id, project_id, slug, title) VALUES ('s1', 'p1', 'o', 'O')");
         $this->db->run("INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES ('c1', 'p1', 's1', 'ch1')");
         $this->db->run("INSERT INTO content_objects (id, type, slug, owner_id) VALUES ('c1', 'chapter', 'ch1', 'a1')");
-        $this->db->run("INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES ('r1', 'c1', 'Ch1', '**not markdown** in slider' || char(10) || char(10) || 'second paragraph' || char(10) || char(10) || 'third paragraph (MIN_PARAGRAPHS=3)', 'a1')");
+        $this->db->run("INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES ('r1', 'c1', 'Ch1', '**not markdown** in slider' || char(10) || char(10) || 'p2' || char(10) || char(10) || 'p3' || char(10) || char(10) || 'p4 (MIN_PARAGRAPHS=3, need > 3)', 'a1')");
         $db2 = $this->db;
         $controller = new WritingController($db2, new View($this->base), new Csrf($db2, $this->auth), new ProjectAccess($db2), new ContentRenderer($db2, new ModuleRegistry()));
         $body = $controller->index($this->admin)->body();

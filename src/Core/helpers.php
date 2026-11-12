@@ -97,17 +97,23 @@ function markdown_html(string $md): string
     static $converter = null;
     if ($converter === null) {
         $environment = new \League\CommonMark\Environment\Environment([
-            'html_input' => 'escape',
-            'allow_unsafe_links' => false,
-            'external_link' => [
-                'internal_hosts' => [], // every link counts as external
-                'open_in_new_window' => false,
-                'noopener' => 'all', // rel="noopener" on every rendered link
-            ],
+            'html_input' => 'escape',      // raw user HTML is escaped, never passed through
+            'allow_unsafe_links' => false, // javascript:/data: URIs never become links
         ]);
         $environment->addExtension(new \League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension());
         $environment->addExtension(new \League\CommonMark\Extension\GithubFlavoredMarkdownExtension());
-        $environment->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension());
+        // every rendered link gets rel="noopener" (own listener - deterministic)
+        $environment->addEventListener(
+            \League\CommonMark\Event\DocumentParsedEvent::class,
+            static function (\League\CommonMark\Event\DocumentParsedEvent $e): void {
+                foreach ($e->getDocument()->iterator() as $node) {
+                    if ($node instanceof \League\CommonMark\Extension\CommonMark\Node\Inline\Link) {
+                        $node->data->set('attributes/rel', 'noopener');
+                    }
+                }
+            },
+            -50
+        );
         $converter = new \League\CommonMark\MarkdownConverter($environment);
     }
     return $converter->convert($md)->getContent();
