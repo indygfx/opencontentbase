@@ -99,14 +99,13 @@ function markdown_html(string $md): string
         $converter = new \League\CommonMark\MarkdownConverter([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
-        ]);
-        $converter->getEnvironment()->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension([
             'external_link' => [
                 'internal_hosts' => [], // every link counts as external -> rel="noopener"
                 'open_in_new_window' => false,
                 'rel' => 'noopener',
             ],
-        ]));
+        ]);
+        $converter->getEnvironment()->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension());
     }
     return $converter->convert($md)->getContent();
 }
