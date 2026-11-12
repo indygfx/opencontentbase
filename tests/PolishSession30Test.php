@@ -111,7 +111,7 @@ final class PolishSession30Test extends TestCase
         $longBlurb = '**Bold** intro. ' . str_repeat('lorem ipsum dolor ', 30);
         $idea = 'First sentence here. Second sentence with **markdown** stays.';
         $this->db->run("INSERT INTO projects (id, owner_id, title, idea, blurb) VALUES ('p1', 'a1', 'Novel', ?, ?)", [$idea, $longBlurb]);
-        $this->db->run("UPDATE project_targets SET target_words_blurb = 20 WHERE project_id = 'p1'");
+        $this->db->run("INSERT OR REPLACE INTO project_targets (project_id, target_words_blurb) VALUES ('p1', 20)");
         $controller = new WritingController($this->db, new View($this->base), new Csrf($this->db, $this->auth), new ProjectAccess($this->db), new ContentRenderer($this->db, new ModuleRegistry()));
         $body = $controller->show($this->admin, 'p1')->body();
         // idea: full text, no first-sentence truncation, markdown rendered
@@ -132,7 +132,7 @@ final class PolishSession30Test extends TestCase
     public function testDashboardShortBlurbHasNoToggle(): void
     {
         $this->db->run("INSERT INTO projects (id, owner_id, title, blurb) VALUES ('p1', 'a1', 'Novel', 'tiny blurb')");
-        $this->db->run("UPDATE project_targets SET target_words_blurb = 150 WHERE project_id = 'p1'");
+        $this->db->run("INSERT OR REPLACE INTO project_targets (project_id, target_words_blurb) VALUES ('p1', 150)");
         $controller = new WritingController($this->db, new View($this->base), new Csrf($this->db, $this->auth), new ProjectAccess($this->db), new ContentRenderer($this->db, new ModuleRegistry()));
         $body = $controller->show($this->admin, 'p1')->body();
         $this->assertStringContainsString('tiny blurb', $body);
@@ -151,7 +151,7 @@ final class PolishSession30Test extends TestCase
         $this->db->run("INSERT INTO chapter_synopses (id, project_id, slug, title) VALUES ('s1', 'p1', 'o', 'O')");
         $this->db->run("INSERT INTO chapters (id, project_id, chapter_synopsis_id, slug) VALUES ('c1', 'p1', 's1', 'ch1')");
         $this->db->run("INSERT INTO content_objects (id, type, slug, owner_id) VALUES ('c1', 'chapter', 'ch1', 'a1')");
-        $this->db->run("INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES ('r1', 'c1', 'Ch1', '**not markdown** in slider' || char(10) || char(10) || 'second paragraph to pass MIN_PARAGRAPHS', 'a1')");
+        $this->db->run("INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES ('r1', 'c1', 'Ch1', '**not markdown** in slider' || char(10) || char(10) || 'second paragraph' || char(10) || char(10) || 'third paragraph (MIN_PARAGRAPHS=3)', 'a1')");
         $db2 = $this->db;
         $controller = new WritingController($db2, new View($this->base), new Csrf($db2, $this->auth), new ProjectAccess($db2), new ContentRenderer($db2, new ModuleRegistry()));
         $body = $controller->index($this->admin)->body();

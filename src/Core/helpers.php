@@ -96,16 +96,19 @@ function markdown_html(string $md): string
 {
     static $converter = null;
     if ($converter === null) {
-        $converter = new \League\CommonMark\GithubFlavoredMarkdownConverter([
+        $environment = new \League\CommonMark\Environment\Environment([
             'html_input' => 'escape',
             'allow_unsafe_links' => false,
             'external_link' => [
-                'internal_hosts' => [], // every link counts as external -> rel="noopener"
+                'internal_hosts' => [], // every link counts as external
                 'open_in_new_window' => false,
-                'noopener' => 'all', // rel=noopener on every rendered link
+                'noopener' => 'all', // rel="noopener" on every rendered link
             ],
         ]);
-        $converter->getEnvironment()->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension());
+        $environment->addExtension(new \League\CommonMark\Extension\CommonMark\CommonMarkCoreExtension());
+        $environment->addExtension(new \League\CommonMark\Extension\GithubFlavoredMarkdownExtension());
+        $environment->addExtension(new \League\CommonMark\Extension\ExternalLink\ExternalLinkExtension());
+        $converter = new \League\CommonMark\MarkdownConverter($environment);
     }
     return $converter->convert($md)->getContent();
 }
