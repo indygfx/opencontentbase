@@ -525,3 +525,91 @@
         btn.textContent = collapsed ? btn.dataset.less : btn.dataset.more;
     });
 })();
+
+/* Prompt 31 part 2: "Save draft" - background save via fetch POST to the
+   existing save endpoint (JSON branch: Accept: application/json +
+   X-Requested-With). No navigation, no reload, editor/focus untouched.
+   Success -> toast "Draft saved"; 422 -> toast with the server messages. */
+(function () {
+    'use strict';
+    function toast(msg) {
+        var t = document.createElement('div');
+        t.className = 'notice app-toast';
+        t.setAttribute('role', 'status');
+        var span = document.createElement('span');
+        span.textContent = msg;
+        t.appendChild(span);
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 5000);
+    }
+    document.querySelectorAll('.save-draft').forEach(function (btn) {
+        btn.addEventListener('click', function (ev) {
+            ev.preventDefault();
+            var form = btn.closest('form') || document.getElementById(btn.getAttribute('form') || '');
+            if (form === null || btn.disabled) {
+                return;
+            }
+            btn.disabled = true;
+            fetch(form.getAttribute('action') || window.location.pathname, {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (r) {
+                return r.json().catch(function () { return { ok: false, errors: [] }; })
+                    .then(function (d) { return { status: r.status, data: d }; });
+            }).then(function (res) {
+                btn.disabled = false;
+                if (res.status === 200 && res.data.ok) {
+                    toast(btn.dataset.msgSaved);
+                } else {
+                    toast((res.data.errors || []).join(' ') || btn.dataset.msgFailed);
+                }
+            }).catch(function () {
+                btn.disabled = false;
+                toast(btn.dataset.msgFailed);
+            });
+        });
+    });
+})();
+
+/* Prompt 31 part 3: sticky save dock (.editor-save-dock) on the chapter edit
+   page. Shows ONLY on meaningful DOWNWARD scroll (delta > MIN_DELTA px),
+   fades out IDLE_MS after scrolling stops; upward scroll alone never shows it;
+   typing without scrolling keeps it hidden. Hidden state uses visibility, so
+   it is not focusable. */
+(function () {
+    'use strict';
+    var dock = document.querySelector('.editor-save-dock');
+    if (dock === null) {
+        return;
+    }
+    var MIN_DELTA = 24;   // px - ignore micro-jitter
+    var IDLE_MS = 1200;   // fade-out delay after the last scroll
+    var lastY = window.scrollY || 0;
+    var idleTimer = null;
+    function show() {
+        dock.classList.add('is-visible');
+        dock.removeAttribute('aria-hidden');
+    }
+    function hide() {
+        dock.classList.remove('is-visible');
+        dock.setAttribute('aria-hidden', 'true');
+    }
+    function armIdle() {
+        if (idleTimer !== null) {
+            clearTimeout(idleTimer);
+        }
+        idleTimer = setTimeout(hide, IDLE_MS);
+    }
+    window.addEventListener('scroll', function () {
+        var y = window.scrollY || 0;
+        var delta = y - lastY;
+        lastY = y;
+        if (delta > MIN_DELTA) {
+            show();
+            armIdle();
+        } else if (dock.classList.contains('is-visible')) {
+            armIdle();
+        }
+    }, { passive: true });
+})();

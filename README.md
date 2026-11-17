@@ -120,6 +120,35 @@ Getting started is deliberately minimal – `composer install` and a built-in PH
   bottom-sheet override was removed; the bottom-sheet pattern no longer exists
   anywhere in the project (editor toolbar dropdowns are anchored popovers too).
 
+## Editor polish (prompt 31)
+
+- **Undo/redo fixed:** the toolbar buttons existed and tracked their disabled
+  state, but `MARK_COMMANDS` had no undo/redo entries, so no click handlers were
+  attached (no-op buttons). Fixed in `assets/editor/main.js`
+  (`undo: e => e.chain().focus().undo().run()`, same for redo; the StarterKit
+  history extension was already bundled) and rebuilt with `npm run build`
+  (esbuild -> `public/assets/js/editor.js`). While at it, `package.json` gained
+  the two tiptap v3 packages the source already imported
+  (`@tiptap/extension-highlight`, `@tiptap/extension-list`, pinned to the locked
+  3.31.4) - the documented build was broken without them.
+- **Save draft:** "Save draft" button next to Save/Cancel on the chapter edit
+  form AND in the sticky save dock. It POSTs the existing save endpoint via
+  fetch with `Accept: application/json` + `X-Requested-With: XMLHttpRequest`;
+  the endpoint answers `{ok:true}` (200) or `{ok:false, errors:[...]}` (422) -
+  same validation/guards, no duplicated logic, no new route. No navigation, no
+  reload, caret/focus untouched; toasts on success/failure.
+- **Sticky save dock** (`.editor-save-dock`, fixed bottom-centered with
+  `env(safe-area-inset-bottom)`): fades in only on meaningful DOWNWARD scroll
+  (delta > 24 px), fades out 1.2 s after scrolling stops; upward scroll or
+  typing alone never shows it. Hidden state uses `visibility` (not focusable).
+  Contains Save (normal form submit) + Save draft. The static form footer is
+  unchanged.
+
+**Manual checklist:** type mid-text -> scroll down -> dock fades in -> "Save
+draft" -> toast, caret untouched -> keep typing; stop scrolling -> dock fades
+out; scroll down again -> dock returns; undo/redo buttons work on desktop and
+mobile.
+
 ## Architecture
 
 - **Generic content objects**: `content_objects` (UUID, `type`, `slug`) instead of a fixed `pages` table in the core; modules bring their own tables.

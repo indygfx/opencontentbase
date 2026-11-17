@@ -270,6 +270,26 @@ img.avatar, .avatar-img { object-fit: cover; }
     overflow: visible;
 }
 .read-more__toggle { margin-top: 0.5rem; min-height: 44px; }
+/* Prompt 31 part 3: sticky save dock on the chapter edit page - fixed bottom
+   bar, fades in/out via opacity+visibility (hidden = not focusable) */
+.editor-save-dock {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    z-index: 40;
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+.editor-save-dock.is-visible { opacity: 1; visibility: visible; }
 /* Offline dashboard rows (prompt 29): stories not in the offline index are muted
    with the "online only" hint while the browser is offline */
 body.is-offline tr.is-online-only a { opacity: 0.45; pointer-events: none; }

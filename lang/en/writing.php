@@ -292,4 +292,7 @@ return [
     'offline_online_only' => 'Online only',
     'show_more' => 'Show more',
     'show_less' => 'Show less',
+    'save_draft' => 'Save draft',
+    'draft_saved' => 'Draft saved.',
+    'draft_save_failed' => 'Draft could not be saved.',
 ];

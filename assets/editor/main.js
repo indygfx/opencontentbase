@@ -203,6 +203,10 @@ function createToolbar() {
 }
 
 const MARK_COMMANDS = {
+  // prompt 31: undo/redo buttons were rendered + disabled-synced but had no
+  // command entry, so their click handlers were never attached (no-op buttons)
+  undo: (e) => e.chain().focus().undo().run(),
+  redo: (e) => e.chain().focus().redo().run(),
   bold: (e) => e.chain().focus().toggleBold().run(),
   italic: (e) => e.chain().focus().toggleItalic().run(),
   underline: (e) => e.chain().focus().toggleUnderline().run(),

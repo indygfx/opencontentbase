@@ -155,6 +155,13 @@ read-more line-clamp at the personal word target, story menu unified as an
 anchored dropdown on all viewports (bottom sheet removed project-wide).
 SW VERSION v8.
 
+**Done:** prompt 31 - editor polish: undo/redo fixed (missing MARK_COMMANDS
+entries in assets/editor/main.js, bundle rebuilt via npm run build; package.json
+gained the two tiptap packages the source already imported), draft save via a
+JSON branch on the existing chapter save endpoint (Accept/X-Requested-With ->
+{ok:true} / 422 {errors}, no new route), sticky save dock on the chapter edit
+page (down-scroll > 24px shows, 1.2s idle hides, visibility-based). SW v9.
+
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

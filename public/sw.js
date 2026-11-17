@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v8'; // prompt 30 (app.js/CSS/templates: spellcheck, read-more, markdown, story menu)
+const VERSION = 'v9'; // prompt 31 (app.js/CSS/templates + rebuilt editor.js: undo fix, draft save, save dock)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';

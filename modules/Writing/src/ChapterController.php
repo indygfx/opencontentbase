@@ -134,11 +134,17 @@ final class ChapterController
         if ($synopsisId !== $currentSynopsisId) {
             $synopsis = $synopsisId === '' ? null : $this->synopses->findSynopsisRow($projectId, $synopsisId);
             if ($synopsis === null) {
+                if ($this->wantsJson()) {
+                    return $this->jsonError(t('writing', 'error_pick_outline'));
+                }
                 return $this->editError($user, $projectId, $slug, $newSlug, $body,
                     t('writing', 'error_pick_outline'), null, true);
             }
             $assigned = $this->assignedChapter($projectId, $synopsis['id']);
             if ($assigned !== null) {
+                if ($this->wantsJson()) {
+                    return $this->jsonError(t('writing', 'error_outline_assigned'));
+                }
                 return $this->editError($user, $projectId, $slug, $newSlug, $body,
                     t('writing', 'error_outline_assigned'), $synopsis, true);
             }
@@ -157,6 +163,9 @@ final class ChapterController
             $error = null;
         }
         if ($error !== null) {
+            if ($this->wantsJson()) {
+                return $this->jsonError($error);
+            }
             return $this->editError($user, $projectId, $slug, $newSlug, $body, $error, null, true);
         }
         $currentSynopsis = $this->synopses->findSynopsisRow($projectId, $currentSynopsisId);
@@ -179,6 +188,13 @@ final class ChapterController
                     $summaryText, $body, $user->id()]
             );
         });
+        if ($this->wantsJson()) {
+            return new Response(
+                (string)json_encode(['ok' => true]),
+                200,
+                ['Content-Type' => 'application/json; charset=utf-8']
+            );
+        }
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($newSlug));
     }
 
@@ -296,6 +312,26 @@ final class ChapterController
     {
         $project = $this->findProject($projectId);
         return $project === null ? '' : (string)$project['title'];
+    }
+
+    /**
+     * Prompt 31 (draft save): AJAX requests signal JSON via Accept or
+     * X-Requested-With and get JSON responses instead of redirects/re-renders.
+     */
+    private function wantsJson(): bool
+    {
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        return str_contains($accept, 'application/json')
+            || (string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+    }
+
+    private function jsonError(string $message): Response
+    {
+        return new Response(
+            (string)json_encode(['ok' => false, 'errors' => [$message]]),
+            422,
+            ['Content-Type' => 'application/json; charset=utf-8']
+        );
     }
 
     private function editError(

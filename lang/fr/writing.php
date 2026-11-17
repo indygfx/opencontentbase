@@ -292,4 +292,7 @@ return [
     'offline_online_only' => 'En ligne uniquement',
     'show_more' => 'Afficher plus',
     'show_less' => 'Afficher moins',
+    'save_draft' => 'Enregistrer le brouillon',
+    'draft_saved' => 'Brouillon enregistré.',
+    'draft_save_failed' => 'Impossible d’enregistrer le brouillon.',
 ];

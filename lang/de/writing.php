@@ -292,4 +292,7 @@ return [
     'offline_online_only' => 'Nur online',
     'show_more' => 'Mehr anzeigen',
     'show_less' => 'Weniger anzeigen',
+    'save_draft' => 'Zwischenspeichern',
+    'draft_saved' => 'Entwurf gespeichert.',
+    'draft_save_failed' => 'Entwurf konnte nicht gespeichert werden.',
 ];

@@ -10,7 +10,7 @@
             <?= $synopsisSummaryHtml ?>
         </div>
     <?php endif; ?>
-    <form method="post" action="<?= $isEdit
+    <form id="chapter-form" method="post" action="<?= $isEdit
         ? '/writing/' . e($projectId) . '/chapters/' . e($chapter['slug'])
         : '/writing/' . e($projectId) . '/chapters' ?>">
         <?= $csrf->field() ?>
@@ -29,5 +29,16 @@
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($chapter['body'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
         <a class="button button-secondary" href="<?= $isEdit ? '/writing/' . e($projectId) . '/chapters/' . e($chapter['slug']) : '/writing/' . e($projectId) ?>"><?= e(t('core', 'cancel')) ?></a>
+        <button type="button" class="button button-secondary save-draft"
+            data-msg-saved="<?= e(t('writing', 'draft_saved')) ?>"
+            data-msg-failed="<?= e(t('writing', 'draft_save_failed')) ?>"><?= e(t('writing', 'save_draft')) ?></button>
     </form>
 </section>
+<?php /* prompt 31 part 3: sticky save dock - fixed bottom bar, fades in on
+       downward scroll (app.js), contains normal Save (form submit) + Save draft */ ?>
+<div class="editor-save-dock" aria-hidden="true">
+    <button type="submit" form="chapter-form" class="button"><?= e(t('pages', 'save')) ?></button>
+    <button type="button" form="chapter-form" class="button button-secondary save-draft"
+        data-msg-saved="<?= e(t('writing', 'draft_saved')) ?>"
+        data-msg-failed="<?= e(t('writing', 'draft_save_failed')) ?>"><?= e(t('writing', 'save_draft')) ?></button>
+</div>

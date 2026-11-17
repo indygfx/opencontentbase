@@ -292,4 +292,7 @@ return [
     'offline_online_only' => 'Solo en línea',
     'show_more' => 'Mostrar más',
     'show_less' => 'Mostrar menos',
+    'save_draft' => 'Guardar borrador',
+    'draft_saved' => 'Borrador guardado.',
+    'draft_save_failed' => 'No se pudo guardar el borrador.',
 ];

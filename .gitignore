@@ -12,3 +12,4 @@ snapshot*
 /public/assets/themes/*
 !/public/assets/themes/nerdline/
 /public/assets/overrides/
+node_modules
