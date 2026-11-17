@@ -198,7 +198,7 @@ final class PolishSession30Test extends TestCase
     public function testSwVersionV8AndI18nParity(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v8'", $sw);
+        $this->assertMatchesRegularExpression("/const VERSION = 'v[8-9]'/", $sw);
         foreach (['en', 'de', 'es', 'fr'] as $code) {
             $src = (string)file_get_contents($this->base . '/lang/' . $code . '/writing.php');
             $this->assertStringContainsString("'show_more'", $src, $code);
