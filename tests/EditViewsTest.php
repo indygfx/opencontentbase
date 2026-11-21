@@ -102,7 +102,8 @@ final class EditViewsTest extends TestCase
         $with = $view->render('templates/layout.php', ['title' => 'T', 'user' => $this->admin, 'csrf' => $csrf, 'content' => '<p>x</p>', 'bodyClass' => 'editing']);
         $this->assertStringContainsString('<body class="editing"', $with);
         $without = $view->render('templates/layout.php', ['title' => 'T', 'user' => $this->admin, 'csrf' => $csrf, 'content' => '<p>x</p>']);
-        $this->assertStringContainsString('<body data-update-available=', $without);
+        $this->assertStringContainsString('<body data-session-expired=', $without, 'body carries the session-expired toast text (prompt 32)');
+        $this->assertStringContainsString('data-update-available=', $without);
         $this->assertStringNotContainsString('class="editing"', $without);
     }
 
@@ -113,7 +114,7 @@ final class EditViewsTest extends TestCase
             $this->assertStringContainsString('button button-secondary', $src, $tpl . ': quiet cancel variant');
             $this->assertStringContainsString("t('core', 'cancel')", $src, $tpl . ': cancel label key');
             $savePos = strpos($src, 'type="submit"');
-            $cancelPos = strpos($src, 'button-secondary');
+            $cancelPos = strpos($src, '<a class="button button-secondary"');
             $this->assertNotFalse($savePos, $tpl . ': save submit');
             $this->assertNotFalse($cancelPos, $tpl . ': cancel link');
             $this->assertGreaterThan($savePos, $cancelPos, $tpl . ': Save renders before Cancel');
@@ -197,7 +198,7 @@ final class EditViewsTest extends TestCase
     public function testSwVersionBumpedInSameChange(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertMatchesRegularExpression("/const VERSION = 'v[4-9]'/", $sw, 'prompt 27b bumps master.css+editor.css -> v4+');
+        $this->assertMatchesRegularExpression("/const VERSION = 'v([4-9]|1\\d)'/", $sw, 'bumped past v4');
     }
 
     public function testPrompt27bSpacingRulesScopedToEditingInMobileBlockOnly(): void

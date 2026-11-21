@@ -100,7 +100,7 @@ final class SessionExpiry32Test extends TestCase
         $this->assertStringContainsString("\$path !== '/logout'", $app, 'logout bypasses the CSRF check');
         $this->assertStringContainsString('csrfFail(', $app);
         $this->assertStringContainsString("'code' => 'csrf_expired'", $app, 'AJAX 403 carries the JSON hint');
-        $this->assertStringContainsString("'return=' . rawurlencode(\$path) . '&expired=1'", $app);
+        $this->assertStringContainsString("return=' . rawurlencode(\$path) . '&expired=1'", $app);
         $this->assertStringContainsString("'/session-check'", $app, 'heartbeat endpoint registered');
         $this->assertMatchesRegularExpression('/204/', $app);
         $this->assertMatchesRegularExpression('/401/', $app);
