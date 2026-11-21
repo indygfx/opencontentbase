@@ -162,6 +162,15 @@ JSON branch on the existing chapter save endpoint (Accept/X-Requested-With ->
 {ok:true} / 422 {errors}, no new route), sticky save dock on the chapter edit
 page (down-scroll > 24px shows, 1.2s idle hides, visibility-based). SW v9.
 
+**Done:** prompt 32 - CSRF/session expiry: token stability fix (session token as
+single source of truth, cookie synced - no rotation), CSRF 403 never silent
+(AJAX JSON {code:csrf_expired, login} + global fetch wrapper with toast and
+return-redirect; form path 302 to /login?return=...&expired=1), draft rescue
+per chapter (stash on 403, banner Restore/Discard after re-login, cleared on
+save), logout bypasses CSRF and always destroys the session, heartbeat
+GET /session-check (204/401, network-only, 5-min throttle on visibilitychange).
+SW VERSION v10.
+
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

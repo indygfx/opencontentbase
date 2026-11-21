@@ -124,8 +124,10 @@ final class App
         }
 
         $handler = $route['handler'];
-        if ($method === 'POST' && !$this->csrf->validate()) {
-            $this->fail(403, 'Invalid or missing CSRF token.');
+        // prompt 32: logout must ALWAYS work - a CSRF mismatch means the session
+        // state is already broken, so logout destroys the session regardless.
+        if ($method === 'POST' && $path !== '/logout' && !$this->csrf->validate()) {
+            $this->csrfFail($path);
             return;
         }
         $response = $handler($route['params'], $user);
@@ -153,6 +155,11 @@ final class App
         $this->router->get('/login', fn ($params, $user) => $controller->showLogin());
         $this->router->post('/login', fn ($params, $user) => $controller->login());
         $this->router->post('/logout', fn ($params, $user) => $controller->logout());
+        // prompt 32 part 5: session heartbeat for long-open tabs / returning PWA
+        // users. Trivial (no rendering, one auth lookup), network-only in sw.js.
+        $this->router->get('/session-check', fn ($params, $user) => $user === null
+            ? new Response('', 401)
+            : new Response('', 204));
         $this->router->get('/profile', fn ($params, $user) => $controller->showProfile($user));
         $this->router->post('/profile/password', fn ($params, $user) => $controller->changePassword($user));
         $this->router->post('/profile/language', fn ($params, $user) => $controller->changeLanguage($user), ['user']);
@@ -174,6 +181,31 @@ final class App
     {
         $row = $this->db->one('SELECT COUNT(*) AS c FROM users');
         return (int)($row['c'] ?? 0) === 0;
+    }
+
+    /**
+     * Prompt 32 part 2: a CSRF 403 must never be silent. AJAX requests get a 403
+     * JSON body with code=csrf_expired + the login URL (client shows the toast and
+     * redirects); regular form POSTs get a 302 to the same login URL with
+     * expired=1 (the login page then shows the "session expired" notice).
+     * The return parameter lands the user back on the page after re-login.
+     */
+    private function csrfFail(string $path): void
+    {
+        $loginUrl = '/login?return=' . rawurlencode($path) . '&expired=1';
+        $accept = (string)($_SERVER['HTTP_ACCEPT'] ?? '');
+        $ajax = str_contains($accept, 'application/json')
+            || (string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest';
+        if ($ajax) {
+            Response::json([
+                'ok' => false,
+                'code' => 'csrf_expired',
+                'errors' => ['Invalid or missing CSRF token.'],
+                'login' => $loginUrl,
+            ], 403)->send();
+            return;
+        }
+        Response::redirect($loginUrl)->send();
     }
 
     private function fail(int $code, string $message): void

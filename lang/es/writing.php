@@ -295,4 +295,7 @@ return [
     'save_draft' => 'Guardar borrador',
     'draft_saved' => 'Borrador guardado.',
     'draft_save_failed' => 'No se pudo guardar el borrador.',
+    'draft_rescue_found' => 'Borrador sin guardar de {time} encontrado',
+    'draft_rescue_restore' => 'Restaurar',
+    'draft_rescue_discard' => 'Descartar',
 ];

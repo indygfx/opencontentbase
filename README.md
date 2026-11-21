@@ -149,6 +149,39 @@ draft" -> toast, caret untouched -> keep typing; stop scrolling -> dock fades
 out; scroll down again -> dock returns; undo/redo buttons work on desktop and
 mobile.
 
+## Session / CSRF expiry (prompt 32)
+
+**Root cause (diagnosed):** the CSRF token lived in two places - the
+`sessions.csrf_token` column and the `cb_csrf` session cookie. When the browser
+lost the session cookie (restart with "continue session", eviction) while the
+persistent `cb_session` cookie still logged the user in, a NEW cookie token was
+generated that no longer matched the stored one -> every POST failed with 403
+while the page still looked logged in. SW-cached page snapshots amplified this
+(old embedded token). **Fix:** no rotation - while a session exists,
+`sessions.csrf_token` is the single source of truth and the cookie is synced to
+it, so the token is stable for the whole session lifetime and cached snapshots
+stay valid until the session expires.
+
+- **A CSRF 403 is never silent:** AJAX POSTs get `403 {code:'csrf_expired',
+  login:...}`; app.js wraps `fetch` globally - on any POST 403 it stashes a
+  rescue draft (editor pages), shows the "Session expired" toast and redirects
+  to `/login?return=<current>&expired=1`. Plain form POSTs get a 302 to the same
+  URL; the login page shows the notice via `expired=1`. After re-login the
+  `return` parameter (same-origin paths only) lands the user back where they were.
+- **Draft rescue:** on a 403 on the chapter edit page, the current editor
+  Markdown is stashed in `localStorage['draft-rescue/<project>/<chapter>']` with
+  a timestamp. After re-login + return, a non-blocking banner at the top of the
+  editor offers Restore (fills the editor via the hidden textarea + reload) /
+  Discard. The slot is cleared on every successful save (draft and form).
+- **Logout always works:** `/logout` bypasses the CSRF check (a mismatch means
+  the session state is broken - destroying it is exactly what the user wants);
+  the anomaly is logged via `error_log`.
+- **Early detection:** navigation already hits the auth guard (expired session
+  -> redirect to login). Additionally a heartbeat in app.js pings
+  `GET /session-check` (204 authed / 401 not, network-only in the SW, no
+  rendering) on `visibilitychange` -> visible AND online, throttled to once per
+  5 minutes; on 401 it toasts and redirects to login with the return URL.
+
 ## Architecture
 
 - **Generic content objects**: `content_objects` (UUID, `type`, `slug`) instead of a fixed `pages` table in the core; modules bring their own tables.

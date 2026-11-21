@@ -290,6 +290,8 @@ img.avatar, .avatar-img { object-fit: cover; }
     transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 .editor-save-dock.is-visible { opacity: 1; visibility: visible; }
+/* Prompt 32 part 3: draft-rescue banner on the chapter edit page (non-blocking) */
+.draft-rescue-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
 /* Offline dashboard rows (prompt 29): stories not in the offline index are muted
    with the "online only" hint while the browser is offline */
 body.is-offline tr.is-online-only a { opacity: 0.45; pointer-events: none; }

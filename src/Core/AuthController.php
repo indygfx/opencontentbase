@@ -45,14 +45,18 @@ final class AuthController
         if (trim((string)($_GET['setup'] ?? '')) === 'done') {
             $success = t('core', 'setup_success');
         }
+        // prompt 32: expired=1 -> the session-expired notice; return=<path> is
+        // carried through the form so a successful re-login lands back there
+        $expired = (string)($_GET['expired'] ?? '') === '1';
         return Response::html($this->view->render('templates/layout.php', [
             'title' => t('core', 'login_title'),
             'user' => null,
             'csrf' => $this->csrf,
             'content' => $this->view->render('templates/login.php', [
                 'csrf' => $this->csrf,
-                'error' => null,
+                'error' => $expired ? t('core', 'session_expired') : null,
                 'success' => $success,
+                'return' => $this->sanitizeReturn((string)($_GET['return'] ?? '')),
             ]),
         ]));
     }
@@ -79,7 +83,15 @@ final class AuthController
             return $this->loginPage(t('core', 'login_error'), 401);
         }
         $this->throttler?->recordSuccess($username);
-        return Response::redirect('/writing');
+        // prompt 32: honor the return target (same-origin paths only)
+        $return = $this->sanitizeReturn((string)($_POST['return'] ?? ''));
+        return Response::redirect($return !== '' ? $return : '/writing');
+    }
+
+    /** Only same-origin paths starting with a single slash are valid returns. */
+    private function sanitizeReturn(string $return): string
+    {
+        return str_starts_with($return, '/') && !str_starts_with($return, '//') ? $return : '';
     }
 
     private function throttleMessage(int $seconds): string
@@ -89,6 +101,11 @@ final class AuthController
 
     private function loginPage(string $error, int $status): Response
     {
+        return $this->renderLogin($error, null, $status);
+    }
+
+    private function renderLogin(string $error, ?string $success, int $status = 200): Response
+    {
         return Response::html($this->view->render('templates/layout.php', [
             'title' => t('core', 'login_title'),
             'user' => null,
@@ -97,12 +114,20 @@ final class AuthController
                 'csrf' => $this->csrf,
                 'error' => $error,
                 'success' => null,
+                'return' => $this->sanitizeReturn((string)($_POST['return'] ?? '')),
             ]),
         ]), $status);
     }
 
     public function logout(): Response
     {
+        // prompt 32 part 4: logout is intentionally reachable without a valid
+        // CSRF token (App bypasses the check for /logout) - the session is
+        // destroyed no matter what, which is exactly what the user wants when
+        // the token state is broken.
+        if (!($this->csrf->validate())) {
+            error_log('prompt 32: logout with invalid CSRF token - session destroyed anyway');
+        }
         $this->auth->logout();
         return Response::redirect('/login');
     }

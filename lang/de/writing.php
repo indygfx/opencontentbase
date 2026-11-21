@@ -295,4 +295,7 @@ return [
     'save_draft' => 'Zwischenspeichern',
     'draft_saved' => 'Entwurf gespeichert.',
     'draft_save_failed' => 'Entwurf konnte nicht gespeichert werden.',
+    'draft_rescue_found' => 'Ungespeicherter Entwurf von {time} gefunden',
+    'draft_rescue_restore' => 'Wiederherstellen',
+    'draft_rescue_discard' => 'Verwerfen',
 ];

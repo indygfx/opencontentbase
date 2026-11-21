@@ -191,7 +191,7 @@ final class EditorPolish31Test extends TestCase
     public function testSwV9AndI18nParity(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v9'", $sw);
+        $this->assertMatchesRegularExpression("/const VERSION = 'v(9|1\\d)'/", $sw);
         foreach (['en', 'de', 'es', 'fr'] as $code) {
             $src = (string)file_get_contents($this->base . '/lang/' . $code . '/writing.php');
             foreach (['save_draft', 'draft_saved', 'draft_save_failed'] as $key) {

@@ -1,4 +1,12 @@
 <section class="card">
+    <?php /* prompt 32 part 3: draft-rescue banner - app.js reveals it when a
+           stashed draft-rescue/<project>/<chapter> exists (stashed on a CSRF 403) */ ?>
+    <div class="draft-rescue-banner notice" id="draft-rescue-banner" hidden
+        data-found-template="<?= e(t('writing', 'draft_rescue_found')) ?>">
+        <span data-rescue-text></span>
+        <button type="button" class="button" data-rescue-restore><?= e(t('writing', 'draft_rescue_restore')) ?></button>
+        <button type="button" class="button button-secondary" data-rescue-discard><?= e(t('writing', 'draft_rescue_discard')) ?></button>
+    </div>
     <p class="muted"><a href="/writing/<?= e($projectId) ?>">&larr; <?= e($projectTitle) ?></a></p>
     <h1><?= $isEdit ? e(t('writing', 'edit_prefix', ['title' => (string)($chapter['title'] ?? '')])) : e(t('writing', 'new_chapter')) ?></h1>
     <?php if (!empty($error)): ?>

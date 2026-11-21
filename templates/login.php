@@ -8,6 +8,9 @@
     <?php endif; ?>
     <form method="post" action="/login">
         <?= ($csrf ?? null) !== null ? $csrf->field() : '' ?>
+        <?php if (!empty($return)): ?>
+            <input type="hidden" name="return" value="<?= e($return) ?>">
+        <?php endif; ?>
         <label for="username"><?= e(t('core', 'login_username')) ?></label>
         <input id="username" name="username" required autofocus autocomplete="username">
         <label for="password"><?= e(t('core', 'login_password')) ?></label>

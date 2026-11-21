@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v9'; // prompt 31 (app.js/CSS/templates + rebuilt editor.js: undo fix, draft save, save dock)
+const VERSION = 'v10'; // prompt 32 (CSRF/session expiry: app.js/layout/templates + /session-check network-only)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';
@@ -114,6 +114,11 @@ self.addEventListener('fetch', function (event) {
         return; // let the browser handle cross-origin requests
     }
     var path = url.pathname;
+
+    // Session heartbeat (prompt 32): always network-only, never cached
+    if (path === '/session-check') {
+        return;
+    }
 
     // Static assets + manifest: cache-first.
     if (path.indexOf(ASSET_PREFIX) === 0 || path === '/manifest.webmanifest') {

@@ -81,4 +81,5 @@ return [
     'profile_avatar_too_big' => 'Das Bild ist zu groß (max. 5 MB).',
     'profile_avatar_invalid' => 'Nicht unterstützter Bildtyp - JPG, PNG, WebP oder GIF.',
     'cancel' => 'Abbrechen',
+    'session_expired' => 'Sitzung abgelaufen - bitte erneut anmelden',
 ];

@@ -559,7 +559,11 @@
                     .then(function (d) { return { status: r.status, data: d }; });
             }).then(function (res) {
                 btn.disabled = false;
+                if (res.data && res.data.code === 'csrf_expired') {
+                    return; // prompt 32: the global 403 wrapper shows the toast + redirects
+                }
                 if (res.status === 200 && res.data.ok) {
+                    if (window.cbClearRescue) { window.cbClearRescue(); }
                     toast(btn.dataset.msgSaved);
                 } else {
                     toast((res.data.errors || []).join(' ') || btn.dataset.msgFailed);
@@ -612,4 +616,129 @@
             armIdle();
         }
     }, { passive: true });
+})();
+
+/* Prompt 32: CSRF/session expiry - never silent. A global fetch wrapper catches
+   ANY POST answered with 403: stash a rescue draft when on the chapter editor,
+   show the "session expired" toast, redirect to /login?return=<current>&expired=1
+   (the server answers AJAX 403s with JSON {code:'csrf_expired', login:...};
+   plain form POSTs get a 302 to the same URL and the login page shows the
+   notice via expired=1). The rescue key is one slot per chapter and is cleared
+   on every successful save (draft + form submit). */
+(function () {
+    'use strict';
+    function toast(msg) {
+        var t = document.createElement('div');
+        t.className = 'notice app-toast';
+        t.setAttribute('role', 'status');
+        var span = document.createElement('span');
+        span.textContent = msg;
+        t.appendChild(span);
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 5000);
+    }
+    function expiredMsg() {
+        return document.body.dataset.sessionExpired || 'Session expired - please log in again';
+    }
+    function loginUrl() {
+        return '/login?return=' + encodeURIComponent(window.location.pathname + window.location.search) + '&expired=1';
+    }
+    function rescueKey() {
+        var form = document.getElementById('chapter-form');
+        if (form === null) { return null; }
+        var m = (form.getAttribute('action') || '').match(/\/writing\/([^/]+)\/chapters\/([^/?]+)/);
+        return m ? 'draft-rescue/' + m[1] + '/' + m[2] : null;
+    }
+    function stashRescue() {
+        var key = rescueKey();
+        var ta = document.querySelector('textarea[data-editor]');
+        if (key === null || ta === null) { return; }
+        try { localStorage.setItem(key, JSON.stringify({ md: ta.value, ts: Date.now() })); } catch (e) {}
+    }
+    function sessionExpired() {
+        stashRescue();
+        toast(expiredMsg());
+        window.location.href = loginUrl();
+    }
+    window.cbClearRescue = function () {
+        var key = rescueKey();
+        if (key !== null) { try { localStorage.removeItem(key); } catch (e) {} }
+    };
+    var origFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        var method = ((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+        return origFetch(input, init).then(function (res) {
+            if (res.status === 403 && method === 'POST') {
+                sessionExpired();
+            }
+            return res;
+        });
+    };
+    // clear the rescue slot on regular form submit too (a 403 re-stashes via the wrapper)
+    var chapterForm = document.getElementById('chapter-form');
+    if (chapterForm !== null) {
+        chapterForm.addEventListener('submit', function () { window.cbClearRescue(); });
+    }
+    // rescue banner on the chapter edit page (non-blocking, top of the card)
+    var banner = document.getElementById('draft-rescue-banner');
+    var key = rescueKey();
+    if (banner !== null && key !== null) {
+        var raw = null;
+        try { raw = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { raw = null; }
+        if (raw !== null && raw.ts) {
+            banner.hidden = false;
+            var textEl = banner.querySelector('[data-rescue-text]');
+            if (textEl !== null) {
+                textEl.textContent = (banner.dataset.foundTemplate || '').replace('{time}', new Date(raw.ts).toLocaleString());
+            }
+            banner.querySelector('[data-rescue-restore]').addEventListener('click', function () {
+                var ta = document.querySelector('textarea[data-editor]');
+                if (ta !== null) { ta.value = raw.md || ''; }
+                try { localStorage.removeItem(key); } catch (e) {}
+                window.location.reload(); // bundle re-initializes the editor from the textarea
+            });
+            banner.querySelector('[data-rescue-discard]').addEventListener('click', function () {
+                try { localStorage.removeItem(key); } catch (e) {}
+                banner.hidden = true;
+            });
+        }
+    }
+})();
+
+/* Prompt 32 part 5: session heartbeat for long-open tabs / returning PWA users.
+   On visibilitychange -> visible AND online, at most once per 5 minutes, ping
+   GET /session-check (network-only in the SW, skipped while offline). 401 ->
+   toast + redirect to login with the return URL. The 403 path stays the final
+   safety net for save attempts. */
+(function () {
+    'use strict';
+    var THROTTLE_MS = 5 * 60 * 1000;
+    var KEY = 'cb-session-check';
+    function toast(msg) {
+        var t = document.createElement('div');
+        t.className = 'notice app-toast';
+        t.setAttribute('role', 'status');
+        var span = document.createElement('span');
+        span.textContent = msg;
+        t.appendChild(span);
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 5000);
+    }
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState !== 'visible' || !navigator.onLine) {
+            return;
+        }
+        var last = 0;
+        try { last = parseInt(localStorage.getItem(KEY) || '0', 10) || 0; } catch (e) {}
+        if (Date.now() - last < THROTTLE_MS) {
+            return;
+        }
+        try { localStorage.setItem(KEY, String(Date.now())); } catch (e) {}
+        fetch('/session-check', { headers: { 'X-Requested-With': 'XMLHttpRequest' } }).then(function (r) {
+            if (r.status === 401) {
+                toast(document.body.dataset.sessionExpired || 'Session expired - please log in again');
+                window.location.href = '/login?return=' + encodeURIComponent(window.location.pathname + window.location.search) + '&expired=1';
+            }
+        }).catch(function () { /* offline or failed - next visible visit retries */ });
+    });
 })();

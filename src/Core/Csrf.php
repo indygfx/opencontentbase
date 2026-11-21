@@ -11,13 +11,40 @@ final class Csrf
     {
     }
 
+    /**
+     * Prompt 32: while a session exists, the token stored in sessions.csrf_token
+     * is the SINGLE source of truth and the cb_csrf cookie is only a mirror that
+     * gets synced to it. (Before, a lost session cookie regenerated a fresh
+     * cookie token that no longer matched sessions.csrf_token -> every POST
+     * failed with 403 while the persistent session cookie still logged the user
+     * in. No rotation: the token stays stable for the whole session lifetime.)
+     */
     public function token(): string
     {
-        $token = $_COOKIE[self::COOKIE] ?? '';
-        if (is_string($token) && preg_match('/^[0-9a-f]{64}$/', $token) === 1) {
-            return $token;
+        $sessionToken = $this->auth->currentCsrfToken();
+        if ($sessionToken !== null) {
+            if ($this->cookieValue() !== $sessionToken) {
+                $this->setCookieValue($sessionToken);
+            }
+            return $sessionToken;
         }
-        $token = bin2hex(random_bytes(32));
+        // logged out: cookie-only token (there is no session row to store it in)
+        $token = $this->cookieValue();
+        if ($token === null) {
+            $token = bin2hex(random_bytes(32));
+            $this->setCookieValue($token);
+        }
+        return $token;
+    }
+
+    private function cookieValue(): ?string
+    {
+        $token = $_COOKIE[self::COOKIE] ?? '';
+        return is_string($token) && preg_match('/^[0-9a-f]{64}$/', $token) === 1 ? $token : null;
+    }
+
+    private function setCookieValue(string $token): void
+    {
         setcookie(self::COOKIE, $token, [
             'expires' => 0,
             'path' => '/',
@@ -25,14 +52,6 @@ final class Csrf
             'samesite' => 'Lax',
         ]);
         $_COOKIE[self::COOKIE] = $token;
-        $sessionId = $this->auth->currentSessionId();
-        if ($sessionId !== null) {
-            $this->db->run(
-                'UPDATE sessions SET csrf_token = ? WHERE id = ? AND csrf_token IS NULL',
-                [$token, $sessionId]
-            );
-        }
-        return $token;
     }
 
     public function validate(): bool

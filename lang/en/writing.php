@@ -295,4 +295,7 @@ return [
     'save_draft' => 'Save draft',
     'draft_saved' => 'Draft saved.',
     'draft_save_failed' => 'Draft could not be saved.',
+    'draft_rescue_found' => 'Unsaved draft from {time} found',
+    'draft_rescue_restore' => 'Restore',
+    'draft_rescue_discard' => 'Discard',
 ];

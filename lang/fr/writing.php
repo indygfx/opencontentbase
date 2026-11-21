@@ -295,4 +295,7 @@ return [
     'save_draft' => 'Enregistrer le brouillon',
     'draft_saved' => 'Brouillon enregistré.',
     'draft_save_failed' => 'Impossible d’enregistrer le brouillon.',
+    'draft_rescue_found' => 'Brouillon non enregistré du {time} trouvé',
+    'draft_rescue_restore' => 'Restaurer',
+    'draft_rescue_discard' => 'Ignorer',
 ];
