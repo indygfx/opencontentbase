@@ -144,9 +144,12 @@ final class ChapterImage33Test extends TestCase
 
     public function testUploadRejectsOversizeAndBogusContent(): void
     {
+        $_SERVER['HTTP_ACCEPT'] = 'application/json'; // prompt 34: image actions are fetch-only
+        $_SERVER['HTTP_X_REQUESTED_WITH'] = 'XMLHttpRequest';
         $_FILES['image'] = $this->pngUpload(6 * 1024 * 1024); // > 5 MB
         $r = $this->chapters()->uploadImage($this->owner, 'p1', 'ch1');
-        $this->assertSame(200, $r->status(), 'error re-renders the edit form');
+        $this->assertSame(422, $r->status(), 'prompt 34: validation errors are 422 JSON, never a re-render');
+        $this->assertSame('application/json; charset=utf-8', $r->header('Content-Type'));
         $this->assertStringContainsString('too large', $r->body());
         $this->assertNull($this->db->one("SELECT image_path FROM chapters WHERE id = 'c1'")['image_path']);
         // bogus content with image mime -> getimagesize check rejects
@@ -154,7 +157,7 @@ final class ChapterImage33Test extends TestCase
         file_put_contents($tmp, 'this is not an image');
         $_FILES['image'] = ['name' => 'fake.png', 'type' => 'image/png', 'tmp_name' => $tmp, 'error' => UPLOAD_ERR_OK, 'size' => filesize($tmp)];
         $r = $this->chapters()->uploadImage($this->owner, 'p1', 'ch1');
-        $this->assertSame(200, $r->status());
+        $this->assertSame(422, $r->status());
         $this->assertNull($this->db->one("SELECT image_path FROM chapters WHERE id = 'c1'")['image_path']);
         $this->assertFileDoesNotExist($this->basePath . '/data/chapters/c1.png');
         // guard: stranger cannot upload
@@ -234,7 +237,7 @@ final class ChapterImage33Test extends TestCase
         $outside = substr($css, 0, (int)strpos($css, ':root')) . substr($css, (int)$rootEnd + 1);
         $this->assertSame(0, (int)preg_match('/#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(/', $outside));
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v11'", $sw);
+        $this->assertMatchesRegularExpression("/const VERSION = 'v(11|1\\d)'/", $sw);
         foreach (['en', 'de', 'es', 'fr'] as $code) {
             $src = (string)file_get_contents($this->base . '/lang/' . $code . '/writing.php');
             foreach (['chapter_image', 'chapter_image_upload', 'chapter_image_remove', 'chapter_image_too_big', 'confirm_remove_chapter_image'] as $key) {

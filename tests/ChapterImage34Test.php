@@ -193,8 +193,9 @@ final class ChapterImage34Test extends TestCase
         $this->assertStringContainsString('new FormData(form)', $js);
         $this->assertStringContainsString("'X-Requested-With': 'XMLHttpRequest'", $js);
         $this->assertStringContainsString('.image-preview', $js, 'only the preview is swapped on success');
-        $this->assertStringContainsString('window.location', $js) === false || true; // navigation only via prompt-32 403 path
-        $this->assertStringNotContainsString('location.reload()', $js, 'image actions never reload');
+        $block = substr($js, (int)strpos($js, 'Prompt 34'));
+        $this->assertStringNotContainsString('location.reload()', $block, 'image actions never reload (the prompt-32 rescue restore is a different, explicit flow)');
+        $this->assertStringNotContainsString('location.href', $block, 'image actions never navigate');
     }
 
     public function testSwV12AndI18nParity(): void
