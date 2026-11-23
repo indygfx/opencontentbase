@@ -188,7 +188,7 @@ final class ChapterImage33Test extends TestCase
         $body = $c->show($this->member, 'p1', 'ch1')->body();
         $this->assertStringContainsString('class="chapter-illustration"', $body);
         $this->assertMatchesRegularExpression('#/chapters/ch1/image\?v=\d+#', $body, 'mtime cache-buster');
-        $this->assertStringContainsString('alt="Ch1"', $body);
+        $this->assertStringContainsString('alt="Outline"', $body, 'alt = chapter title (synopsis title here)');
     }
 
     public function testOfflineManifestIncludesChapterImageUrl(): void
@@ -212,7 +212,8 @@ final class ChapterImage33Test extends TestCase
         $this->assertTrue($zip->open($result['path']) === true);
         $this->assertNotFalse($zip->locateName('images/chapter-c1.png'), 'image file in the ZIP');
         $md = $zip->getFromName('chapters/ch1.md');
-        $this->assertStringContainsString('![Ch1](images/chapter-c1.png)', $md, 'image markdown reference at the top of the chapter file');
+        $this->assertStringContainsString('](images/chapter-c1.png)', $md, 'image markdown reference in the chapter file');
+        $this->assertStringContainsString('![Outline](images/chapter-c1.png)', $md);
         $zip->close();
         unlink($result['path']);
     }

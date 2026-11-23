@@ -103,7 +103,7 @@ final class MigrationOrderTest extends TestCase
         preg_match_all('/^\\s*\\/\\/ v(\\d+):/m', $source, $matches, PREG_OFFSET_CAPTURE);
         $versions = array_map(fn (array $m): int => (int)$m[0], $matches[1]);
 
-        $this->assertSame(range(2, 15), $versions, 'migration comments must appear in strict v2..v15 order');
+        $this->assertSame(range(2, 16), $versions, 'migration comments must appear in strict v2..v16 order');
 
         $this->module($db)->migrations();
         // The list starts with the v1 migration which carries no

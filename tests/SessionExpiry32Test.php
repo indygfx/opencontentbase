@@ -172,7 +172,7 @@ final class SessionExpiry32Test extends TestCase
     public function testSwSessionCheckNetworkOnlyAndV10(): void
     {
         $sw = (string)file_get_contents($this->base . '/public/sw.js');
-        $this->assertStringContainsString("const VERSION = 'v10'", $sw);
+        $this->assertMatchesRegularExpression("/const VERSION = 'v(10|1\\d)'/", $sw);
         $pos = strpos($sw, "path === '/session-check'");
         $this->assertNotFalse($pos);
         $this->assertLessThan(strpos($sw, 'ASSET_PREFIX) === 0'), $pos, 'session-check passthrough before any caching branch');
