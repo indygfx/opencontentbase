@@ -303,4 +303,8 @@ return [
     'chapter_image_remove' => 'Bild entfernen',
     'chapter_image_too_big' => 'Das Bild ist zu groß (max. 5 MB).',
     'confirm_remove_chapter_image' => 'Kapitelbild entfernen?',
+    'image_too_large' => 'Das Bild ist zu groß (max. 5 MB) - bitte ein kleineres/komprimiertes Foto verwenden.',
+    'image_type_invalid' => 'Nicht unterstützter Bildtyp - bitte JPEG, PNG, WebP oder GIF verwenden.',
+    'image_uploaded' => 'Bild hochgeladen.',
+    'image_removed' => 'Bild entfernt.',
 ];

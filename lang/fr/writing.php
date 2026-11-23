@@ -303,4 +303,8 @@ return [
     'chapter_image_remove' => 'Supprimer l’image',
     'chapter_image_too_big' => 'L’image est trop lourde (max 5 Mo).',
     'confirm_remove_chapter_image' => 'Supprimer l’illustration du chapitre ?',
+    'image_too_large' => 'L’image est trop lourde (max 5 Mo) - utilisez une photo plus petite ou compressée.',
+    'image_type_invalid' => 'Type d’image non pris en charge - utilisez JPEG, PNG, WebP ou GIF.',
+    'image_uploaded' => 'Image téléversée.',
+    'image_removed' => 'Image supprimée.',
 ];

@@ -33,25 +33,6 @@
         </select>
         <label for="slug"><?= e(t('pages', 'slug_label')) ?> <small class="muted"><?= e(t('writing', 'slug_from_outline_hint')) ?></small></label>
         <input id="slug" name="slug" value="<?= e($chapter['slug'] ?? '') ?>" placeholder="automatic" pattern="[a-z0-9-]*" title="a-z, 0-9, hyphen; leave empty to derive automatically">
-        <?php if ($isEdit): /* prompt 33: chapter illustration block (edit only) */ ?>
-        <h2><?= e(t('writing', 'chapter_image')) ?></h2>
-        <?php if (!empty($imageError)): ?>
-            <p class="error"><?= e($imageError) ?></p>
-        <?php endif; ?>
-        <?php if (($chapter['image_path'] ?? '') !== ''): ?>
-            <p><img class="chapter-edit-preview" src="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image?v=<?= (int)($imageVersion ?? 0) ?>" alt="<?= e((string)($chapter['title'] ?? $chapter['slug'])) ?>"></p>
-            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image/delete" data-confirm="<?= e(t('writing', 'confirm_remove_chapter_image')) ?>">
-                <?= $csrf->field() ?>
-                <button type="submit"><?= e(t('writing', 'chapter_image_remove')) ?></button>
-            </form>
-        <?php endif; ?>
-        <form method="post" enctype="multipart/form-data" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image">
-            <?= $csrf->field() ?>
-            <label for="chapter-image"><?= e(t('writing', 'chapter_image_upload')) ?> <small class="muted"><?= e(t('writing', 'image_rules')) ?></small></label>
-            <input type="file" id="chapter-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif" required>
-            <button type="submit"><?= e(t('writing', 'chapter_image_upload')) ?></button>
-        </form>
-        <?php endif; ?>
         <label for="body"><?= e(t('writing', 'body_chapter_label')) ?></label>
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($chapter['body'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>
@@ -60,6 +41,31 @@
             data-msg-saved="<?= e(t('writing', 'draft_saved')) ?>"
             data-msg-failed="<?= e(t('writing', 'draft_save_failed')) ?>"><?= e(t('writing', 'save_draft')) ?></button>
     </form>
+    <?php if ($isEdit): /* prompt 33/34: chapter illustration - fetch-only block OUTSIDE the
+           save form, so no auxiliary action can ever submit/wipe the editor content */ ?>
+    <h2><?= e(t('writing', 'chapter_image')) ?></h2>
+    <p class="error image-error" hidden></p>
+    <p class="image-preview-wrap"<?= ($chapter['image_path'] ?? '') === '' ? ' hidden' : '' ?>>
+        <img class="chapter-edit-preview image-preview" src="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image?v=<?= (int)($imageVersion ?? 0) ?>" alt="<?= e((string)($chapter['title'] ?? $chapter['slug'])) ?>">
+    </p>
+    <form class="image-action image-upload" method="post" enctype="multipart/form-data"
+        action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image"
+        data-err-size="<?= e(t('writing', 'image_too_large')) ?>"
+        data-err-type="<?= e(t('writing', 'image_type_invalid')) ?>"
+        data-msg-uploaded="<?= e(t('writing', 'image_uploaded')) ?>">
+        <?= $csrf->field() ?>
+        <label for="chapter-image"><?= e(t('writing', 'chapter_image_upload')) ?> <small class="muted"><?= e(t('writing', 'image_rules')) ?></small></label>
+        <input type="file" id="chapter-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif" required>
+        <button type="submit"><?= e(t('writing', 'chapter_image_upload')) ?></button>
+    </form>
+    <form class="inline image-action image-remove" method="post"
+        action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image/delete"
+        data-confirm="<?= e(t('writing', 'confirm_remove_chapter_image')) ?>"
+        data-msg-removed="<?= e(t('writing', 'image_removed')) ?>"<?= ($chapter['image_path'] ?? '') === '' ? ' hidden' : '' ?>>
+        <?= $csrf->field() ?>
+        <button type="submit"><?= e(t('writing', 'chapter_image_remove')) ?></button>
+    </form>
+    <?php endif; ?>
 </section>
 <?php /* prompt 31 part 3: sticky save dock - fixed bottom bar, fades in on
        downward scroll (app.js), contains normal Save (form submit) + Save draft */ ?>

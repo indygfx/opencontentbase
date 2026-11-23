@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v11'; // prompt 33 (templates/CSS: chapter illustration)
+const VERSION = 'v12'; // prompt 34 (app.js/templates: fetch-only chapter image actions)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';

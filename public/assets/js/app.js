@@ -742,3 +742,90 @@
         }).catch(function () { /* offline or failed - next visible visit retries */ });
     });
 })();
+
+/* Prompt 34: chapter image actions are FETCH-ONLY and never touch the editor.
+   The image forms live OUTSIDE the save form (structure guard in tests). On
+   submit: preventDefault -> client-side pre-validation (type whitelist +
+   5 MB limit, BEFORE anything is transmitted) -> fetch POST FormData with JSON
+   signal headers. Success: swap ONLY the preview img / remove button + toast,
+   no navigation, no re-render (unsaved editor text + caret stay untouched).
+   422: inline error in the image block + toast. 403: the global prompt-32
+   wrapper handles it (toast + re-login + rescue stash). */
+(function () {
+    'use strict';
+    var ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    var MAX_BYTES = 5242880; // 5 MB, same as Core\ImageStore::MAX_BYTES
+    function toast(msg) {
+        var t = document.createElement('div');
+        t.className = 'notice app-toast';
+        t.setAttribute('role', 'status');
+        var span = document.createElement('span');
+        span.textContent = msg;
+        t.appendChild(span);
+        document.body.appendChild(t);
+        setTimeout(function () { t.remove(); }, 5000);
+    }
+    document.querySelectorAll('form.image-action').forEach(function (form) {
+        form.addEventListener('submit', function (ev) {
+            ev.preventDefault();
+            if (form.dataset.confirm && !window.confirm(form.dataset.confirm)) {
+                return;
+            }
+            var errEl = document.querySelector('.image-error');
+            function inlineErr(msg) {
+                if (errEl !== null) { errEl.textContent = msg; errEl.hidden = false; }
+                toast(msg);
+            }
+            var fileInput = form.querySelector('input[type="file"]');
+            var file = fileInput !== null && fileInput.files ? fileInput.files[0] : null;
+            // client-side pre-validation BEFORE any upload starts (phone photos!)
+            if (file !== undefined && file !== null) {
+                if (ACCEPTED_TYPES.indexOf(file.type) === -1) {
+                    inlineErr(form.dataset.errType || 'Invalid image type');
+                    return;
+                }
+                if (file.size > MAX_BYTES) {
+                    inlineErr(form.dataset.errSize || 'Image too large (max 5 MB)');
+                    return;
+                }
+            }
+            if (errEl !== null) { errEl.hidden = true; }
+            var btn = form.querySelector('button[type="submit"]');
+            if (btn !== null) { btn.disabled = true; }
+            fetch(form.getAttribute('action'), {
+                method: 'POST',
+                body: new FormData(form),
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function (r) {
+                return r.json().catch(function () { return { ok: false, errors: [] }; })
+                    .then(function (d) { return { status: r.status, data: d }; });
+            }).then(function (res) {
+                if (btn !== null) { btn.disabled = false; }
+                if (res.data && res.data.code === 'csrf_expired') {
+                    return; // global 403 wrapper (prompt 32) shows toast + redirects
+                }
+                if (res.status === 200 && res.data.ok) {
+                    var preview = document.querySelector('.image-preview');
+                    var wrap = document.querySelector('.image-preview-wrap');
+                    var removeForm = document.querySelector('form.image-remove');
+                    if (res.data.url) {
+                        if (preview !== null) { preview.src = res.data.url + '?v=' + (res.data.version || Date.now()); }
+                        if (wrap !== null) { wrap.hidden = false; }
+                        if (removeForm !== null) { removeForm.hidden = false; }
+                        toast(form.dataset.msgUploaded || 'Image uploaded');
+                    } else {
+                        if (wrap !== null) { wrap.hidden = true; }
+                        if (removeForm !== null) { removeForm.hidden = true; }
+                        if (fileInput !== null) { fileInput.value = ''; }
+                        toast(form.dataset.msgRemoved || 'Image removed');
+                    }
+                } else {
+                    inlineErr((res.data.errors || []).join(' ') || form.dataset.errType || 'Upload failed');
+                }
+            }).catch(function () {
+                if (btn !== null) { btn.disabled = false; }
+                inlineErr(form.dataset.errType || 'Upload failed');
+            });
+        });
+    });
+})();

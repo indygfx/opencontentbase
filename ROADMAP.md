@@ -178,6 +178,12 @@ block in the chapter edit form, bounded display above the chapter text, offline
 manifest + export ZIP images/chapter-<id>.<ext> with markdown reference).
 SW VERSION v11.
 
+**Done:** prompt 34 - chapter image actions are fetch-only and draft-safe: image
+forms moved outside the save form (no nested form can submit the editor),
+upload/remove answer JSON only (success {ok,url,version} / 422 {errors}), the
+re-render error path is removed, client-side pre-validation (type + 5 MB)
+runs before any request. SW VERSION v12.
+
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

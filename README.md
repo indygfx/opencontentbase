@@ -208,6 +208,20 @@ on the read page -> replace it -> remove it -> make the story available offline
 -> airplane mode -> chapter shows the image -> export the bundle -> image file
 present and referenced.
 
+**Draft-safe by design (prompt 34):** the chapter image upload/remove are
+fetch-only (AJAX multipart) and live OUTSIDE the save form - they never
+navigate, never re-render the edit page, and never touch the editor DOM, so
+unsaved text and caret survive. The browser pre-validates type
+(jpeg/png/webp/gif) and size (5 MB) BEFORE anything is sent; server-side the
+image routes answer JSON only (`{ok:true,url,version}` / 422 `{errors:[...]}`),
+never an HTML re-render. Limits are shown in the upload UI (5 MB, formats).
+
+**Manual phone-only checklist:** upload a normal image -> toast + preview
+swaps, typed text still in the editor untouched -> try an oversized camera
+photo (> 5 MB) -> friendly size error, NOTHING sent, text still there ->
+remove image -> preview placeholder returns, text still there -> save ->
+image persisted.
+
 ## Architecture
 
 - **Generic content objects**: `content_objects` (UUID, `type`, `slug`) instead of a fixed `pages` table in the core; modules bring their own tables.

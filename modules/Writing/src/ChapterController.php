@@ -104,7 +104,7 @@ final class ChapterController
             'imageVersion' => $this->imageVersion($chapter),]);
     }
 
-    public function edit(User $user, string $projectId, string $slug, ?string $imageError = null): Response
+    public function edit(User $user, string $projectId, string $slug): Response
     {
         $chapter = $this->findChapter($projectId, $slug);
         if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
@@ -123,7 +123,7 @@ final class ChapterController
             'synopses' => $this->synopses->unassigned($projectId, $synopsis['id'] ?? null),
             'isEdit' => true,
             'error' => null,
-            'imageError' => $imageError,
+            'imageError' => null, // prompt 34: image errors are AJAX-only, never re-rendered
             'imageVersion' => $this->imageVersion($chapter),
         ]);
     }
@@ -223,8 +223,13 @@ final class ChapterController
                 => t('writing', 'error_cover_type'),
             default => null,
         };
+        // prompt 34: image actions are fetch-only - errors come back as 422 JSON,
+        // NEVER as a re-rendered edit page (a re-render would wipe unsaved editor text)
         if ($error !== null) {
-            return $this->editWithImageError($user, $projectId, $slug, $error);
+            if ($this->wantsJson()) {
+                return $this->jsonError($error);
+            }
+            return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug) . '/edit');
         }
         if ((string)($chapter['image_path'] ?? '') !== '') {
             $this->images->delete('chapters', (string)$chapter['image_path']);
@@ -232,6 +237,14 @@ final class ChapterController
         $name = $chapter['id'] . '.' . $ext;
         $this->images->store($file, 'chapters', $name);
         $this->db->run('UPDATE chapters SET image_path = ? WHERE id = ?', [$name, (string)$chapter['id']]);
+        $imageUrl = '/writing/' . $projectId . '/chapters/' . rawurlencode($slug) . '/image';
+        if ($this->wantsJson()) {
+            return new Response(
+                (string)json_encode(['ok' => true, 'url' => $imageUrl, 'version' => $this->imageVersion($this->findChapter($projectId, $slug)) ?? time()]),
+                200,
+                ['Content-Type' => 'application/json; charset=utf-8']
+            );
+        }
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug) . '/edit');
     }
 
@@ -246,6 +259,13 @@ final class ChapterController
             $this->images->delete('chapters', (string)$chapter['image_path']);
         }
         $this->db->run('UPDATE chapters SET image_path = NULL WHERE id = ?', [(string)$chapter['id']]);
+        if ($this->wantsJson()) {
+            return new Response(
+                (string)json_encode(['ok' => true, 'url' => null]),
+                200,
+                ['Content-Type' => 'application/json; charset=utf-8']
+            );
+        }
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug) . '/edit');
     }
 
@@ -277,11 +297,6 @@ final class ChapterController
         }
         $file = $this->images->path('chapters', $name);
         return $file === null ? null : (int)filemtime($file);
-    }
-
-    private function editWithImageError(User $user, string $projectId, string $slug, string $error): Response
-    {
-        return $this->edit($user, $projectId, $slug, $error);
     }
 
     public function destroy(User $user, string $projectId, string $slug): Response
