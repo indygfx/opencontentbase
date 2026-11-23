@@ -39,7 +39,7 @@ final class WritingModule implements ModuleInterface
         $this->characters = new CharacterController($db, $view, $csrf, $this->access, $renderer, $basePath);
         $this->backgrounds = new BackgroundController($db, $view, $csrf, $this->access, $renderer);
         $this->relationships = new RelationshipController($db, $view, $csrf, $this->access);
-        $this->export = new StoryExportController($db, $this->access, $view, $csrf);
+        $this->export = new StoryExportController($db, $this->access, $view, $csrf, $this->basePath);
         $this->import = new StoryImportController($db, $view, $csrf);
         $this->graph = new GraphController($db, $view, $csrf, $this->access, new CharacterMentions($db), $this->relationships);
         $this->revisions = new RevisionController($db, $view, $csrf, $this->access);
@@ -73,6 +73,9 @@ final class WritingModule implements ModuleInterface
             ['method' => 'GET', 'pattern' => '/writing/{id}/chapters/{slug}/edit', 'handler' => fn ($params, $user) => $ch->edit($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}', 'handler' => fn ($params, $user) => $ch->update($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/delete', 'handler' => fn ($params, $user) => $ch->destroy($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/image', 'handler' => fn ($params, $user) => $ch->uploadImage($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'POST', 'pattern' => '/writing/{id}/chapters/{slug}/image/delete', 'handler' => fn ($params, $user) => $ch->removeImage($user, $params['id'], $params['slug']), 'roles' => ['user']],
+            ['method' => 'GET', 'pattern' => '/writing/{id}/chapters/{slug}/image', 'handler' => fn ($params, $user) => $ch->image($user, $params['id'], $params['slug']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/synopses/new', 'handler' => fn ($params, $user) => $sy->create($user, $params['id']), 'roles' => ['user']],
             ['method' => 'POST', 'pattern' => '/writing/{id}/synopses', 'handler' => fn ($params, $user) => $sy->store($user, $params['id']), 'roles' => ['user']],
             ['method' => 'GET', 'pattern' => '/writing/{id}/synopses/{slug}', 'handler' => fn ($params, $user) => $sy->show($user, $params['id'], $params['slug']), 'roles' => ['user']],
@@ -363,6 +366,10 @@ final class WritingModule implements ModuleInterface
             // v15: two-layer relations - nullable emotional stance next to the structural kind
             function (Database $db): void {
                 $db->run('ALTER TABLE character_relations ADD COLUMN stance TEXT');
+            },
+            // v16: optional chapter illustration image (file name under data/chapters/; NULL = no image)
+            function (Database $db): void {
+                $db->run('ALTER TABLE chapters ADD COLUMN image_path TEXT');
             },
         ];
     }

@@ -171,6 +171,13 @@ save), logout bypasses CSRF and always destroys the session, heartbeat
 GET /session-check (204/401, network-only, 5-min throttle on visibilitychange).
 SW VERSION v10.
 
+**Done:** prompt 33 - chapter illustration: one image per chapter
+(migration v16 chapters.image_path, data/chapters/<id>.<ext> via the already
+generalized Core\ImageStore, guarded GET route with ?v=filemtime, upload/remove
+block in the chapter edit form, bounded display above the chapter text, offline
+manifest + export ZIP images/chapter-<id>.<ext> with markdown reference).
+SW VERSION v11.
+
 **Done:** prompt 24 - story header shows the sharing avatar stack next to the
 title (same partial/mechanics as the overview; links to setup for the owner,
 no stack without members) and users can upload their own avatar on `/profile`

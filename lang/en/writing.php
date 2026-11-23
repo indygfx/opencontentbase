@@ -298,4 +298,9 @@ return [
     'draft_rescue_found' => 'Unsaved draft from {time} found',
     'draft_rescue_restore' => 'Restore',
     'draft_rescue_discard' => 'Discard',
+    'chapter_image' => 'Chapter image',
+    'chapter_image_upload' => 'Upload image',
+    'chapter_image_remove' => 'Remove image',
+    'chapter_image_too_big' => 'The image is too large (max 5 MB).',
+    'confirm_remove_chapter_image' => 'Remove the chapter image?',
 ];

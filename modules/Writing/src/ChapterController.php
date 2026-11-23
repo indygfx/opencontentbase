@@ -12,6 +12,8 @@ use Core\View;
 
 final class ChapterController
 {
+    private \Core\ImageStore $images;
+
     public function __construct(
         private Database $db,
         private View $view,
@@ -19,8 +21,10 @@ final class ChapterController
         private ProjectAccess $access,
         private ContentRenderer $rendererService,
         private ChapterSynopsisController $synopses,
-        private ?RevisionController $revisions = null
+        private ?RevisionController $revisions = null,
+        private string $basePath = ''
     ) {
+        $this->images = new \Core\ImageStore($basePath !== '' ? $basePath : dirname(__DIR__, 3) . '/data');
     }
 
     /** Lazily built revision-history reader for the embedded recent list. */
@@ -96,10 +100,11 @@ final class ChapterController
             'recentRevisions' => $this->revisions()->recent((string)$chapter['object_id']),
             'recentBase' => '/writing/' . rawurlencode($projectId) . '/chapters/' . rawurlencode($slug),
             'error' => null,
-        ]);
+        
+            'imageVersion' => $this->imageVersion($chapter),]);
     }
 
-    public function edit(User $user, string $projectId, string $slug): Response
+    public function edit(User $user, string $projectId, string $slug, ?string $imageError = null): Response
     {
         $chapter = $this->findChapter($projectId, $slug);
         if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
@@ -118,6 +123,8 @@ final class ChapterController
             'synopses' => $this->synopses->unassigned($projectId, $synopsis['id'] ?? null),
             'isEdit' => true,
             'error' => null,
+            'imageError' => $imageError,
+            'imageVersion' => $this->imageVersion($chapter),
         ]);
     }
 
@@ -196,6 +203,85 @@ final class ChapterController
             );
         }
         return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($newSlug));
+    }
+
+    /** Prompt 33: upload/replace the chapter illustration (data/chapters/<id>.<ext>). */
+    public function uploadImage(User $user, string $projectId, string $slug): Response
+    {
+        $chapter = $this->findChapter($projectId, $slug);
+        if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $file = $_FILES['image'] ?? null;
+        $ext = $file !== null && is_array($file) ? $this->images->validateUpload($file) : null;
+        $error = match (true) {
+            $file === null || !is_array($file) || ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK
+                => t('writing', 'error_no_file'),
+            ($file['size'] ?? 0) > \Core\ImageStore::MAX_BYTES
+                => t('writing', 'chapter_image_too_big'),
+            $ext === null
+                => t('writing', 'error_cover_type'),
+            default => null,
+        };
+        if ($error !== null) {
+            return $this->editWithImageError($user, $projectId, $slug, $error);
+        }
+        if ((string)($chapter['image_path'] ?? '') !== '') {
+            $this->images->delete('chapters', (string)$chapter['image_path']);
+        }
+        $name = $chapter['id'] . '.' . $ext;
+        $this->images->store($file, 'chapters', $name);
+        $this->db->run('UPDATE chapters SET image_path = ? WHERE id = ?', [$name, (string)$chapter['id']]);
+        return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug) . '/edit');
+    }
+
+    /** Prompt 33: remove the chapter illustration (file + column together). */
+    public function removeImage(User $user, string $projectId, string $slug): Response
+    {
+        $chapter = $this->findChapter($projectId, $slug);
+        if ($chapter === null || !$this->access->canEdit($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        if ((string)($chapter['image_path'] ?? '') !== '') {
+            $this->images->delete('chapters', (string)$chapter['image_path']);
+        }
+        $this->db->run('UPDATE chapters SET image_path = NULL WHERE id = ?', [(string)$chapter['id']]);
+        return Response::redirect('/writing/' . $projectId . '/chapters/' . rawurlencode($slug) . '/edit');
+    }
+
+    /** Prompt 33: serve the illustration - guarded exactly like the chapter view. */
+    public function image(User $user, string $projectId, string $slug): Response
+    {
+        $chapter = $this->findChapter($projectId, $slug);
+        if ($chapter === null || !$this->access->canAccess($user, $projectId)) {
+            return $this->notFound($user);
+        }
+        $name = (string)($chapter['image_path'] ?? '');
+        $file = $this->images->path('chapters', $name);
+        $mime = $file === null ? null : $this->images->contentType('chapters', $name);
+        if ($name === '' || $mime === null) {
+            return $this->notFound($user);
+        }
+        return new Response(
+            (string)file_get_contents($file),
+            200,
+            ['Content-Type' => $mime, 'Cache-Control' => 'public, max-age=31536000, immutable']
+        );
+    }
+
+    private function imageVersion(array $chapter): ?int
+    {
+        $name = (string)($chapter['image_path'] ?? '');
+        if ($name === '') {
+            return null;
+        }
+        $file = $this->images->path('chapters', $name);
+        return $file === null ? null : (int)filemtime($file);
+    }
+
+    private function editWithImageError(User $user, string $projectId, string $slug, string $error): Response
+    {
+        return $this->edit($user, $projectId, $slug, $error);
     }
 
     public function destroy(User $user, string $projectId, string $slug): Response
@@ -287,7 +373,7 @@ final class ChapterController
     private function findChapter(string $projectId, string $slug): ?array
     {
         return $this->db->one(
-            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, c.chapter_synopsis_id,
+            "SELECT o.id AS object_id, o.slug, o.owner_id, c.id, c.chapter_synopsis_id, c.image_path,
                     COALESCE(s.title, r.title, o.slug) AS title,
                     COALESCE(s.summary_text, r.summary, '') AS summary, r.body
              FROM content_objects o

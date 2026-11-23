@@ -15,7 +15,9 @@ final class StoryExporter implements StoryExportProvider
 {
     public const FORMAT_VERSION = 1;
 
-    public function __construct(private readonly Database $db)
+    private ?\Core\ImageStore $images = null;
+
+    public function __construct(private readonly Database $db, private readonly string $basePath = '')
     {
     }
 
@@ -59,6 +61,11 @@ final class StoryExporter implements StoryExportProvider
             $zip->addFromString('synopses/' . $this->safeSlug($row['slug']) . '.md', $this->synopsisFile($row));
         }
         foreach ($chapters as $row) {
+            $image = $this->chapterImage($row);
+            if ($image !== null) {
+                $zip->addFile($image['file'], $image['zip']);
+                $row['image_zip'] = $image['zip'];
+            }
             $zip->addFromString('chapters/' . $this->safeSlug($row['slug']) . '.md', $this->chapterFile($row));
         }
         foreach ($characters as $row) {
@@ -113,6 +120,11 @@ final class StoryExporter implements StoryExportProvider
     /** @param array<string, mixed> $row */
     private function chapterFile(array $row): string
     {
+        $body = (string)$row['body'];
+        if (($row['image_zip'] ?? null) !== null) {
+            // cover export does not exist yet; chapter images go to images/chapter-<id>.<ext>
+            $body = '![' . (string)$row['title'] . '](' . $row['image_zip'] . ')\n\n' . $body;
+        }
         return $this->file([
             'uuid' => (string)$row['id'],
             'slug' => (string)$row['slug'],
@@ -121,7 +133,23 @@ final class StoryExporter implements StoryExportProvider
             'created_at' => (string)$row['created_at'],
             'synopsis_uuid' => (string)$row['synopsis_id'],
             'updated_at' => (string)$row['updated_at'],
-        ], (string)$row['body']);
+        ], $body);
+    }
+
+    /** @return array{zip: string, file: string}|null */
+    private function chapterImage(array $row): ?array
+    {
+        $name = (string)($row['image_path'] ?? '');
+        if ($name === '') {
+            return null;
+        }
+        $this->images ??= new \Core\ImageStore($this->basePath !== '' ? $this->basePath : dirname(__DIR__, 3) . '/data');
+        $file = $this->images->path('chapters', $name);
+        if ($file === null) {
+            return null;
+        }
+        $ext = pathinfo($name, PATHINFO_EXTENSION);
+        return ['zip' => 'images/chapter-' . $row['id'] . '.' . $ext, 'file' => $file];
     }
 
     /**
@@ -267,7 +295,7 @@ final class StoryExporter implements StoryExportProvider
     private function chapters(string $projectId): array
     {
         return $this->db->all(
-            "SELECT c.id, c.slug, c.created_at, c.chapter_synopsis_id AS synopsis_id,
+            "SELECT c.id, c.slug, c.created_at, c.chapter_synopsis_id AS synopsis_id, c.image_path,
                     COALESCE(s.title, c.slug) AS title,
                     COALESCE(r.body, '') AS body,
                     r.created_at AS updated_at

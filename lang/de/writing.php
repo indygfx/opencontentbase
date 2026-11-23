@@ -298,4 +298,9 @@ return [
     'draft_rescue_found' => 'Ungespeicherter Entwurf von {time} gefunden',
     'draft_rescue_restore' => 'Wiederherstellen',
     'draft_rescue_discard' => 'Verwerfen',
+    'chapter_image' => 'Kapitelbild',
+    'chapter_image_upload' => 'Bild hochladen',
+    'chapter_image_remove' => 'Bild entfernen',
+    'chapter_image_too_big' => 'Das Bild ist zu groß (max. 5 MB).',
+    'confirm_remove_chapter_image' => 'Kapitelbild entfernen?',
 ];

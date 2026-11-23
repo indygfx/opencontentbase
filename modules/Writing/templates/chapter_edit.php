@@ -33,6 +33,25 @@
         </select>
         <label for="slug"><?= e(t('pages', 'slug_label')) ?> <small class="muted"><?= e(t('writing', 'slug_from_outline_hint')) ?></small></label>
         <input id="slug" name="slug" value="<?= e($chapter['slug'] ?? '') ?>" placeholder="automatic" pattern="[a-z0-9-]*" title="a-z, 0-9, hyphen; leave empty to derive automatically">
+        <?php if ($isEdit): /* prompt 33: chapter illustration block (edit only) */ ?>
+        <h2><?= e(t('writing', 'chapter_image')) ?></h2>
+        <?php if (!empty($imageError)): ?>
+            <p class="error"><?= e($imageError) ?></p>
+        <?php endif; ?>
+        <?php if (($chapter['image_path'] ?? '') !== ''): ?>
+            <p><img class="chapter-edit-preview" src="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image?v=<?= (int)($imageVersion ?? 0) ?>" alt="<?= e((string)($chapter['title'] ?? $chapter['slug'])) ?>"></p>
+            <form class="inline" method="post" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image/delete" data-confirm="<?= e(t('writing', 'confirm_remove_chapter_image')) ?>">
+                <?= $csrf->field() ?>
+                <button type="submit"><?= e(t('writing', 'chapter_image_remove')) ?></button>
+            </form>
+        <?php endif; ?>
+        <form method="post" enctype="multipart/form-data" action="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image">
+            <?= $csrf->field() ?>
+            <label for="chapter-image"><?= e(t('writing', 'chapter_image_upload')) ?> <small class="muted"><?= e(t('writing', 'image_rules')) ?></small></label>
+            <input type="file" id="chapter-image" name="image" accept="image/jpeg,image/png,image/webp,image/gif" required>
+            <button type="submit"><?= e(t('writing', 'chapter_image_upload')) ?></button>
+        </form>
+        <?php endif; ?>
         <label for="body"><?= e(t('writing', 'body_chapter_label')) ?></label>
         <textarea id="body" name="body" rows="14" data-editor="tiptap"><?= e($chapter['body'] ?? '') ?></textarea>
         <button type="submit"><?= e(t('pages', 'save')) ?></button>

@@ -15,7 +15,7 @@
    VERSION keys are deleted. The app shows an "update available" toast
    (app.js listens for updatefound/controllerchange). */
 
-const VERSION = 'v10'; // prompt 32 (CSRF/session expiry: app.js/layout/templates + /session-check network-only)
+const VERSION = 'v11'; // prompt 33 (templates/CSS: chapter illustration)
 const STATIC_CACHE = 'ocb-static-' + VERSION;
 const PAGE_CACHE = 'ocb-pages-' + VERSION;
 const OFFLINE_URL = '/offline.html';

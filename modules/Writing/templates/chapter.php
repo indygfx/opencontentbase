@@ -5,6 +5,9 @@
         <?php if (!empty($chapter['summary'])): ?>
             <p class="muted"><strong><?= e(t('writing', 'summary')) ?>:</strong> <?= e($chapter['summary']) ?></p>
         <?php endif; ?>
+        <?php if (($chapter['image_path'] ?? '') !== '' && ($imageVersion ?? null) !== null): ?>
+            <img class="chapter-illustration" src="/writing/<?= e($projectId) ?>/chapters/<?= e($chapter['slug']) ?>/image?v=<?= (int)$imageVersion ?>" alt="<?= e((string)($chapter['title'] ?? $chapter['slug'])) ?>">
+        <?php endif; ?>
         <div class="content"><?= $rendered /* already escaped/sanitized by ContentRenderer */ ?></div>
     </article>
     <?php if ($canEdit): ?>

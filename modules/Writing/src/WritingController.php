@@ -524,6 +524,9 @@ final class WritingController
         foreach ($this->db->all("SELECT slug, image_path FROM characters WHERE project_id = ? AND image_path IS NOT NULL AND image_path <> '' ORDER BY slug", [$id]) as $row) {
             $urls[] = $base . '/characters/' . rawurlencode((string)$row['slug']) . '/image';
         }
+        foreach ($this->db->all("SELECT slug, image_path FROM chapters WHERE project_id = ? AND image_path IS NOT NULL AND image_path <> '' ORDER BY slug", [$id]) as $row) {
+            $urls[] = $base . '/chapters/' . rawurlencode((string)$row['slug']) . '/image';
+        }
         if ((string)($project['cover'] ?? '') !== '') {
             $urls[] = $base . '/cover';
         }

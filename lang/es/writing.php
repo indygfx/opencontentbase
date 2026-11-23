@@ -298,4 +298,9 @@ return [
     'draft_rescue_found' => 'Borrador sin guardar de {time} encontrado',
     'draft_rescue_restore' => 'Restaurar',
     'draft_rescue_discard' => 'Descartar',
+    'chapter_image' => 'Imagen del capítulo',
+    'chapter_image_upload' => 'Subir imagen',
+    'chapter_image_remove' => 'Eliminar imagen',
+    'chapter_image_too_big' => 'La imagen es demasiado grande (máx. 5 MB).',
+    'confirm_remove_chapter_image' => '¿Eliminar la imagen del capítulo?',
 ];

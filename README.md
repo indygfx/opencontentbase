@@ -182,6 +182,32 @@ stay valid until the session expires.
   rendering) on `visibilitychange` -> visible AND online, throttled to once per
   5 minutes; on 401 it toasts and redirects to login with the return URL.
 
+## Chapter illustrations (prompt 33)
+
+- Each chapter can have ONE image, uploaded in the chapter edit form (block
+  between slug and editor): preview, multipart upload, "Remove image".
+  Storage: `data/chapters/<chapterId>.<ext>` via the existing
+  `Core\ImageStore` (already generalized - directory is a parameter, no
+  avatar-shaped code left; no changes needed). Validation identical to
+  avatars/portraits: jpeg/png/webp/gif, max 5 MB, verified via `getimagesize`,
+  traversal-safe names. Column: `chapters.image_path` (migration v16, nullable).
+- Serving: `GET /writing/{id}/chapters/{slug}/image` - guarded exactly like the
+  chapter view (members only, strangers get 404), served with the image mime
+  type; pages reference it with a `?v=<filemtime>` cache-buster.
+- Read page: chapters WITH an image render it above the chapter text in a
+  bounded container (max-height 320px, `object-fit: cover`); chapters without
+  render nothing. Chapter list and slider deliberately unchanged.
+- Offline: chapter image URLs join the per-story offline manifest, so a
+  precached story serves its illustrations offline from `offline-stories-v1`.
+- Export: the ZIP gains `images/chapter-<id>.<ext>` and the chapter's markdown
+  file starts with `![title](images/chapter-<id>.<ext>)`. (Cover export does
+  not exist yet - noted, not added here.)
+
+**Manual checklist:** upload an image in a chapter (mobile + desktop) -> shows
+on the read page -> replace it -> remove it -> make the story available offline
+-> airplane mode -> chapter shows the image -> export the bundle -> image file
+present and referenced.
+
 ## Architecture
 
 - **Generic content objects**: `content_objects` (UUID, `type`, `slug`) instead of a fixed `pages` table in the core; modules bring their own tables.

@@ -26,7 +26,8 @@ final class StoryExportController
         private readonly ProjectAccess $access,
         private readonly ?View $view = null,
         private readonly ?Csrf $csrf = null,
-        private readonly ?StoryExportProvider $exporter = null
+        private readonly ?StoryExportProvider $exporter = null,
+        private readonly string $basePath = ''
     ) {
     }
 
@@ -35,7 +36,7 @@ final class StoryExportController
         if (!$this->access->canAccess($user, $projectId)) {
             return new Response('', 403);
         }
-        $exporter = $this->exporter ?? new StoryExporter($this->db);
+        $exporter = $this->exporter ?? new StoryExporter($this->db, $this->basePath);
         try {
             $result = $exporter->export($projectId);
         } catch (ExportUnavailableException $e) {

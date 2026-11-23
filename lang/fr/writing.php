@@ -298,4 +298,9 @@ return [
     'draft_rescue_found' => 'Brouillon non enregistré du {time} trouvé',
     'draft_rescue_restore' => 'Restaurer',
     'draft_rescue_discard' => 'Ignorer',
+    'chapter_image' => 'Illustration du chapitre',
+    'chapter_image_upload' => 'Téléverser une image',
+    'chapter_image_remove' => 'Supprimer l’image',
+    'chapter_image_too_big' => 'L’image est trop lourde (max 5 Mo).',
+    'confirm_remove_chapter_image' => 'Supprimer l’illustration du chapitre ?',
 ];
