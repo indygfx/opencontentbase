@@ -71,6 +71,7 @@ final class ChapterImage33Test extends TestCase
         $this->db->run("INSERT INTO content_revisions (id, object_id, title, body, author_id) VALUES ('r1', 'c1', 'Ch1', 'body text', 'a1')");
         $_FILES = [];
         $_POST = [];
+        unset($_SERVER['HTTP_ACCEPT'], $_SERVER['HTTP_X_REQUESTED_WITH']);
     }
 
     protected function tearDown(): void
@@ -78,6 +79,7 @@ final class ChapterImage33Test extends TestCase
         unset($this->db, $this->auth, $this->owner, $this->member, $this->stranger);
         $_FILES = [];
         $_POST = [];
+        unset($_SERVER['HTTP_ACCEPT'], $_SERVER['HTTP_X_REQUESTED_WITH']);
         if (!$this->translatorWasInitialized) {
             $prop = new \ReflectionProperty(Translator::class, 'instance');
             $prop->setValue(null, null);
